@@ -66,7 +66,7 @@ export default async function Privacidad() {
         />
         <p>
           No pedimos ni guardamos datos de tarjetas ni claves bancarias. Esa información la maneja
-          directamente Bold, la pasarela de pagos, y nunca pasa por nuestros servidores.
+          directamente Wompi, la pasarela de pagos, y nunca pasa por nuestros servidores.
         </p>
       </Seccion>
 
@@ -96,7 +96,8 @@ export default async function Privacidad() {
         <Lista
           items={[
             <>
-              <strong>Bold</strong>, para procesar el abono o el pago de tu cita.
+              <strong>Wompi</strong>, la pasarela de pagos, para procesar el abono o el pago de tu
+              cita.
             </>,
             <>
               <strong>Nuestro proveedor de correo</strong>, para enviarte la confirmación, los

@@ -1,6 +1,7 @@
 /** Los 5 estados posibles de una cita, en un solo lugar para no repetirlo
  * (validación en el server action, etiquetas y colores en las vistas). */
 export const ESTADOS = [
+  "POR_PAGAR",
   "PENDIENTE",
   "CONFIRMADA",
   "ATENDIDA",
@@ -9,6 +10,7 @@ export const ESTADOS = [
 ] as const;
 
 export const ETIQUETA: Record<string, string> = {
+  POR_PAGAR: "Esperando abono",
   PENDIENTE: "Pendiente",
   CONFIRMADA: "Confirmada",
   ATENDIDA: "Asiste",
@@ -17,6 +19,7 @@ export const ETIQUETA: Record<string, string> = {
 };
 
 export const TONO: Record<string, "neutral" | "success" | "warning" | "gold" | "danger"> = {
+  POR_PAGAR: "gold",
   PENDIENTE: "warning",
   CONFIRMADA: "success",
   ATENDIDA: "neutral",
@@ -26,6 +29,7 @@ export const TONO: Record<string, "neutral" | "success" | "warning" | "gold" | "
 
 /** Mismo color por estado en los bloques del calendario (semana y profesionales). */
 export const COLOR: Record<string, string> = {
+  POR_PAGAR: "border-l-terra border-dashed bg-paper text-muted",
   PENDIENTE: "border-l-terra bg-gold-100 text-ink",
   CONFIRMADA: "border-l-emerald-600 bg-emerald-50 text-ink",
   ATENDIDA: "border-l-clay bg-smoke text-muted",

@@ -128,8 +128,8 @@ export async function resumenReporte({ desde, hasta, branchId }: RangoReporte) {
  *
  * Junta las tres fuentes de cobro: el desglose de las ventas (mostrador y
  * pedidos en línea), el medio que se marcó al atender una cita y los abonos
- * con Bold. De una cita se cuenta lo que se cobró en el salón (sin el abono,
- * que ya aparece como Bold).
+ * en línea. De una cita se cuenta lo que se cobró en el salón (sin el abono,
+ * que ya aparece como abono en línea).
  */
 export async function mediosDePagoReporte({ desde, hasta, branchId }: RangoReporte) {
   const desdeUtc = aUtc(desde, "00:00");
@@ -170,7 +170,7 @@ export async function mediosDePagoReporte({ desde, hasta, branchId }: RangoRepor
   for (const c of citas) {
     const total =
       (c.priceOverride ?? c.service.price) + c.items.reduce((a, i) => a + i.unitPrice * i.quantity, 0);
-    if (c.depositPaid > 0) sumar("BOLD", c.depositPaid);
+    if (c.depositPaid > 0) sumar("EN_LINEA", c.depositPaid);
     if (c.paymentMethod) sumar(c.paymentMethod, Math.max(0, total - c.depositPaid));
   }
 

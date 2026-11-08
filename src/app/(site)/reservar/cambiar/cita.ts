@@ -37,9 +37,12 @@ export function motivoNoCambiable(
   cita: { status: string; startsAt: Date; sale: { id: string } | null; service: { bookable: boolean } },
   minHorasAntes: number,
 ) {
-  // Los servicios con abono (color) los agenda y los mueve solo el salón.
+  // Los servicios que no se reservan en línea los mueve solo el salón.
   if (!cita.service.bookable) {
-    return "Este servicio requiere abono, así que el cambio lo hacemos contigo. Escríbenos por WhatsApp y buscamos otra fecha.";
+    return "Este servicio se agenda directamente con el salón. Escríbenos por WhatsApp y buscamos otra fecha.";
+  }
+  if (cita.status === "POR_PAGAR") {
+    return "Esta reserva todavía espera el pago del abono. Termina el pago desde el enlace de la reserva, o reserva de nuevo.";
   }
   if (cita.status === "CANCELADA") return "Esta cita está cancelada. Reserva una nueva desde la página de reservas.";
   if (cita.status === "ATENDIDA" || cita.status === "NO_ASISTIO" || cita.sale) {

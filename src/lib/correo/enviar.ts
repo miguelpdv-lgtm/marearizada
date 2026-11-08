@@ -12,8 +12,8 @@ import { Resend } from "resend";
  *      de Resend en un error de reserva sería cambiar un mal rato por una
  *      venta perdida. Por eso `enviar()` nunca lanza: deja el motivo en el log
  *      y devuelve `false`.
- *   2. **Sin `RESEND_API_KEY` el sitio funciona igual**, como pasa con Bold y
- *      con Siigo. En local no hace falta configurar nada para probar el resto.
+ *   2. **Sin `RESEND_API_KEY` el sitio funciona igual.** En local no hace
+ *      falta configurar nada para probar el resto.
  */
 
 const DESDE_POR_DEFECTO = "Marea Rizada <onboarding@resend.dev>";

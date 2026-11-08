@@ -217,3 +217,16 @@ textarea.rf-input { min-height: 84px; resize: vertical; }
 
 /* Tarjeta fuera de la escena final: sin la espera de la animación. */
 .rf-card--plana { animation: none; }
+
+/* ---- Pago del abono ------------------------------------------------------ */
+.rf-timer { margin-top: 18px; padding: 10px 14px; border-left: 4px solid var(--rf-accent); background: #fff; font-size: .92rem; }
+.rf-timer b { font-family: var(--font-mono); font-size: 1rem; color: var(--rf-strong); }
+.rf-timer--poco { border-left-color: var(--rf-alert); }
+.rf-montos { display: grid; gap: 12px; margin-top: 18px; }
+@media (min-width: 640px) { .rf-montos { grid-template-columns: 1fr 1fr; } }
+.rf-monto { display: grid; gap: 4px; text-align: left; padding: 16px 18px; border: 2px solid var(--rf-line, #d3e3e1); border-radius: 3px; background: #fff; cursor: pointer; }
+.rf-monto b { font-family: var(--font-display); font-size: 1.5rem; color: var(--rf-strong); }
+.rf-monto span { font-size: .88rem; color: var(--rf-muted); }
+.rf-monto[aria-checked="true"], .rf-monto[aria-pressed="true"] { border-color: var(--rf-accent); box-shadow: 4px 4px 0 var(--rf-warm-soft); }
+.rf-prueba { margin-top: 20px; padding: 16px; border: 2px dashed var(--rf-warm); border-radius: 3px; background: #fff; display: grid; gap: 14px; }
+.rf-prueba p { font-size: .92rem; }

@@ -335,7 +335,9 @@ export function ReservaForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Estado" name="status" required>
           <Select name="status" value={status} onChange={(e) => setStatus(e.target.value)} required>
-            {ESTADOS.filter((e) => e !== "ATENDIDA" || inicial?.status === "ATENDIDA").map((e) => (
+            {ESTADOS.filter(
+              (e) => (e !== "ATENDIDA" && e !== "POR_PAGAR") || inicial?.status === e,
+            ).map((e) => (
               <option key={e} value={e}>
                 {ETIQUETA[e]}
               </option>

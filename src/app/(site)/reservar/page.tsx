@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getSettings } from "@/lib/site";
 import { hoyBogota } from "@/lib/agenda";
+import { pasarelaActiva } from "@/lib/pasarela";
 import { etiquetaPromocion, mejorDescuento, promocionesVigentes } from "@/lib/promociones";
 import { whatsappLink } from "@/lib/format";
 import { ReservaFlow } from "./ReservaFlow";
@@ -78,7 +79,9 @@ export default async function ReservarPage({
     })
     .filter((l) => l.servicios.length > 0);
 
-  if (!activa || !sede || lineas.length === 0) {
+  // El abono es obligatorio: sin pasarela de pagos no se abre la reserva.
+  const sinPasarela = !pasarelaActiva();
+  if (!activa || !sede || lineas.length === 0 || sinPasarela) {
     const wa = whatsappLink(
       settings.get("contact.whatsapp"),
       "¡Hola Marea Rizada! Quiero agendar una cita.",
@@ -88,7 +91,9 @@ export default async function ReservarPage({
       <section className="bg-canvas">
         <div className="shell py-24 text-center">
           <p className="t-eyebrow text-terra-deep">Agenda</p>
-          <h1 className="t-editorial mt-4 text-ink">La reserva en línea está en pausa</h1>
+          <h1 className="t-editorial mt-4 text-ink">
+            {sinPasarela ? "La reserva en línea abre muy pronto" : "La reserva en línea está en pausa"}
+          </h1>
           <p className="mx-auto mt-5 max-w-md text-muted">Escríbenos y te agendamos de una vez.</p>
           <div className="mt-9 flex flex-wrap justify-center gap-4">
             {wa && (

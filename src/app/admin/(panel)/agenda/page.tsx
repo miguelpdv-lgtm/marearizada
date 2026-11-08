@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { sedeEfectiva, sedesPermitidas } from "@/lib/branchAccess";
 import {
+  liberarVencidas,
   ESTADOS_ACTIVOS,
   aUtc,
   diaSemanaBogota,
@@ -137,6 +138,8 @@ export default async function AgendaPage({
     sp.vista === "lista" ? "lista" : sp.vista === "semana" ? "semana" : "profesionales";
 
   const user = await requireUser();
+  // Las reservas en línea que no pagaron el abono a tiempo sueltan su cupo.
+  await liberarVencidas();
   const lookupsCompletos = await lookupsReservaAdmin();
   const permitidas = sedesPermitidas(user, lookupsCompletos.sedes);
   const lookups = { ...lookupsCompletos, sedes: permitidas };

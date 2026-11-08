@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/db";
-import { aUtc, hoyBogota, sumarDias } from "@/lib/agenda";
+import { aUtc, hoyBogota, liberarVencidas, sumarDias } from "@/lib/agenda";
 import { enviarInvitacionResena, enviarRecordatorio } from "@/lib/correo/programados";
 import { getSettings } from "@/lib/site";
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   const settings = await getSettings();
   const ahora = new Date();
-  const resultado = { recordatorios: 0, resenas: 0, fallidos: 0 };
+  const resultado = { recordatorios: 0, resenas: 0, fallidos: 0, liberadas: await liberarVencidas() };
 
   // --- Recordatorios: de ahora hasta el final de mañana (hora de Colombia).
   // Las reservadas hace menos de 12 horas no lo reciben: acaban de recibir la

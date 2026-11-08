@@ -82,9 +82,9 @@ export async function desgloseVentas({
       porTipo[item.kind === "PRODUCT" ? "PRODUCT" : "SERVICE"] += item.unitPrice * item.quantity;
       pagado += item.unitPrice * item.quantity;
     }
-    // El abono entró por Bold; el resto, con lo que se haya anotado en la cita.
+    // El abono entró en línea; el resto, con lo que se haya anotado en la cita.
     const abono = Math.min(cita.depositPaid, pagado);
-    sumarMetodo("BOLD", abono);
+    sumarMetodo("EN_LINEA", abono);
     sumarMetodo(cita.paymentMethod, pagado - abono);
   }
 
@@ -96,7 +96,7 @@ const COLOR_METODO: Record<MetodoPago, string> = {
   EFECTIVO: COLORES_DONA.azul,
   TRANSFERENCIA: COLORES_DONA.naranja,
   DATAFONO: COLORES_DONA.aguamarina,
-  BOLD: COLORES_DONA.ciruela,
+  EN_LINEA: COLORES_DONA.ciruela,
 };
 
 /** Las tajadas de las dos donas a partir del desglose. */

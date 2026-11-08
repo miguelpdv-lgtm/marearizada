@@ -3,14 +3,15 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { prisma } from "@/lib/db";
-import { consultarTransaccion } from "@/lib/bold";
-import { avisarAbonoRecibido } from "@/lib/correo/avisos";
+import { hayConflicto } from "@/lib/agenda";
+import { avisarAbonoRecibido, avisarCitaNueva, avisarPagoTardio } from "@/lib/correo/avisos";
+import { consultarCobro } from "@/lib/pasarela";
 
 /**
- * Qué pasa cuando Bold dice que un cobro se aprobó.
+ * Qué pasa cuando la pasarela dice que un cobro se aprobó.
  *
  * Hay dos caminos que traen esa noticia y ninguno es confiable por sí solo:
- * el webhook (que puede llegar cinco veces, o nunca) y la pantalla de retorno
+ * el webhook (que puede llegar varias veces, o nunca) y la pantalla de retorno
  * (que solo existe si la clienta no cerró el navegador). Los dos llaman a las
  * mismas funciones de aquí, y estas son idempotentes: procesar dos veces el
  * mismo pago no acredita dos veces el abono.
@@ -48,8 +49,8 @@ export const tokenCambioCita = (codigo: string) => tokenPublico(`cambiar:${codig
 export const tokenResena = (codigo: string) => tokenPublico(`resena:${codigo}`);
 
 export type DatosCobro = {
-  boldPaymentId?: string | null;
-  boldTransactionId?: string | null;
+  pasarela?: string | null;
+  transaccionId?: string | null;
   metodo?: string | null;
   correo?: string | null;
   payload?: string | null;
@@ -69,7 +70,7 @@ export async function registrarPagoAprobado(
   const comunes = {
     status: "APROBADO",
     paidAt: pago.paidAt ?? new Date(),
-    boldTransactionId: datos.boldTransactionId ?? pago.boldTransactionId,
+    gateway: datos.pasarela ?? pago.gateway,
     method: datos.metodo ?? pago.method,
     payerEmail: datos.correo ?? pago.payerEmail,
     rawPayload: datos.payload ?? pago.rawPayload,
@@ -81,11 +82,11 @@ export async function registrarPagoAprobado(
   try {
     tomado = await prisma.payment.updateMany({
       where: { id: pago.id, status: { not: "APROBADO" } },
-      data: { ...comunes, boldPaymentId: datos.boldPaymentId ?? pago.boldPaymentId },
+      data: { ...comunes, gatewayId: datos.transaccionId ?? pago.gatewayId },
     });
   } catch (e) {
-    // `boldPaymentId` es único: si llega uno que ya está en otra fila, se
-    // guarda el resto igual antes que perder la aprobación.
+    // `gatewayId` es único: si llega uno que ya está en otra fila, se guarda
+    // el resto igual antes que perder la aprobación.
     if ((e as { code?: string }).code !== "P2002") throw e;
     tomado = await prisma.payment.updateMany({
       where: { id: pago.id, status: { not: "APROBADO" } },
@@ -100,16 +101,67 @@ export async function registrarPagoAprobado(
 }
 
 /**
- * Suma a la cita lo abonado y la deja confirmada: con plata de por medio, la
- * clienta ya se comprometió. Se recalcula desde los pagos aprobados en vez de
- * sumar, así un reintento o una anulación nunca descuadran el total.
+ * Suma a la cita lo abonado y la confirma.
+ *
+ * - Reserva en línea esperando el abono (POR_PAGAR) → CONFIRMADA, y sale el
+ *   correo de confirmación a la clienta y el aviso al salón.
+ * - Reserva que se canceló sola porque el plazo venció, pero el pago llegó
+ *   después: si el cupo sigue libre se revive; si ya lo tomó otra persona, la
+ *   cita queda cancelada y el salón recibe un aviso para reagendar o devolver.
+ * - Cita ya confirmada (un pago adicional): solo el aviso de abono recibido.
+ *
+ * Se recalcula desde los pagos aprobados en vez de sumar, así un reintento o
+ * una anulación nunca descuadran el total.
  */
 async function acreditarAbono(appointmentId: string) {
   await recalcularAbono(appointmentId);
-  await prisma.appointment.updateMany({
-    where: { id: appointmentId, status: "PENDIENTE" },
-    data: { status: "CONFIRMADA" },
+  const cita = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { status: true, holdUntil: true, staffId: true, branchId: true, startsAt: true, endsAt: true },
   });
+  if (!cita) return;
+
+  // Vencida: pasó el plazo del cupo apartado, la haya limpiado alguien o no.
+  // En ese rato la disponibilidad ya no la contaba y otra persona pudo tomar
+  // la hora, así que no se confirma sin revisar.
+  const vencida =
+    cita.holdUntil != null &&
+    cita.holdUntil <= new Date() &&
+    (cita.status === "POR_PAGAR" || cita.status === "CANCELADA");
+
+  if (!vencida && (cita.status === "POR_PAGAR" || cita.status === "PENDIENTE")) {
+    const r = await prisma.appointment.updateMany({
+      where: { id: appointmentId, status: cita.status },
+      data: { status: "CONFIRMADA", holdUntil: null },
+    });
+    if (r.count > 0 && cita.status === "POR_PAGAR") avisarCitaNueva(appointmentId);
+    else if (r.count > 0) avisarAbonoRecibido(appointmentId);
+    return;
+  }
+
+  if (vencida) {
+    const ocupado = await hayConflicto(cita.branchId, cita.staffId, cita.startsAt, cita.endsAt, appointmentId);
+    if (!ocupado) {
+      await prisma.appointment.update({
+        where: { id: appointmentId },
+        data: { status: "CONFIRMADA", holdUntil: null, cancelledAt: null, internalNotes: null },
+      });
+      avisarCitaNueva(appointmentId);
+    } else {
+      await prisma.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          status: "CANCELADA",
+          cancelledAt: new Date(),
+          internalNotes:
+            "Pagó el abono después de que venció el plazo y el cupo ya estaba tomado. Contáctala para reagendar o devolver el abono.",
+        },
+      });
+      avisarPagoTardio(appointmentId);
+    }
+    return;
+  }
+
   avisarAbonoRecibido(appointmentId);
 }
 
@@ -137,22 +189,19 @@ export async function registrarPagoRechazado(
     where: { id: pago.id, status: { notIn: ["APROBADO", "ANULADO"] } },
     data: {
       status: "RECHAZADO",
-      boldTransactionId: datos.boldTransactionId ?? pago.boldTransactionId,
+      gateway: datos.pasarela ?? pago.gateway,
       method: datos.metodo ?? pago.method,
       rawPayload: datos.payload ?? pago.rawPayload,
     },
   });
   if (tomado.count === 0) return { ok: true, yaProcesado: true };
 
-  // Un abono rechazado no cambia la cita: la reserva sigue en pie, solo que
-  // sin abono.
+  // Un pago rechazado no cambia la cita: sigue apartada hasta que venza el
+  // plazo, y la clienta puede intentar otra vez.
   return { ok: true, yaProcesado: false };
 }
 
-/**
- * Anulación (VOID): Bold revierte un cobro del mismo día. El abono de la cita
- * se recalcula desde los pagos que siguen aprobados.
- */
+/** Anulación: la pasarela revierte un cobro. Se recalcula lo abonado. */
 export async function registrarPagoAnulado(
   referencia: string,
   datos: DatosCobro = {},
@@ -171,28 +220,16 @@ export async function registrarPagoAnulado(
 }
 
 /**
- * Le pregunta a Bold por una referencia y aplica lo que responda. Es la red de
- * seguridad cuando el webhook no llegó: la usa la pantalla de retorno del
- * abono. En desarrollo local, sin URL pública que Bold pueda llamar, es el
- * único camino que cierra un pago.
+ * Le pregunta a la pasarela por una referencia y aplica lo que responda. Es la
+ * red de seguridad cuando el webhook no llegó: la usa la pantalla de retorno.
  */
 export async function sincronizarPago(referencia: string) {
-  const comprobante = await consultarTransaccion(referencia);
-  if (!comprobante) return null;
+  const cobro = await consultarCobro(referencia);
+  if (!cobro) return null;
 
-  const datos: DatosCobro = {
-    boldTransactionId: comprobante.transactionId,
-    metodo: comprobante.metodo,
-    correo: comprobante.correo,
-  };
-
-  if (comprobante.estado === "APPROVED") {
-    await registrarPagoAprobado(referencia, datos);
-  } else if (comprobante.estado === "REJECTED" || comprobante.estado === "FAILED") {
-    await registrarPagoRechazado(referencia, datos);
-  } else if (comprobante.estado === "VOIDED") {
-    await registrarPagoAnulado(referencia, datos);
-  }
-
-  return comprobante.estado;
+  const datos: DatosCobro = { transaccionId: cobro.transaccionId, metodo: cobro.metodo, correo: cobro.correo };
+  if (cobro.estado === "APROBADO") await registrarPagoAprobado(referencia, datos);
+  else if (cobro.estado === "RECHAZADO") await registrarPagoRechazado(referencia, datos);
+  else if (cobro.estado === "ANULADO") await registrarPagoAnulado(referencia, datos);
+  return cobro.estado;
 }

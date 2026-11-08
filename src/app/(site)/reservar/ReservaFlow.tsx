@@ -1,22 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition, type FormEvent } from "react";
-import Link from "next/link";
 
 import { Isotipo } from "@/components/brand/Marca";
-import { formatCOP, whatsappLink } from "@/lib/format";
+import { formatCOP } from "@/lib/format";
 import {
   crearReserva,
   obtenerDiasConCupo,
   obtenerHoras,
   proximoCupo,
   revisarCupon,
+  soltarReserva,
   type ResultadoCupon,
   type ResultadoReserva,
 } from "./actions";
 import { etiquetaFecha, hora12 } from "./fechas";
-import { MareaFinal, SelloMarea } from "./MareaFinal";
-import { OfertaAbono } from "./OfertaAbono";
+import { PagoAbono } from "./PagoAbono";
+import type { ResumenCita } from "./resumen";
+import { TarjetaConfirmada } from "./TarjetaConfirmada";
 import "./reserva.css";
 
 export type Servicio = {
@@ -50,7 +51,7 @@ export type Profesional = {
 
 type Sede = { id: string; name: string; address: string; whatsapp: string | null };
 
-const PASOS = 5;
+const PASOS = 6;
 /** "" = cualquiera disponible. */
 const CUALQUIERA = "";
 
@@ -107,7 +108,9 @@ export function ReservaFlow({
   const [proximos, setProximos] = useState<Record<string, { fecha: string; hora: string } | null>>({});
   const [datos, setDatos] = useState({ nombre: "", celular: "", correo: "", patron: "NO_SE", notas: "", primera: false });
   const [error, setError] = useState<{ campo?: string; texto: string } | null>(null);
-  const [resultado, setResultado] = useState<Extract<ResultadoReserva, { ok: true }> | null>(null);
+  /** Reserva creada que espera el pago (paso 6). */
+  const [reserva, setReserva] = useState<Extract<ResultadoReserva, { ok: true }> | null>(null);
+  const [confirmada, setConfirmada] = useState<ResumenCita | null>(null);
   const [enviando, enviar] = useTransition();
   const [cupon, setCupon] = useState({ abierto: false, texto: "" });
   const [cuponOk, setCuponOk] = useState<Extract<ResultadoCupon, { ok: true }> | null>(null);
@@ -209,7 +212,10 @@ export function ReservaFlow({
         cupon: cuponOk ? cupon.texto : undefined,
       });
       if (r.ok) {
-        setResultado(r);
+        if (r.pago) {
+          setReserva(r);
+          ir(6, "next");
+        } else setConfirmada(r.resumen);
         return;
       }
       if (r.campo === "cupon") {
@@ -225,8 +231,22 @@ export function ReservaFlow({
     });
   };
 
+  /** Desde el pago, volver a otro paso: suelta el cupo apartado. */
+  const salirDelPago = (n: number) => {
+    if (reserva) {
+      void soltarReserva(reserva.codigo, reserva.token);
+      if (reserva.pago && new Date(reserva.pago.venceEn) <= new Date()) {
+        setHora(null);
+        n = Math.min(n, 4);
+      }
+    }
+    setReserva(null);
+    ir(n, "prev");
+  };
+
   const reiniciar = () => {
-    setResultado(null);
+    setReserva(null);
+    setConfirmada(null);
     setLineaId(lineas.length === 1 ? lineas[0].id : null);
     setServiceId(null);
     setStaffId(null);
@@ -266,7 +286,11 @@ export function ReservaFlow({
       <div className="rf-wrap">
         <div className="rf-bar">
           {paso > 1 && !(paso === 2 && lineas.length === 1) && (
-            <button type="button" className="rf-back" onClick={() => ir(paso - 1, "prev")}>
+            <button
+              type="button"
+              className="rf-back"
+              onClick={() => (paso === 6 ? salirDelPago(5) : ir(paso - 1, "prev"))}
+            >
               Anterior
             </button>
           )}
@@ -280,7 +304,12 @@ export function ReservaFlow({
         {rastro.length > 0 && (
           <nav className="rf-trail" aria-label="Lo que elegiste">
             {rastro.map((r) => (
-              <button key={r.paso} type="button" onClick={() => ir(r.paso, "prev")} aria-label={`Cambiar: ${r.label}`}>
+              <button
+                key={r.paso}
+                type="button"
+                onClick={() => (paso === 6 ? salirDelPago(r.paso) : ir(r.paso, "prev"))}
+                aria-label={`Cambiar: ${r.label}`}
+              >
                 {r.contenido}
               </button>
             ))}
@@ -675,96 +704,44 @@ export function ReservaFlow({
                     <rect x="3" y="5" width="18" height="14" rx="2" />
                     <path d="M3 7l9 6 9-6" />
                   </svg>
-                  <span>Te enviaremos la confirmación de tu cita a este correo, con la fecha, la hora y cómo llegar al salón.</span>
+                  <span>
+                    {(servicio.promo?.precioFinal ?? servicio.price) > 0
+                      ? "Para confirmar la cita pagas un abono en línea. Al aprobarse, te llega la confirmación a este correo con la fecha, la hora y cómo llegar."
+                      : "Te enviaremos la confirmación de tu cita a este correo, con la fecha, la hora y cómo llegar al salón."}
+                  </span>
                 </div>
                 {error && !error.campo && <p className="rf-err rf-full">{error.texto}</p>}
                 <div className="rf-full">
                   <button type="submit" className="rf-btn rf-btn--full" disabled={enviando}>
-                    {enviando ? "Agendando…" : "Agendar cita"}
+                    {enviando
+                      ? "Apartando tu cupo…"
+                      : (servicio.promo?.precioFinal ?? servicio.price) > 0
+                        ? "Continuar al pago"
+                        : "Agendar cita"}
                   </button>
                 </div>
               </form>
             </>
           )}
+
+          {paso === 6 && reserva?.pago && (
+            <PagoAbono
+              codigo={reserva.codigo}
+              token={reserva.token}
+              resumen={reserva.resumen}
+              pago={reserva.pago}
+              titulo={titulo}
+              onConfirmada={(r) => {
+                setReserva(null);
+                setConfirmada(r);
+              }}
+              onVolver={() => salirDelPago(5)}
+            />
+          )}
         </section>
       </div>
 
-      {resultado && (
-        <MareaFinal etiqueta="Tu cita quedó agendada">
-          <div className="rf-card">
-            <SelloMarea />
-            <h2>Tu cita quedó agendada</h2>
-            <p>
-              La marea ya lleva tu confirmación a <span className="rf-to">{datos.correo.trim()}</span>
-            </p>
-            <p className="rf-code" aria-label={`Código de tu cita: ${resultado.codigo}`}>{resultado.codigo}</p>
-            <dl>
-              <div>
-                <dt>Servicio</dt>
-                <dd>{resultado.servicio}</dd>
-              </div>
-              {resultado.profesional && (
-                <div>
-                  <dt>Con</dt>
-                  <dd>{resultado.profesional}</dd>
-                </div>
-              )}
-              <div>
-                <dt>Día</dt>
-                <dd>{dia && capital(etiquetaFecha(dia))}</dd>
-              </div>
-              <div>
-                <dt>Hora</dt>
-                <dd>{hora && hora12(hora)}</dd>
-              </div>
-              <div>
-                <dt>Lugar</dt>
-                <dd>{resultado.direccion}</dd>
-              </div>
-              {resultado.precio && (
-                <div>
-                  <dt>Precio</dt>
-                  <dd>
-                    <s className="rf-old">{formatCOP(resultado.precio.lista)}</s> {formatCOP(resultado.precio.final)}
-                  </dd>
-                </div>
-              )}
-            </dl>
-            {resultado.abono && (
-              <div className="rf-abono">
-                <OfertaAbono
-                  codigo={resultado.codigo}
-                  token={resultado.abono.token}
-                  minimo={resultado.abono.minimo}
-                  maximo={resultado.abono.maximo}
-                />
-              </div>
-            )}
-            <p className="rf-fine">
-              Si no ves el correo en unos minutos, revisa la carpeta de spam. ¿Se te cruzó algo? Puedes{" "}
-              <Link href={resultado.cambiar} className="underline underline-offset-2">
-                cambiar tu cita tú misma
-              </Link>
-              .
-            </p>
-            <div className="rf-links">
-              {resultado.whatsapp && (
-                <a
-                  className="rf-btn rf-btn--outline"
-                  href={whatsappLink(resultado.whatsapp, `¡Hola Marea Rizada! Acabo de reservar con el código ${resultado.codigo}.`)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Escribir por WhatsApp
-                </a>
-              )}
-              <button type="button" className="rf-btn rf-btn--light" onClick={reiniciar}>
-                Agendar otra cita
-              </button>
-            </div>
-          </div>
-        </MareaFinal>
-      )}
+      {confirmada && <TarjetaConfirmada resumen={confirmada} onOtra={reiniciar} />}
     </div>
   );
 }

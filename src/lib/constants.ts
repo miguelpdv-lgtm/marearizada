@@ -53,16 +53,16 @@ export const GALLERY_SIZE_LABEL: Record<GallerySize, string> = {
 export const CAUSAS_AJUSTE = ["Ajuste manual", "Compra", "Venta", "Merma"] as const;
 
 /** Cómo se cobró una venta de mostrador o una cita atendida, cargado a mano
- * por el equipo. BOLD es lo que entró en línea: el abono de una cita, que en
+ * por el equipo. EN_LINEA es lo que entró en línea: el abono de una cita, que en
  * caja se registra como una parte más del pago. */
-export const METODOS_PAGO = ["EFECTIVO", "TRANSFERENCIA", "DATAFONO", "BOLD"] as const;
+export const METODOS_PAGO = ["EFECTIVO", "TRANSFERENCIA", "DATAFONO", "EN_LINEA"] as const;
 export type MetodoPago = (typeof METODOS_PAGO)[number];
 
 export const METODO_PAGO_LABEL: Record<MetodoPago, string> = {
   EFECTIVO: "Efectivo",
   TRANSFERENCIA: "Transferencia",
   DATAFONO: "Tarjeta (datáfono)",
-  BOLD: "Bold en línea / abono",
+  EN_LINEA: "Abono en línea",
 };
 
 /**

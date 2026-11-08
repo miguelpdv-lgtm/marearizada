@@ -116,6 +116,17 @@ export function avisarCitaNueva(appointmentId: string) {
           fila("Cuándo", escapar(cuando(cita.startsAt))),
           fila("Dónde", escapar(`${sede?.name ?? ""} · ${sede?.address ?? ""}`)),
           fila("Tu código", `<span style="font-family:monospace;letter-spacing:.05em;">${escapar(cita.code)}</span>`),
+          ...(cita.depositPaid > 0
+            ? [
+                fila("Pagaste", escapar(formatCOP(cita.depositPaid))),
+                fila(
+                  "En el salón",
+                  escapar(
+                    formatCOP(Math.max(0, (cita.priceOverride ?? cita.service?.price ?? 0) - cita.depositPaid)),
+                  ),
+                ),
+              ]
+            : []),
         ].join(""),
       );
 
@@ -123,10 +134,10 @@ export function avisarCitaNueva(appointmentId: string) {
       if (cita.clientEmail) {
         await enviar({
           para: cita.clientEmail,
-          asunto: `Tu cita en Marea Rizada quedó lista · ${cita.code}`,
+          asunto: `Tu cita en Marea Rizada quedó confirmada · ${cita.code}`,
           responderA: correoDelSalon(settings.get("contact.email")) || null,
           html: plantilla({
-            titulo: "Tu cita quedó lista",
+            titulo: "Tu cita quedó confirmada",
             etiqueta: "Tu cita",
             despedida: true,
             pie: pieDe(settings, POR_CITA),
@@ -502,6 +513,55 @@ export function avisarCambioAlSalon(appointmentId: string, antes: Date) {
     } catch (e) {
       const error = e as Error;
       console.error(`[correo] falló el aviso al salón del cambio de ${appointmentId}:`, error?.message ?? e);
+    }
+  });
+}
+
+/**
+ * Un abono llegó después de que la reserva se venció y otra persona ya tomó
+ * el cupo. Va al correo de contacto aunque los avisos internos estén
+ * apagados: hay plata de por medio.
+ */
+export function avisarPagoTardio(appointmentId: string) {
+  after(async () => {
+    try {
+      const cita = await prisma.appointment.findUnique({
+        where: { id: appointmentId },
+        include: { service: true },
+      });
+      if (!cita) return;
+      const settings = await getSettings();
+      const buzon = correoDelSalon(settings.get("contact.email"));
+      if (!buzon) return;
+      await enviar({
+        para: buzon,
+        asunto: `Revisar: abono pagado tarde · ${cita.code}`,
+        responderA: cita.clientEmail,
+        html: plantilla({
+          titulo: "Llegó un abono de una reserva vencida",
+          etiqueta: "Agenda",
+          pie: pieDe(settings, INTERNO),
+          preencabezado: `${cita.clientName} · ${formatCOP(cita.depositPaid)}`,
+          cuerpo: [
+            parrafo(
+              "La clienta pagó el abono después de que venció el plazo, y el cupo ya lo había tomado otra persona. Contáctala para reagendar o devolver el abono.",
+            ),
+            tablaDatos(
+              [
+                fila("Clienta", escapar(cita.clientName)),
+                fila("Celular", escapar(cita.clientPhone)),
+                cita.clientEmail ? fila("Correo", escapar(cita.clientEmail)) : "",
+                fila("Servicio", escapar(cita.service?.name ?? "—")),
+                fila("Era para", escapar(cuando(cita.startsAt))),
+                fila("Pagó", escapar(formatCOP(cita.depositPaid))),
+                fila("Código", escapar(cita.code)),
+              ].join(""),
+            ),
+          ].join(""),
+        }),
+      });
+    } catch (e) {
+      console.error(`[correo] falló el aviso de pago tardío ${appointmentId}:`, (e as Error)?.message ?? e);
     }
   });
 }

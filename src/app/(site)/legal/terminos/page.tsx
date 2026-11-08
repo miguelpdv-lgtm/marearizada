@@ -45,10 +45,12 @@ export default async function Terminos() {
         <Lista
           items={[
             "Al reservar eliges el servicio, la profesional (o cualquiera disponible), el día y la hora. Los horarios que ves son los que están libres en ese momento.",
-            "Tu reserva queda registrada cuando recibes el correo con tu código de cita. Si no te llega en unos minutos, revisa el spam o escríbenos antes de venir.",
+            "Para reservar pagas un abono en línea. Mientras pagas, te guardamos el cupo unos minutos; si el pago no se completa a tiempo, el cupo se libera para otras personas.",
+            "Tu cita queda confirmada cuando se aprueba el pago y recibes el correo con tu código. Si no te llega en unos minutos, revisa el spam o escríbenos antes de venir.",
             "Las citas se toman con la antelación mínima que muestra el calendario y hasta donde llegue la agenda abierta.",
             "Te enviamos un recordatorio por correo antes de la cita.",
-            "Puedes cambiar la fecha y la hora tú misma desde el enlace del correo, mientras haya cupo. Si no puedes venir, avísanos con tiempo.",
+            "Puedes cambiar la fecha y la hora tú misma desde el enlace del correo, mientras haya cupo.",
+            "Para cancelar tu cita, escríbenos por WhatsApp o al correo del salón.",
             "Llegar más de 15 minutos tarde puede obligarnos a reprogramar, porque el espacio siguiente ya está tomado por otra persona.",
             "El precio publicado de un servicio es una referencia: algunos dependen del largo, la densidad y el estado del cabello, y se confirman en el diagnóstico antes de empezar. Nunca se cobra nada que no se te haya dicho antes.",
           ]}
@@ -57,15 +59,16 @@ export default async function Terminos() {
 
       <Seccion titulo="Abono en línea">
         <p>
-          Al terminar la reserva puedes pagar un abono, o el valor completo del servicio, con
-          tarjeta o PSE. El pago lo procesa Bold, la pasarela de pagos: los datos de tu tarjeta o
-          de tu banco nunca pasan por este sitio ni quedan guardados acá.
+          El abono es obligatorio para reservar en línea. Puedes pagar el abono o el valor completo
+          del servicio con los medios que ofrece la pasarela (tarjeta, PSE, Nequi, entre otros). El
+          pago lo procesa Wompi, la pasarela de pagos: los datos de tu tarjeta o de tu banco nunca
+          pasan por este sitio ni quedan guardados acá.
         </p>
         <Lista
           items={[
             "Lo que abones se descuenta del valor del servicio el día de tu cita.",
             "Si mueves la cita, el abono queda para la nueva fecha.",
-            "Si necesitas cancelar, escríbenos y acordamos cómo devolverlo o usarlo en otra cita.",
+            "Si necesitas cancelar, escríbenos y te contamos qué pasa con tu abono.",
             "Los descuentos y cupones se aplican según las condiciones de cada promoción y no son acumulables, salvo que la promoción diga lo contrario.",
           ]}
         />

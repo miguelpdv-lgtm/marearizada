@@ -196,7 +196,8 @@ model Appointment {
   startsAt DateTime
   endsAt   DateTime
 
-  /// PENDIENTE | CONFIRMADA | ATENDIDA | CANCELADA | NO_ASISTIO
+  /// POR_PAGAR (reserva en línea esperando el abono) | PENDIENTE |
+  /// CONFIRMADA | ATENDIDA | CANCELADA | NO_ASISTIO
   status String @default("PENDIENTE")
 
   clientName    String
@@ -231,6 +232,10 @@ model Appointment {
   /// tipo ABONO aprobados). Es opcional para la clienta; 0 = no abonó. Se
   /// descuenta de lo que se le cobra en el salón.
   depositPaid Int @default(0)
+
+  /// Reserva en línea esperando el abono (estado POR_PAGAR): el cupo queda
+  /// apartado hasta esta hora. Si no se paga, la cita se cancela sola.
+  holdUntil DateTime?
 
   /// Promoción o cupón aplicado al reservar. `discount` son los pesos
   /// rebajados; el precio final queda en `priceOverride`.
@@ -536,22 +541,23 @@ model Payment {
   appointmentId String?
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
-  /// Lo que se manda como `data-order-id`. Bold exige que sea único por venta.
+  /// Referencia del cobro en la pasarela; única por intento de pago.
   reference String @unique
   amount    Int
   /// CREADO | APROBADO | RECHAZADO | ANULADO
   status    String @default("CREADO")
 
-  /// Llave de idempotencia: Bold reenvía la misma notificación hasta 5 veces,
-  /// y además la pantalla de retorno concilia por su cuenta.
-  boldPaymentId     String?   @unique
-  boldTransactionId String?
-  /// CREDIT_CARD | PSE | NEQUI | BOTON_BANCOLOMBIA | QR …
-  method            String?
-  payerEmail        String?
+  /// Pasarela que procesó el cobro: WOMPI | PRUEBA.
+  gateway    String?
+  /// Id de la transacción en la pasarela. Único: la pasarela reenvía la misma
+  /// notificación varias veces y la pantalla de retorno también concilia.
+  gatewayId  String?   @unique
+  /// CARD | PSE | NEQUI | BANCOLOMBIA_TRANSFER …
+  method     String?
+  payerEmail String?
   /// Último payload recibido, tal cual llegó. Para soporte y conciliación.
-  rawPayload        String?
-  paidAt            DateTime?
+  rawPayload String?
+  paidAt     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

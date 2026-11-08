@@ -394,7 +394,7 @@ export type ResultadoFinalizar = { ok: true; saleId?: string } | { ok: false; er
  *   1. Se crea UNA venta con el servicio principal (a su precio final) y todo
  *      lo que se le agregó, cada línea con quien la vendió. El inventario no
  *      se toca: los productos ya se descontaron al agregarlos a la cita.
- *   2. Se registra el pago: el abono en línea como Bold y el resto con el
+ *   2. Se registra el pago: el abono en línea como EN_LINEA y el resto con el
  *      medio que se elija.
  *   3. La cita queda atendida y ya no se le puede sumar nada.
  */
@@ -449,10 +449,10 @@ export async function finalizarCita(
   ];
   const total = lineas.reduce((a, l) => a + l.unitPrice * l.quantity, 0);
 
-  // El abono ya entró por Bold; lo que falta, con el medio que se eligió.
+  // El abono ya entró en línea; lo que falta, con el medio que se eligió.
   const abono = Math.min(cita.depositPaid, total);
   const pagos = [
-    ...(abono > 0 ? [{ method: "BOLD", amount: abono }] : []),
+    ...(abono > 0 ? [{ method: "EN_LINEA", amount: abono }] : []),
     ...(total - abono > 0 && datos.metodoPago ? [{ method: datos.metodoPago, amount: total - abono }] : []),
   ];
   const medioPrincipal = [...pagos].sort((a, b) => b.amount - a.amount)[0]?.method ?? null;

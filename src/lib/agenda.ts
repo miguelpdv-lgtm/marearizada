@@ -15,6 +15,37 @@ const PASO_MINUTOS = 15;
 
 export const ESTADOS_ACTIVOS = ["PENDIENTE", "CONFIRMADA", "ATENDIDA"];
 
+/**
+ * Condición de Prisma para "esta cita ocupa la agenda": las activas y las
+ * reservas en línea que esperan el abono y todavía están dentro de su plazo.
+ */
+export function ocupaAgenda() {
+  return {
+    OR: [
+      { status: { in: ESTADOS_ACTIVOS } },
+      { status: "POR_PAGAR", holdUntil: { gt: new Date() } },
+    ],
+  };
+}
+
+/**
+ * Cancela las reservas en línea cuyo plazo para pagar el abono ya venció. Se
+ * llama al reservar, al abrir la agenda del panel y en el trabajo diario; la
+ * disponibilidad ya las ignora aunque nadie haya llamado esto todavía.
+ */
+export async function liberarVencidas() {
+  const ahora = new Date();
+  const r = await prisma.appointment.updateMany({
+    where: { status: "POR_PAGAR", holdUntil: { lte: ahora } },
+    data: {
+      status: "CANCELADA",
+      cancelledAt: ahora,
+      internalNotes: "No se pagó el abono a tiempo: la reserva se liberó sola.",
+    },
+  });
+  return r.count;
+}
+
 /* --- Fechas ---------------------------------------------------------------- */
 
 /** "2026-08-15" + "09:30" (hora Bogotá) → Date en UTC. */
@@ -234,7 +265,7 @@ async function ocupacionDelRango(
     prisma.appointment.findMany({
       where: {
         branchId,
-        status: { in: ESTADOS_ACTIVOS },
+        ...ocupaAgenda(),
         ...(excluirCitaId ? { id: { not: excluirCitaId } } : {}),
         startsAt: { lt: hasta },
         endsAt: { gt: desde },
@@ -491,7 +522,7 @@ export async function hayConflicto(
       ? prisma.appointment.findFirst({
           where: {
             staffId,
-            status: { in: ESTADOS_ACTIVOS },
+            ...ocupaAgenda(),
             startsAt: { lt: fin },
             endsAt: { gt: inicio },
             ...(excludeAppointmentId ? { id: { not: excludeAppointmentId } } : {}),

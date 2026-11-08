@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireUserForAction } from "@/lib/auth";
 import { canManageContent } from "@/lib/constants";
-import { ESTADOS_ACTIVOS, aUtc, diaSemanaBogota } from "@/lib/agenda";
+import { aUtc, diaSemanaBogota, ocupaAgenda } from "@/lib/agenda";
 import { bool, optionalStr, runAction, str, type ActionState } from "@/lib/actions";
 
 const esquema = z
@@ -89,7 +89,7 @@ export async function crearBloqueo(
         where: {
           branchId,
           ...(staffId ? { staffId } : {}),
-          status: { in: ESTADOS_ACTIVOS },
+          ...ocupaAgenda(),
           startsAt: { lt: endsAt },
           endsAt: { gt: startsAt },
         },
@@ -171,7 +171,7 @@ export async function bloquearEnAgenda(datos: {
     where: {
       branchId: sede.id,
       ...(staffId ? { staffId } : {}),
-      status: { in: ESTADOS_ACTIVOS },
+      ...ocupaAgenda(),
       startsAt: { lt: endsAt },
       endsAt: { gt: startsAt },
     },

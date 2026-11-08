@@ -44,7 +44,7 @@ export type CitaEditable = {
    * sugiere si ya se le agregaron servicios adicionales. */
   endsAtIso: string;
   items: ItemDTO[];
-  /** Abono pagado en línea con Bold al reservar. */
+  /** Abono pagado en línea al reservar. */
   depositPaid?: number;
 };
 
@@ -152,7 +152,7 @@ export function CitaDetalle({
 
           {!!cita.depositPaid && (
             <p className="border border-sky bg-sky-pale px-4 py-3 text-sm text-ink">
-              Abonó <strong>{formatCOP(cita.depositPaid)}</strong> en línea con Bold. Descuéntalo
+              Abonó <strong>{formatCOP(cita.depositPaid)}</strong> en línea. Descuéntalo
               al cobrar.
             </p>
           )}

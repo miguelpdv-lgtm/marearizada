@@ -11,13 +11,15 @@ import {
   diasConCupo,
   generarCodigo,
   horasLibres,
+  liberarVencidas,
 } from "@/lib/agenda";
 import { vincularCliente } from "@/lib/clients";
 import { avisarCitaNueva } from "@/lib/correo/avisos";
-import { boldConfigurado, configCheckout, MONTO_MINIMO, type ConfigCheckout } from "@/lib/bold";
-import { tokenCambioCita, tokenPublico, tokenValido } from "@/lib/pagos";
-import { formatCOP } from "@/lib/format";
+import { registrarPagoAprobado, registrarPagoRechazado, tokenPublico, tokenValido } from "@/lib/pagos";
+import { reglasAbono } from "@/lib/abono";
+import { iniciarCobro, pasarelaActiva, type InicioCobro } from "@/lib/pasarela";
 import { urlSitio } from "@/lib/site";
+import { resumenCita, type InfoPago, type ResumenCita } from "./resumen";
 import { descuentoReserva } from "@/lib/cupones";
 import { etiquetaPromocion } from "@/lib/promociones";
 
@@ -120,20 +122,11 @@ export type ResultadoReserva =
   | {
       ok: true;
       codigo: string;
-      inicio: string;
-      servicio: string;
-      profesional: string | null;
-      sede: string;
-      direccion: string;
-      whatsapp: string | null;
-      /** Abono opcional que se le ofrece al terminar: la clienta elige cuánto,
-       * entre `minimo` (lo menos que cobra Bold) y `maximo` (el valor del
-       * servicio). null si no aplica. */
-      abono: { minimo: number; maximo: number; token: string } | null;
-      /** Enlace para que la clienta mueva la cita sola. */
-      cambiar: string;
-      /** Si se aplicó una promoción o cupón. */
-      precio: { lista: number; final: number; promocion: string } | null;
+      /** Para las acciones del pago y la pantalla de retorno. */
+      token: string;
+      resumen: ResumenCita;
+      /** null si el servicio no cobra abono y la cita ya quedó confirmada. */
+      pago: InfoPago | null;
     }
   | { ok: false; error: string; campo?: string };
 
@@ -162,6 +155,13 @@ export async function crearReserva(
 
   const d = parsed.data;
 
+  // Sin pasarela no se puede cobrar el abono, y sin abono no hay reserva.
+  if (!pasarelaActiva()) {
+    return { ok: false, error: "La reserva en línea abre muy pronto. Mientras tanto, escríbenos por WhatsApp." };
+  }
+  // Las reservas que no se pagaron a tiempo sueltan su cupo (y su cupón).
+  await liberarVencidas();
+
   const [servicio, sede, cfg] = await Promise.all([
     prisma.service.findUnique({ where: { id: d.serviceId } }),
     prisma.branch.findUnique({ where: { id: d.branchId } }),
@@ -173,7 +173,7 @@ export async function crearReserva(
   }
   // Los que requieren abono (color) los agenda solo el salón.
   if (!servicio.bookable) {
-    return { ok: false, error: "Ese servicio requiere abono: escríbenos por WhatsApp y lo agendamos contigo." };
+    return { ok: false, error: "Ese servicio se agenda directamente con el salón: escríbenos por WhatsApp." };
   }
   if (!sede || !sede.active) {
     return { ok: false, error: "Esa sede ya no está disponible." };
@@ -220,6 +220,10 @@ export async function crearReserva(
     email: d.clientEmail,
   });
 
+  const precioFinal = descuento?.precioFinal ?? servicio.price;
+  const reglas = await reglasAbono(precioFinal);
+  const conAbono = reglas.monto > 0;
+
   // Reintenta si el código corto choca con uno existente.
   for (let intento = 0; intento < 5; intento++) {
     try {
@@ -231,7 +235,10 @@ export async function crearReserva(
           staffId,
           startsAt: inicio,
           endsAt: fin,
-          status: "PENDIENTE",
+          // Con abono, el cupo queda apartado mientras paga; la confirmación
+          // (y su correo) sale cuando la pasarela aprueba el pago.
+          status: conAbono ? "POR_PAGAR" : "PENDIENTE",
+          holdUntil: conAbono ? new Date(Date.now() + reglas.minutos * 60_000) : null,
           clientName: d.clientName,
           clientPhone: d.clientPhone,
           clientEmail: d.clientEmail || null,
@@ -245,28 +252,12 @@ export async function crearReserva(
         },
       });
 
-      // Confirmación a la clienta y aviso al salón. Sale por `after()`, así
-      // que la pantalla de "tu cita quedó lista" no espera a Resend y una
-      // caída del correo no se ve como una reserva fallida.
-      avisarCitaNueva(cita.id);
+      // Un servicio sin costo no tiene abono: se confirma como antes.
+      if (!conAbono) avisarCitaNueva(cita.id);
 
-      const maximo = maximoAbono(descuento?.precioFinal ?? servicio.price);
-
-      return {
-        ok: true,
-        codigo: cita.code,
-        inicio: cita.startsAt.toISOString(),
-        servicio: servicio.name,
-        profesional: (await prisma.teamMember.findUnique({ where: { id: staffId }, select: { name: true } }))?.name ?? null,
-        sede: sede.city,
-        direccion: sede.address,
-        whatsapp: sede.whatsapp,
-        abono: maximo ? { minimo: MONTO_MINIMO, maximo, token: tokenPublico(cita.code) } : null,
-        cambiar: `/reservar/cambiar?codigo=${cita.code}&t=${tokenCambioCita(cita.code)}`,
-        precio: descuento
-          ? { lista: servicio.price, final: descuento.precioFinal, promocion: descuento.promocion.name }
-          : null,
-      };
+      const r = await resumenCita(cita.code);
+      if (!r) throw new Error("La cita no se pudo leer después de crearla.");
+      return { ok: true, codigo: cita.code, token: tokenPublico(cita.code), resumen: r.resumen, pago: r.pago };
     } catch (e) {
       const err = e as { code?: string };
       if (err.code === "P2002" && intento < 4) continue; // código repetido
@@ -280,59 +271,52 @@ export async function crearReserva(
   return { ok: false, error: "No pudimos generar tu código de cita." };
 }
 
-/* --- Abono opcional con Bold ------------------------------------------------ */
+/* --- Pago del abono -------------------------------------------------------- */
 
-/** Hasta cuánto puede abonar la clienta: el valor del servicio, o sea dejar la
- * cita paga. El monto lo elige ella. `null` si no se ofrece (sin Bold, o un
- * servicio gratis o por debajo del mínimo que cobra Bold). */
-function maximoAbono(precioServicio: number) {
-  if (!boldConfigurado()) return null;
-  return precioServicio >= MONTO_MINIMO ? precioServicio : null;
-}
-
-export type ResultadoAbono =
-  | { ok: true; checkout: ConfigCheckout }
+export type EstadoReserva =
+  | { ok: true; resumen: ResumenCita; pago: InfoPago | null; vencida: boolean }
   | { ok: false; error: string };
 
+/** Cómo va la reserva: para la pantalla del pago y la de retorno. */
+export async function estadoReserva(codigo: string, token: string): Promise<EstadoReserva> {
+  if (!tokenValido(codigo, token)) return { ok: false, error: "No encontramos esa reserva." };
+  const r = await resumenCita(codigo);
+  if (!r) return { ok: false, error: "No encontramos esa reserva." };
+  return { ok: true, resumen: r.resumen, pago: r.pago, vencida: r.vencida };
+}
+
+export type ResultadoInicioPago =
+  | { ok: true; inicio: InicioCobro }
+  | { ok: false; error: string; vencida?: boolean };
+
 /**
- * Prepara el cobro del abono. El monto lo elige la clienta, pero se valida acá
- * contra el precio del servicio (nunca más de lo que cuesta). El token (el
- * mismo de la pantalla de retorno) evita que alguien con solo el código corto
- * arme cobros sobre citas ajenas.
+ * Prepara el cobro: el abono o el total, según elija la clienta. Los montos
+ * salen del servidor; del navegador solo llega cuál de los dos quiere.
  */
-export async function iniciarAbono(
+export async function iniciarPago(
   codigo: string,
   token: string,
-  montoElegido: number,
-): Promise<ResultadoAbono> {
-  if (!tokenValido(codigo, token)) return { ok: false, error: "No encontramos esa cita." };
-
-  const cita = await prisma.appointment.findUnique({
-    where: { code: codigo },
-    include: { service: { select: { name: true, price: true } } },
-  });
-  if (!cita) return { ok: false, error: "No encontramos esa cita." };
-  if (cita.status === "CANCELADA") return { ok: false, error: "Esa cita está cancelada." };
-  if (cita.depositPaid > 0) return { ok: false, error: "Esa cita ya tiene un abono." };
-
-  const maximo = maximoAbono(cita.priceOverride ?? cita.service.price);
-  if (!maximo) return { ok: false, error: "El abono en línea no está disponible." };
-  const monto = Math.round(Number(montoElegido));
-  if (!Number.isFinite(monto) || monto < MONTO_MINIMO) {
-    return { ok: false, error: `El abono mínimo es ${formatCOP(MONTO_MINIMO)}.` };
+  modo: "ABONO" | "TOTAL",
+): Promise<ResultadoInicioPago> {
+  if (!tokenValido(codigo, token)) return { ok: false, error: "No encontramos esa reserva." };
+  const r = await resumenCita(codigo);
+  if (!r) return { ok: false, error: "No encontramos esa reserva." };
+  const { cita, pago } = r;
+  if (cita.status !== "POR_PAGAR" || !pago || !cita.holdUntil) {
+    return { ok: false, error: "Esta reserva ya no está esperando un pago." };
   }
-  if (monto > maximo) {
-    return { ok: false, error: `Tu cita cuesta ${formatCOP(maximo)}; no puedes abonar más que eso.` };
+  // Con menos de un minuto no alcanza a pagar: mejor que elija otra vez.
+  if (cita.holdUntil.getTime() - Date.now() < 60_000) {
+    return { ok: false, vencida: true, error: "Se acabó el tiempo para pagar y el cupo se liberó." };
   }
 
-  // Una referencia por intento: Bold exige que cada cobro tenga la suya, y
-  // la clienta puede cerrar el pago y volver a intentarlo.
+  const monto = modo === "TOTAL" ? pago.total : pago.abono;
   let referencia = "";
   for (let intento = 0; intento < 5 && !referencia; intento++) {
-    const candidata = `${cita.code}-A${generarCodigo().slice(-4)}`;
+    const candidata = `${cita.code}-${generarCodigo().slice(-4)}`;
     try {
       await prisma.payment.create({
-        data: { kind: "ABONO", appointmentId: cita.id, reference: candidata, amount: monto },
+        data: { kind: "ABONO", appointmentId: cita.id, reference: candidata, amount: monto, gateway: pasarelaActiva() },
       });
       referencia = candidata;
     } catch (e) {
@@ -341,19 +325,52 @@ export async function iniciarAbono(
   }
   if (!referencia) return { ok: false, error: "No pudimos preparar el pago. Inténtalo de nuevo." };
 
-  const urlRetorno = `${urlSitio()}/reservar/abono/${cita.code}?t=${token}`;
-  return {
-    ok: true,
-    checkout: configCheckout({
+  try {
+    const inicio = await iniciarCobro({
       referencia,
       monto,
-      descripcion: `${monto === maximo ? "Pago" : "Abono"} cita ${cita.code} · ${cita.service.name}`,
-      urlRetorno,
-      cliente: {
-        nombre: cita.clientName,
-        correo: cita.clientEmail,
-        telefono: cita.clientPhone,
-      },
-    }),
-  };
+      descripcion: `${monto >= pago.total ? "Pago" : "Abono"} cita ${cita.code} · ${cita.service.name}`,
+      urlRetorno: `${urlSitio()}/reservar/pago/${cita.code}?t=${token}`,
+      expira: cita.holdUntil,
+      cliente: { nombre: cita.clientName, correo: cita.clientEmail, telefono: cita.clientPhone },
+    });
+    return { ok: true, inicio };
+  } catch {
+    return { ok: false, error: "El pago en línea no está disponible en este momento. Escríbenos por WhatsApp." };
+  }
+}
+
+/**
+ * Solo en modo de prueba: hace de pasarela y aprueba o rechaza el cobro.
+ * Con una pasarela real esta acción no hace nada.
+ */
+export async function simularPago(
+  codigo: string,
+  token: string,
+  referencia: string,
+  aprobado: boolean,
+): Promise<EstadoReserva> {
+  if (pasarelaActiva() !== "PRUEBA") return { ok: false, error: "Simulación no disponible." };
+  if (!tokenValido(codigo, token) || !referencia.startsWith(`${codigo}-`)) {
+    return { ok: false, error: "No encontramos esa reserva." };
+  }
+  const datos = { pasarela: "PRUEBA", metodo: "PRUEBA", transaccionId: `prueba-${referencia}` };
+  if (aprobado) await registrarPagoAprobado(referencia, datos);
+  else await registrarPagoRechazado(referencia, datos);
+  return estadoReserva(codigo, token);
+}
+
+/** La clienta quiere cambiar algo antes de pagar: suelta el cupo apartado. */
+export async function soltarReserva(codigo: string, token: string) {
+  if (!tokenValido(codigo, token)) return;
+  await prisma.appointment.updateMany({
+    where: { code: codigo, status: "POR_PAGAR" },
+    data: {
+      status: "CANCELADA",
+      cancelledAt: new Date(),
+      // El plazo termina ya: si llegara un pago tarde, se revisa el cupo.
+      holdUntil: new Date(),
+      internalNotes: "La clienta volvió atrás antes de pagar el abono.",
+    },
+  });
 }

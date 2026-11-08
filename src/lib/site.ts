@@ -39,7 +39,7 @@ export class SiteSettings {
 
 /**
  * URL pública del sitio, sin barra final. Se usa para armar las direcciones
- * absolutas que necesita Bold (a dónde devolver a la clienta después de pagar).
+ * absolutas que necesita la pasarela (a dónde devolver a la clienta después de pagar).
  */
 export function urlSitio() {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
