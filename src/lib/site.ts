@@ -42,7 +42,10 @@ export class SiteSettings {
  * absolutas que necesita la pasarela (a dónde devolver a la clienta después de pagar).
  */
 export function urlSitio() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  // En Vercel, sin dominio propio todavía, se usa la URL de producción del
+  // proyecto (o la del despliegue de prueba).
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const base = process.env.NEXT_PUBLIC_SITE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000");
   return base.replace(/\/+$/, "");
 }
 

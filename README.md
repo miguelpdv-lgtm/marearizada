@@ -29,6 +29,13 @@ Para probar el flujo completo en local, pon `PAGOS_DE_PRUEBA="true"` en `.env`. 
 
 Verificación antes de subir cambios: `npm run typecheck && npm run lint && npm run build`.
 
+## Desplegar en Vercel (prueba)
+
+1. Crea un proyecto en Supabase y copia las dos cadenas de conexión (pooler 6543 y 5432).
+2. En Vercel, importa el repositorio y en Settings → Environments → Production cambia la rama a `plataforma`.
+3. Variables: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `PAGOS_DE_PRUEBA=true` y `SEED_ON_BUILD=true` (la primera vez; carga el administrador y los datos de ejemplo sin pisar lo que se edite después).
+4. Despliega. El script `vercel-build` aplica las migraciones antes de compilar.
+
 ## Pagos
 
 La pasarela definitiva es **Wompi** y está pendiente de integrar: los pasos están en `src/lib/pasarela.ts`. Mientras tanto hay un **modo de prueba** (`PAGOS_DE_PRUEBA="true"`) que no cobra nada y deja simular un pago aprobado o rechazado, para revisar y mostrar el flujo completo. Sin pasarela ni modo de prueba, `/reservar` muestra que la reserva en línea abre pronto, porque el abono es obligatorio.
