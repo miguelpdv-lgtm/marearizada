@@ -1,0 +1,845 @@
+// Amicrespa
+// Modelo de datos del sitio web y del panel administrativo.
+//
+// Base de datos: PostgreSQL en Supabase.
+//   DATABASE_URL  conexión agrupada (pgbouncer, puerto 6543) → la usa la app
+//   DIRECT_URL    conexión directa (puerto 5432)             → la usan las migraciones
+//
+// Los campos "tipo" se guardan como String y sus valores válidos viven en
+// src/lib/constants.ts, validados con zod en cada server action.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios y acceso al panel
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("STAFF") // ADMIN | EDITOR | STAFF
+  phone        String?
+  avatarUrl    String?
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+
+  /// Sedes que puede ver/operar en el panel. Vacío = ninguna (solo aplica a
+  /// EDITOR/STAFF). ADMIN siempre tiene acceso a todas sin importar esto —
+  /// ver `sedesPermitidas()` en src/lib/branchAccess.ts.
+  branches Branch[]
+
+  posts          Post[]
+  stockMovements StockMovement[]
+  sales          Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+}
+
+// ---------------------------------------------------------------------------
+// Sucursales
+// ---------------------------------------------------------------------------
+
+model Branch {
+  id           String  @id @default(cuid())
+  name         String
+  slug         String  @unique
+  city         String
+  address      String
+  neighborhood String?
+  phone        String?
+  whatsapp     String?
+  email        String?
+  mapsUrl      String?
+  /// Coordenadas del local (SEO local): las mismas del pin de Google Maps.
+  latitude     Float?
+  longitude    Float?
+  /// Departamento ("Atlántico") y código postal, para la ficha de Google.
+  region       String?
+  postalCode   String?
+  /// Enlace "Pedir reseñas" de Google Business Profile.
+  googleReviewUrl String?
+  imageUrl     String?
+  description  String?
+  hours        String? // texto libre multilínea: "Lunes a viernes 9:00 - 19:00"
+  order        Int     @default(0)
+  active       Boolean @default(true)
+  /// Cierre temporal ("Cerrada hasta nuevo aviso…"). Con texto, la sede se
+  /// sigue viendo en el sitio con este aviso, pero no recibe reservas ni
+  /// despacha pedidos. Vacío = abierta. Distinto de `active`, que la oculta.
+  closedNotice String?
+
+  team               TeamMember[]
+  users              User[]
+  services           Service[]
+  businessHours      BusinessHour[]
+  appointments       Appointment[]
+  timeOff            TimeOff[]
+  productStock       ProductStock[]
+  stockMovements     StockMovement[]
+  sales              Sale[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  staffExtraHours StaffExtraHours[]
+
+  @@index([active, order])
+}
+
+/// Horario de atención por día. weekday: 0 = domingo … 6 = sábado.
+model BusinessHour {
+  id       String  @id @default(cuid())
+  branchId String
+  branch   Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  weekday  Int
+  opensAt  String // "09:00"
+  closesAt String // "18:30"
+  closed   Boolean @default(false)
+
+  @@unique([branchId, weekday])
+}
+
+// ---------------------------------------------------------------------------
+// Servicios
+// ---------------------------------------------------------------------------
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  order       Int       @default(0)
+  active      Boolean   @default(true)
+  services    Service[]
+
+  promotions Promotion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([active, order])
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  tagline         String?
+  description     String
+  longDescription String?
+  durationMin     Int      @default(60)
+  price           Int      @default(0) // COP, pesos enteros
+  priceFrom       Boolean  @default(true) // muestra "desde $..."
+  /// Oculta el precio en la página pública (p. ej. diseño de color, que se
+  /// cotiza en la valoración). En el panel y en la venta sigue igual.
+  hidePrice       Boolean  @default(false)
+  imageUrl        String?
+  /// Fotos adicionales, en orden. La principal sigue siendo `imageUrl`: esta
+  /// lista solo agrega, nunca la reemplaza.
+  gallery         String[] @default([])
+  includes        String? // una línea por ítem
+  idealFor        String?
+  featured        Boolean  @default(false)
+  order           Int      @default(0)
+  active          Boolean  @default(true)
+
+  // Preparado para Fase 2 (agenda de reservas). En Fase 1 el CTA queda inactivo.
+  bookable Boolean @default(false)
+
+
+  categoryId String?
+  category   ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// Los servicios son por sede: cambian de precio y de nombre entre Barranquilla y Cali.
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  appointments     Appointment[]
+  staff            StaffService[]
+  appointmentItems AppointmentItem[]
+  saleItems        SaleItem[]
+
+  promotions Promotion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([active, order])
+  @@index([branchId, active])
+}
+
+// ---------------------------------------------------------------------------
+// Agenda
+// ---------------------------------------------------------------------------
+
+model Appointment {
+  id   String @id @default(cuid())
+  /// Código corto que se le da a la clienta, p. ej. "AMI-7K3Q".
+  code String @unique
+
+  branchId  String
+  branch    Branch      @relation(fields: [branchId], references: [id])
+  serviceId String
+  service   Service     @relation(fields: [serviceId], references: [id])
+  staffId   String?
+  staff     TeamMember? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  /// PENDIENTE | CONFIRMADA | ATENDIDA | CANCELADA | NO_ASISTIO
+  status String @default("PENDIENTE")
+
+  clientName    String
+  clientPhone   String
+  clientEmail   String?
+  /// Directorio real de clientes — se vincula al guardar (`vincularCliente()`
+  /// en src/lib/clients.ts). `clientName/clientPhone/clientEmail` arriba son
+  /// la foto de ese momento y no se tocan si el cliente cambia sus datos.
+  clientId      String?
+  client        Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  notes         String?
+  /// Nota solo para el equipo, nunca se comparte con la clienta.
+  internalNotes String?
+
+  /// Si es null, se usa el precio del servicio. AgendaPro permite editar el
+  /// precio por reserva (descuentos, casos especiales).
+  priceOverride Int?
+
+  /// ONLINE (wizard público) | ADMIN (cargada a mano desde el panel).
+  source String @default("ONLINE")
+
+  /// Contexto que ayuda a la estilista a preparar la cita.
+  firstVisit Boolean @default(false)
+  curlType   String? // ONDULADO | RIZADO | CRESPO | NO_SE
+
+  /// EFECTIVO | TRANSFERENCIA | DATAFONO. Cómo se cobró al final de la
+  /// visita (servicio + lo que se le haya sumado en `items`) — cargado a
+  /// mano por el equipo, no exige nada para guardar la cita.
+  paymentMethod String?
+
+  /// Abono pagado en línea con Bold al reservar (suma de los `Payment` de
+  /// tipo ABONO aprobados). Es opcional para la clienta; 0 = no abonó. Se
+  /// descuenta de lo que se le cobra en el salón.
+  depositPaid Int @default(0)
+
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items    AppointmentItem[]
+  payments Payment[]
+  /// La venta (y su factura) que se generó al finalizar la cita.
+  sale     Sale?
+
+  @@index([branchId, startsAt])
+  @@index([status, startsAt])
+}
+
+/// Servicios y productos adicionales que se le suman a una cita ya agendada
+/// (vender desde la ficha de la cita). Un ítem de tipo SERVICE extiende
+/// `Appointment.endsAt` (ver `hayConflicto` en src/lib/agenda.ts); uno de
+/// tipo PRODUCT descuenta stock (ver `moverStock` en src/lib/stock.ts).
+model AppointmentItem {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  kind      String // SERVICE | PRODUCT
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  /// Nombre y precio al momento de la venta: no cambian si luego se edita
+  /// el servicio/producto original.
+  name        String
+  quantity    Int    @default(1)
+  unitPrice   Int
+  /// Solo kind=SERVICE: minutos que se le sumaron a la cita al agregarlo.
+  durationMin Int?
+
+  /// Profesional que vendió este ítem (para su comisión). Nulo = el de la cita.
+  staffId String?
+  staff   TeamMember? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([appointmentId])
+}
+
+/// Horas habilitadas: lo contrario de un bloqueo. Abre horas de una
+/// profesional fuera de su horario semanal para un día puntual (p. ej. un
+/// domingo que normalmente no trabaja, o hasta más tarde). Se suman a su
+/// horario solo dentro de este rango.
+model StaffExtraHours {
+  id       String     @id @default(cuid())
+  staffId  String
+  staff    TeamMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branchId String
+  branch   Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([staffId, startsAt])
+  @@index([branchId, startsAt])
+}
+
+/// Bloqueos de agenda: festivos, capacitaciones, cierres puntuales.
+/// staffId nulo bloquea toda la sede; con valor, bloquea solo a esa persona.
+model TimeOff {
+  id       String      @id @default(cuid())
+  branchId String
+  branch   Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staffId  String?
+  staff    TeamMember? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([branchId, startsAt])
+  @@index([staffId, startsAt])
+}
+
+// ---------------------------------------------------------------------------
+// Productos
+// ---------------------------------------------------------------------------
+
+model ProductCategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  order       Int       @default(0)
+  active      Boolean   @default(true)
+  products    Product[]
+
+  promotions Promotion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([active, order])
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  brand           String?
+  description     String
+  longDescription String?
+  price           Int      @default(0) // COP
+  compareAtPrice  Int?
+  sku             String?  @unique
+  stock           Int      @default(0)
+  imageUrl        String?
+  /// Fotos adicionales, en orden. La principal sigue siendo `imageUrl`: esta
+  /// lista solo agrega, nunca la reemplaza.
+  gallery         String[] @default([])
+  hairTypes       String? // "Rizado, Ondulado, Crespo"
+  size            String? // "300 ml"
+  featured        Boolean  @default(false)
+  order           Int      @default(0)
+  active          Boolean  @default(true)
+
+  // Preparado para Fase 2 (tienda online + carrito + Bold).
+  purchasable Boolean @default(false)
+
+
+  categoryId String?
+  category   ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// `stock` de arriba es el total cacheado (lo que lee el sitio público).
+  /// El desglose real por sede vive acá, y se recalcula cada vez que hay
+  /// un StockMovement.
+  stockByBranch    ProductStock[]
+  movements        StockMovement[]
+  appointmentItems AppointmentItem[]
+  saleItems        SaleItem[]
+
+  promotions Promotion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([active, order])
+}
+
+/// Stock de un producto en una sede puntual. La suma de estas filas es el
+/// `Product.stock` cacheado.
+model ProductStock {
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branchId  String
+  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  stock     Int     @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@id([productId, branchId])
+}
+
+/// Bitácora de ajustes de inventario: quién, cuándo, por qué. Igual que el
+/// "Movimiento de stock" de AgendaPro.
+model StockMovement {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branchId  String
+  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  before  Int
+  after   Int
+  /// Ajuste manual | Compra | Venta | Merma | Carga inicial de inventario
+  cause   String
+  comment String?
+
+  staffId String?
+  staff   User?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([branchId, createdAt])
+}
+
+/// Venta de mostrador: productos (y opcionalmente servicios) vendidos sin
+/// que haya una cita de por medio. Separada de `AppointmentItem` a propósito
+/// — no es polimórfica, sigue el mismo estilo del resto del schema.
+model Sale {
+  id       String @id @default(cuid())
+  /// Código corto para la clienta, p. ej. "AMI-V-7K3Q".
+  code     String @unique
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  clientName  String?
+  clientPhone String?
+  /// Directorio real de clientes — ver `Appointment.clientId`.
+  clientId    String?
+  client      Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  /// Profesional que atendió/vendió, para atribuir la comisión.
+  staffId String?
+  staff   TeamMember? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  /// Usuario del panel que registró la venta.
+  soldById String?
+  soldBy   User?   @relation(fields: [soldById], references: [id], onDelete: SetNull)
+
+  /// Identificación de quien compra, para la factura electrónica. Nulos cuando
+  /// la venta se factura a consumidor final — ver `CONSUMIDOR_FINAL` en
+  /// src/lib/documentos.ts. `clientDocType` guarda el código DIAN, no siglas.
+  clientDocType  String?
+  clientDocument String?
+
+  /// EFECTIVO | TRANSFERENCIA | DATAFONO. Nulo en las ventas que nacen de un
+  /// pedido pagado en línea (ver `order` abajo) — ahí el medio de pago lo
+  /// sabe Bold, no el equipo.
+  paymentMethod String?
+
+  notes    String?
+  items    SaleItem[]
+  /// Cómo se pagó, desglosado: "$50.000 en efectivo y $30.000 con tarjeta".
+  /// La suma es el total de la venta. `paymentMethod` de arriba queda con el
+  /// medio principal (el de más valor) para las vistas que muestran uno solo.
+  payments SalePayment[]
+
+
+  /// La cita de la que salió esta venta, si se cerró con "Finalizar cita".
+  /// Todo lo de la cita (servicio, adicionales, productos) se factura acá una
+  /// sola vez; los reportes usan este enlace para no contarlo dos veces.
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+
+  createdAt DateTime @default(now())
+
+  @@index([branchId, createdAt])
+}
+
+model SaleItem {
+  id     String @id @default(cuid())
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  kind      String // SERVICE | PRODUCT
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  name      String
+  quantity  Int    @default(1)
+  unitPrice Int
+  /// Rebaja en pesos sobre el total de esta línea, con IVA incluido igual que
+  /// `unitPrice`. Se guarda en pesos y no en porcentaje porque es como lo
+  /// piensa el salón ("quítale veinte mil"); el porcentaje que exige Siigo se
+  /// calcula al facturar. 0 = sin descuento.
+  discount  Int    @default(0)
+
+  /// Profesional que vendió esta línea (para su comisión). Nulo = el de la
+  /// venta (`Sale.staffId`).
+  staffId String?
+  staff   TeamMember? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+}
+
+/// Una parte del pago de una venta. Una venta pagada con un solo medio tiene
+/// una fila; una pagada "mitad efectivo, mitad tarjeta", dos.
+model SalePayment {
+  id     String @id @default(cuid())
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  /// EFECTIVO | TRANSFERENCIA | DATAFONO | BOLD — ver `METODOS_PAGO`.
+  method String
+  amount Int
+
+  createdAt DateTime @default(now())
+
+  @@index([saleId])
+  @@index([method])
+}
+
+// ---------------------------------------------------------------------------
+// Tienda en línea y pagos (Bold)
+// ---------------------------------------------------------------------------
+
+/// Un intento de cobro con Bold: un pedido de la tienda o el abono de una cita.
+model Payment {
+  id String @id @default(cuid())
+
+  /// ABONO: pago en línea del abono de una cita.
+  kind String @default("ABONO")
+
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  /// Lo que se manda como `data-order-id`. Bold exige que sea único por venta.
+  reference String @unique
+  amount    Int
+  /// CREADO | APROBADO | RECHAZADO | ANULADO
+  status    String @default("CREADO")
+
+  /// Llave de idempotencia: Bold reenvía la misma notificación hasta 5 veces,
+  /// y además la pantalla de retorno concilia por su cuenta.
+  boldPaymentId     String?   @unique
+  boldTransactionId String?
+  /// CREDIT_CARD | PSE | NEQUI | BOTON_BANCOLOMBIA | QR …
+  method            String?
+  payerEmail        String?
+  /// Último payload recibido, tal cual llegó. Para soporte y conciliación.
+  rawPayload        String?
+  paidAt            DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([appointmentId])
+}
+
+/// Una promoción: rebaja que se aplica sola a lo que caiga dentro de su
+/// alcance mientras esté vigente.
+///
+/// Cubre desde "20% en toda la línea Juba esta semana" hasta "este shampoo a
+/// 30.000 hasta fin de mes": una oferta de un solo producto es una promoción
+/// con alcance de un producto. Tener un solo mecanismo evita que existan dos
+/// formas distintas de rebajar un precio y que nadie sepa cuál manda.
+///
+/// Cuando dos promociones aplican al mismo ítem gana la que más rebaja — nunca
+/// se acumulan. Sumarlas puede dejar un precio en cero sin que nadie lo haya
+/// decidido.
+model Promotion {
+  id   String @id @default(cuid())
+  name String
+
+  /// PORCENTAJE | MONTO
+  kind  String
+  /// 20 si es porcentaje; 20000 (pesos) si es monto.
+  value Int
+
+  /// TODO | PRODUCTO | SERVICIO | CATEGORIA_PRODUCTO | CATEGORIA_SERVICIO
+  /// Cada promoción apunta a una sola cosa. Para cubrir varias, se crean
+  /// varias: es más fácil de entender en el panel que un alcance compuesto.
+  scope String
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  productCategoryId String?
+  productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+  serviceCategoryId String?
+  serviceCategory   ServiceCategory? @relation(fields: [serviceCategoryId], references: [id], onDelete: Cascade)
+
+  /// Ventana de vigencia. Ambas opcionales: sin fechas, la promoción vale
+  /// mientras esté activa.
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  /// TIENDA | MOSTRADOR | AMBOS — una promoción de la web no tiene por qué
+  /// aplicarse sola en caja.
+  channel String @default("AMBOS")
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, startsAt, endsAt])
+}
+
+// ---------------------------------------------------------------------------
+// Equipo
+// ---------------------------------------------------------------------------
+
+model TeamMember {
+  id        String  @id @default(cuid())
+  name      String
+  role      String
+  specialty String
+  bio       String?
+  imageUrl  String?
+  instagram String?
+  order     Int     @default(0)
+  active    Boolean @default(true)
+
+  /// Vacío = usa el % por defecto del negocio (Setting payroll.defaultCommissionPercent).
+  commissionPercent Int?
+
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  appointments     Appointment[]
+  schedule         StaffSchedule[]
+  services         StaffService[]
+  timeOff          TimeOff[]
+  sales            Sale[]
+  saleItems        SaleItem[]
+  appointmentItems AppointmentItem[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  staffExtraHours StaffExtraHours[]
+
+  @@index([active, order])
+}
+
+/// Horario semanal por profesional. weekday: 0 = domingo … 6 = sábado.
+/// Al crear un profesional se copia el horario de su sede como punto de
+/// partida (ver backfill-staff.ts) — esto es lo que edita el panel admin.
+model StaffSchedule {
+  id       String     @id @default(cuid())
+  staffId  String
+  staff    TeamMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  weekday  Int
+  opensAt  String // "09:00"
+  closesAt String // "18:30"
+  closed   Boolean    @default(false)
+
+  @@unique([staffId, weekday])
+}
+
+/// Qué servicios realiza cada profesional. Fila presente = lo hace; fila
+/// ausente = no. Al crear un profesional se le asignan todos los servicios
+/// activos de su sede como punto de partida (ver backfill-staff.ts).
+model StaffService {
+  staffId   String
+  staff     TeamMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+}
+
+// ---------------------------------------------------------------------------
+// Historias reales / testimonios
+// ---------------------------------------------------------------------------
+
+model Testimonial {
+  id             String  @id @default(cuid())
+  clientName     String
+  city           String?
+  quote          String
+  story          String?
+  rating         Int     @default(5)
+  serviceName    String?
+  avatarUrl      String?
+  videoUrl       String?
+  beforeImageUrl String?
+  afterImageUrl  String?
+  featured       Boolean @default(false)
+  order          Int     @default(0)
+  active         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, featured, order])
+}
+
+// ---------------------------------------------------------------------------
+// Blog / Aprende con nosotras
+// ---------------------------------------------------------------------------
+
+model Post {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  excerpt        String
+  content        String    @default("")
+  coverImageUrl  String?
+  pillar         String    @default("APRENDE") // pilar de contenido de la estrategia
+  readMinutes    Int       @default(4)
+  published      Boolean   @default(false)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Galería Instagram
+// ---------------------------------------------------------------------------
+
+model GalleryItem {
+  id          String  @id @default(cuid())
+  kind        String  @default("IMAGE") // IMAGE | REEL
+  imageUrl    String?
+  videoUrl    String?
+  caption     String?
+  externalUrl String?
+  size        String  @default("NORMAL") // NORMAL | TALL | WIDE
+  order       Int     @default(0)
+  active      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, order])
+}
+
+// ---------------------------------------------------------------------------
+// Espacios de medios marcados en el mockup
+// (hero video, video de bienvenida, reels, testimonios, carruseles, etc.)
+// ---------------------------------------------------------------------------
+
+model MediaSlot {
+  id             String  @id @default(cuid())
+  key            String  @unique
+  label          String
+  section        String
+  kind           String  @default("VIDEO") // VIDEO | IMAGE | REEL
+  aspect         String  @default("16/9")
+  recommendation String?
+  url            String?
+  posterUrl      String?
+  order          Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([section, order])
+}
+
+// ---------------------------------------------------------------------------
+// Configuración del sitio
+// ---------------------------------------------------------------------------
+
+model Setting {
+  key   String  @id
+  value String  @default("")
+  label String
+  group String  @default("general") // general | contacto | redes | seo | fases
+  type  String  @default("TEXT") // TEXT | TEXTAREA | URL | BOOLEAN | NUMBER
+  hint  String?
+  order Int     @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@index([group, order])
+}
+
+// ---------------------------------------------------------------------------
+// Histórico importado de AgendaPro (solo lectura / análisis)
+// ---------------------------------------------------------------------------
+
+/// Directorio real de clientes (import de AgendaPro). No participa de la
+/// agenda ni de las ventas en vivo — esas siguen derivando clientes de
+/// `Appointment.clientPhone` como hoy. Sirve de base para el análisis
+/// histórico (clientes frecuentes, clientes por reactivar).
+model Client {
+  id           String  @id @default(cuid())
+  name         String
+  phone        String  @unique
+  email        String?
+  document     String?
+  /// Código DIAN del tipo de documento (ver `src/lib/documentos.ts`). Nulo en
+  /// los clientes importados de AgendaPro, que traían el número suelto.
+  documentType String?
+
+  appointments       Appointment[]
+  sales              Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+// ---------------------------------------------------------------------------
+// Límites de uso
+// ---------------------------------------------------------------------------
+
+/// Contador de intentos por acción y llave, para frenar fuerza bruta contra el
+/// login y spam contra las acciones públicas (reservar, pedir).
+///
+/// Vive en la base y no en memoria a propósito: en serverless cada instancia
+/// tendría su propio contador, y con suficientes instancias en paralelo un
+/// límite local no frena absolutamente nada.
+///
+/// La ventana es deslizante por reinicio: cuando `windowAt` queda más vieja
+/// que la ventana configurada, el contador arranca de cero. Es más barato que
+/// guardar cada intento y suficientemente justo para lo que se defiende acá.
+model RateLimit {
+  id String @id @default(cuid())
+
+  /// Qué se está limitando: "login", "login-ip", "reserva", "pedido".
+  action String
+  /// A quién: una IP, un correo o un teléfono, según la acción.
+  key    String
+
+  count        Int       @default(0)
+  /// Inicio de la ventana en curso.
+  windowAt     DateTime  @default(now())
+  /// Si se pasó del tope, hasta cuándo queda frenado.
+  blockedUntil DateTime?
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([action, key])
+  @@index([blockedUntil])
+}

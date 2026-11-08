@@ -1,0 +1,1073 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Amicrespa — sistema visual
+   Fuente: BRANDBOOK AMICRESPA (Brandguide 2026).
+
+   Colores tomados de los rellenos reales de las muestras del capítulo 03
+   (las etiquetas HEX impresas quedaron con valores de plantilla).
+
+   Tono: cercano y cálido, con el lenguaje gráfico del manual: bloques de
+   color planos y de esquina recta, titulares serif grandes, las ondas del
+   capítulo 04 usadas como láminas completas (ver brand/Grafismo.tsx). Sin
+   sombras, inclinaciones ni adornos que no estén en el manual.
+   ========================================================================== */
+
+@theme {
+  /* ------------------------------------------------------------------
+     Valores medidos de los rellenos vectoriales de la página de paleta
+     del manual (capítulo 03, la que lleva el título "INSIGHT"). En el
+     Brandguide 2026 las etiquetas "HEX #…" impresas coinciden con esos
+     rellenos: hay una sola fuente de verdad. El design system completo
+     (reglas de uso, contrastes, logos) está en docs/DESIGN_SYSTEM.md.
+
+     El manual no tiene negros, grises ni marrones: todo el texto va en
+     vino. Los tonos de texto secundario de abajo son el mismo vino
+     aclarado, no colores nuevos.
+
+     REGLAS DE COMBINACIÓN (medidas contra estos valores):
+       · sobre ROSA      → solo VINO (6.6). Terracota 2.9, amarillo y
+                           papel no alcanzan: ahí la terracota es
+                           dibujo, nunca texto.
+       · sobre VINO      → amarillo (11.8), papel (13.6), rosa (6.6).
+                           Terracota 2.3: tampoco.
+       · sobre AMARILLO  → vino (11.8) y terracota (5.2).
+       · sobre CREMA/CANVAS → vino (11.1+), terracota (4.9+), muted (6.3+).
+     ------------------------------------------------------------------ */
+
+  /* --- Vino: el bloque grande de la página de paleta --- */
+  --color-wine-50: #f5f0f1;
+  --color-wine-100: #e3d4d9;
+  --color-wine-300: #b58c99;
+  --color-wine-500: #7f384f;
+  --color-wine-700: #5b001d;
+  --color-wine-900: #420015;
+
+  /* --- Rosa: fila 1 de la cuadrícula --- */
+  --color-pink: #df9dbd;
+  --color-pink-soft: #ecc4d7;
+  --color-pink-pale: #f7e7ef;
+
+  /* --- Terracota: fila 2. terra-deep no está en el manual — es el
+         mismo terra oscurecido, para texto pequeño donde terra no
+         alcanza el contraste mínimo. --- */
+  --color-terra-deep: #8a2509;
+  --color-terra: #b1300b;
+  --color-terra-soft: #d0836d;
+  --color-terra-pale: #e0ac9d;
+
+  /* --- Amarillo: fila 3 del manual (#f5ec85, #f9f4b6, #fbf7ce). Es el
+         amarillo del logo PRINCIPAL sobre vino: limón pastel, no mostaza.
+         gold-50 y gold-300 son pasos intermedios derivados de esos tres. --- */
+  --color-gold-50: #fdfbe6;
+  --color-gold-100: #fbf7ce;
+  --color-gold-200: #f9f4b6;
+  --color-gold-300: #f7f09e;
+  --color-gold-400: #f5ec85;
+  --color-gold-500: #f5ec85;
+
+  /* --- Azul de apoyo: fila 4. Este no se había corrido. --- */
+  --color-sky: #abc3fc;
+  --color-sky-soft: #bccffd;
+  --color-sky-pale: #dde7fe;
+
+  /* --- Neutros: fila 5. El propio fondo de la página del manual es
+         este crema — el manual lo presenta como muestra de marca, no
+         solo como "el papel del PDF", así que es fondo legítimo. --- */
+  /* El blanco puro no está en la paleta: lo más claro del manual es
+     #faf9f5. Se redefine `white` para que `text-white`/`bg-white`
+     también caigan en el papel de la marca. */
+  --color-white: #faf9f5;
+  --color-bone: #faf9f5;
+  --color-paper: #faf9f5;
+  --color-canvas: #f1eee2;
+  --color-shell: #f1eee2;
+  --color-smoke: #f1eee2;
+  --color-cream: #e7e2cf;
+  --color-sand: #e7e2cf;
+  /* Texto secundario y bordes: el vino aclarado hacia el papel, no los
+     marrones que había antes (el manual no tiene marrón). Contraste:
+       · muted  #7f384f → 7.7 sobre paper, 6.3 sobre cream, 5.2 sobre
+                          pink-soft (el fondo claro más exigente).
+       · clay   #8b4b5e → 6.1 sobre paper, 5.5 sobre canvas. Metadatos y
+                          placeholders; no sobre rosa fuerte.
+       · stone  #bd9e9a → bordes y separadores (no es color de texto).
+     ink-soft es el mismo vino medio, para texto largo y hovers. */
+  --color-stone: #bd9e9a;
+  --color-clay: #8b4b5e;
+  --color-muted: #7f384f;
+  --color-ink-soft: #7f384f;
+  --color-ink: #5b001d;
+
+  /* --- Tipografía ---
+     El manual reparte así: el serif manda en los titulares grandes,
+     Inter toma los subtítulos, las etiquetas y el cuerpo. */
+  --font-display: "Awesome Serif", var(--font-playfair), "Playfair Display",
+    Georgia, serif;
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Esquinas generosas: la base del carácter amable --- */
+  --radius-sm: 0.75rem;
+  --radius-md: 1.25rem;
+  --radius-lg: 1.75rem;
+  --radius-xl: 2.25rem;
+  --radius-2xl: 3rem;
+  --radius-3xl: 4rem;
+
+  --spacing-section: 6rem;
+
+  --animate-flotar: flotar 7s ease-in-out infinite;
+  --animate-girar-lento: girar 22s linear infinite;
+  --animate-flotar-foto: flotar-foto 5s ease-in-out infinite;
+  --animate-bump: bump 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Awesome Serif es comercial y no viene con el proyecto: mientras tanto
+   manda Playfair Display, que tiene el mismo aire.
+
+   PARA ACTIVARLA: compra la licencia, deja los .woff2 en public/fonts/ con
+   estos nombres y descomenta el bloque. "Awesome Serif" ya va primero en
+   --font-display, así que no hay que tocar nada más. Se mantiene comentado
+   para no pedirle al navegador tres archivos que no existen. */
+
+/*
+@font-face {
+  font-family: "Awesome Serif";
+  src: url("/fonts/AwesomeSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Awesome Serif";
+  src: url("/fonts/AwesomeSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Awesome Serif";
+  src: url("/fonts/AwesomeSerif-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+@keyframes flotar {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(4deg); }
+}
+
+@keyframes girar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Flotado leve para las fotos del collage del hero: solo traslado, sin
+   rotación — la rotación de cada recorte ya la lleva su propio elemento,
+   y este vive en un envoltorio aparte para no pisarla. */
+@keyframes flotar-foto {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* --- Presentación de la portada ---------------------------------------
+   Cada pieza arranca oculta solo DENTRO de la animación (fill-mode both):
+   si la animación no corre (prefers-reduced-motion), todo está visible. */
+@keyframes intro-trazo {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes intro-letra {
+  from { transform: translateY(115%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes intro-linea {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes intro-sube {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes intro-fondo {
+  from { opacity: 0; transform: scale(1.06); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes intro-foto {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* --- Celebración "CURLY HAIR #ON" al reservar (CurlyHairOn.tsx) --- */
+@keyframes cel-entra {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes cel-sale {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+@keyframes cel-fondo {
+  from { transform: translateY(0); }
+  to { transform: translateY(-8%); }
+}
+
+@keyframes cel-cartel {
+  from { clip-path: circle(0% at 50% 50%); }
+  to { clip-path: circle(75% at 50% 50%); }
+}
+
+@keyframes cel-letra {
+  from { transform: translateY(110%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes cel-on {
+  0% { opacity: 0; transform: scale(0.4) rotate(-6deg); }
+  65% { opacity: 1; transform: scale(1.12) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulso corto para insignias que acaban de cambiar (ej. el contador del
+   carrito): un guiño de vida, no una animación continua. */
+@keyframes bump {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* ========================================================================== */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Cinturón de seguridad, no la solución: cada causa real de overflow
+       horizontal (carruseles sin overscroll-behavior, anchos fijos, etc.)
+       se corrige donde vive. Esto solo evita que un caso que se nos haya
+       escapado —o una diferencia de motor entre navegadores— deje
+       arrastrable la página entera. `clip` evita además crear un contenedor
+       de scroll que pueda romper `position: sticky`. */
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background-color: var(--color-gold-500);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-terra);
+    outline-offset: 3px;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-shell); }
+  ::-webkit-scrollbar-thumb { background: var(--color-pink); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-terra); }
+}
+
+@layer components {
+  /* 96rem y no 84rem: a 1920px (la resolución de escritorio más común)
+     84rem dejaba el contenido ocupando solo el 70% del ancho, con franjas
+     de fondo plano vacías a los costados. */
+  .shell {
+    width: 100%;
+    max-width: 96rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  /* El panel usa las mismas formas que el sitio, con una capa más sobria
+     para que la información siga siendo rápida de escanear. */
+  .admin-card {
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--color-paper);
+    box-shadow: var(--shadow-soft, 0 4px 24px -4px rgba(91, 0, 29, 0.12));
+  }
+
+  .admin-card-header {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .admin-kicker {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--color-terra-deep);
+  }
+
+  .admin-control {
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
+    border-radius: var(--radius-md);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+
+  .admin-control:focus {
+    border-color: var(--color-terra);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold-500) 55%, transparent);
+    outline: none;
+  }
+
+  .admin-area .bg-white {
+    background-color: var(--color-paper);
+  }
+
+  .admin-area [class*="border-stone"] {
+    border-color: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  }
+
+  .admin-area [class*="divide-stone"] > :not(:last-child) {
+    border-color: color-mix(in srgb, var(--color-ink) 10%, transparent);
+  }
+
+  @media (min-width: 768px) {
+    .shell { padding-inline: 2rem; }
+  }
+
+  @media (min-width: 1280px) {
+    .shell { padding-inline: 3rem; }
+  }
+
+  /* --- Tipografía -------------------------------------------------------
+     Reparto del manual: el serif (Awesome Serif → Playfair) en los
+     titulares grandes; Inter en subtítulos, etiquetas y cuerpo. */
+
+  /* Titular de portada: serif grande, en caja baja y bien apretado. */
+  .t-hero {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.75rem, 7.6vw, 5.75rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+  }
+
+  /* Titular póster: el gesto "CURLY HAIR #ON" del manual.
+     Serif en mayúsculas apiladas. Se apila con spans en bloque, una línea
+     por palabra grande. */
+  .t-poster {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.75rem, 6.6vw, 5.5rem);
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  /* La palabra acentuada del póster. Un titular lleva una sola fuente:
+     meter Inter negra o una cursiva en medio del serif es el gesto de
+     plantilla que más delata. El acento se marca solo con el color. */
+  .t-poster-accent {
+    font-family: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* Titular de sección: el mismo serif, un escalón abajo. */
+  .t-editorial {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 4.8vw, 3.5rem);
+    line-height: 1.03;
+    letter-spacing: -0.015em;
+  }
+
+  /* La palabra con guiño: misma fuente, peso y estilo que el titular;
+     solo cambia el color (ver .t-poster-accent). */
+  .t-accent {
+    font-family: inherit;
+    font-weight: inherit;
+    font-style: normal;
+  }
+
+  /* Inter pesada en versalitas: cintas, adhesivos y remates. */
+  .t-pop {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  /* Subtítulo de bloque: Inter, como manda el manual. */
+  .t-section {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: clamp(1.3rem, 2.8vw, 1.85rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .t-card {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+
+  /* Etiqueta pequeña muy espaciada, el gesto de portada del manual. */
+  .t-eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .t-small {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  /* Citas y remates */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  /* Piezas de la presentación (ver Hero.tsx). El retraso de cada una
+     llega como --retraso en su style. */
+  .intro-trazo {
+    animation: intro-trazo 1.2s cubic-bezier(0.65, 0, 0.35, 1) var(--retraso, 0s) both;
+  }
+  .intro-letra {
+    transform-box: fill-box;
+    animation: intro-letra 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--retraso, 0s) both;
+  }
+  .intro-linea {
+    animation: intro-linea 1s cubic-bezier(0.65, 0, 0.35, 1) var(--retraso, 0s) both;
+  }
+  .intro-sube {
+    animation: intro-sube 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--retraso, 0s) both;
+  }
+  .intro-fondo {
+    animation: intro-fondo 1.6s cubic-bezier(0.16, 1, 0.3, 1) var(--retraso, 0s) both;
+  }
+  .intro-foto {
+    animation: intro-foto 1.1s cubic-bezier(0.65, 0, 0.35, 1) var(--retraso, 0s) both;
+  }
+
+  /* Ritmo vertical: el mismo aire en todas las secciones. Entre secciones
+     no hay espacio: el cambio de color del fondo ya las separa, como los
+     bloques del manual. `.seccion-amplia` es la pausa final del cierre. */
+  .seccion { padding-block: 3.5rem; }
+  .seccion-amplia { padding-block: 4.5rem; }
+  @media (min-width: 768px) {
+    .seccion { padding-block: 6rem; }
+    .seccion-amplia { padding-block: 8rem; }
+  }
+
+  /* Sección con manchas de color de fondo (ver brand/Manchas.tsx): las
+     manchas quedan detrás y todo lo demás por encima. `:where` deja que
+     un `sticky` o `absolute` puesto en el marcado siga mandando. */
+  .con-manchas {
+    position: relative;
+    overflow: hidden;
+  }
+  .con-manchas > :where(:not(.manchas)) {
+    position: relative;
+    /* Por encima de las manchas que cruzan de una sección a otra (z 1). */
+    z-index: 2;
+  }
+
+  /* Celebración al reservar */
+  .cel-entra { animation: cel-entra 0.45s cubic-bezier(0.65, 0, 0.35, 1) both; }
+  .cel-sale { animation: cel-sale 0.6s cubic-bezier(0.65, 0, 0.35, 1) both; }
+  .cel-fondo { animation: cel-fondo 2.8s linear both; }
+  .cel-cartel { animation: cel-cartel 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.35s both; }
+  .cel-linea { display: block; overflow: hidden; padding-bottom: 0.04em; }
+  .cel-letra {
+    display: inline-block;
+    animation: cel-letra 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--retraso, 0s) both;
+  }
+  .cel-on {
+    animation: cel-on 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) 1.3s both;
+  }
+
+  /* --- Botones tipo píldora -------------------------------------------- */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border-radius: 999px;
+    padding: 0.95rem 1.9rem;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+    border: 2px solid transparent;
+    transition:
+      transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+      background-color 0.25s ease,
+      border-color 0.25s ease,
+      color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+  .btn:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  .btn-primary {
+    background-color: var(--color-terra);
+    border-color: var(--color-terra);
+    color: var(--color-paper);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  .btn-dark {
+    background-color: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-gold-500);
+  }
+  .btn-dark:hover {
+    background-color: var(--color-terra);
+    border-color: var(--color-terra);
+    color: var(--color-paper);
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+  }
+  .btn-outline:hover {
+    background-color: var(--color-gold-500);
+    border-color: var(--color-ink);
+  }
+
+  .btn-light {
+    background-color: var(--color-paper);
+    border-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+  .btn-light:hover {
+    background-color: var(--color-gold-500);
+    border-color: var(--color-gold-500);
+  }
+
+  /* Para fondos vino: el amarillo del logo hace de acción principal */
+  .btn-gold {
+    background-color: var(--color-gold-500);
+    border-color: var(--color-gold-500);
+    color: var(--color-ink);
+  }
+  .btn-gold:hover {
+    background-color: var(--color-paper);
+    border-color: var(--color-paper);
+  }
+
+  /* Enlace con flechita en círculo */
+  .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    border-radius: 999px;
+    border: 2px solid var(--color-ink);
+    padding: 0.6rem 1.2rem;
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.25s ease;
+  }
+  .btn-link:hover {
+    background-color: var(--color-ink);
+    color: var(--color-gold-500);
+    transform: translateY(-2px);
+  }
+
+  /* --- Piezas ----------------------------------------------------------- */
+
+  /* Tarjeta: bloque de esquina recta, como los bloques de color y las
+     fotos del manual. La profundidad sale del color, no de sombras. */
+  .tarjeta {
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  /* Antes era una ventana en arco; el manual compone con rectángulos. */
+  .arco {
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  /* Insignia circular giratoria, tipo sello */
+  .sello {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    text-align: center;
+  }
+
+  /* Antes pintaba un subrayado terracota al pasar el mouse. El sitio ya no
+     usa subrayados: el enlace cambia solo de opacidad. */
+  .link-underline {
+    transition: opacity 0.2s ease;
+  }
+  .link-underline:hover,
+  .group:hover .link-underline {
+    opacity: 0.7;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Carrusel de móvil: en pantallas angostas, una fila que se desliza con
+     el dedo y encaja tarjeta por tarjeta (mejor que apilar tarjetas
+     grandes una debajo de otra). De `sm` en adelante, cada sección lo
+     apaga con `sm:grid` y retoma su cuadrícula normal — estas dos clases
+     solo mandan por debajo de ese punto. */
+  .carrusel-movil {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* Sin esto, arrastrar el dedo hasta el final de la fila "encadena" el
+       gesto al documento entero y da la sensación de que toda la página
+       se corre de lado — el bug clásico de carruseles en móvil. */
+    overscroll-behavior-x: contain;
+    /* Solo de lado. Con overflow-x en auto, el navegador pone también el
+       eje vertical en auto, y cualquier cosa que sobresalga un poco (el
+       levantar de una tarjeta, la entrada animada) dejaba mover la fila en
+       diagonal y peleaba con el scroll de la página. */
+    overflow-y: hidden;
+    touch-action: pan-x pan-y;
+  }
+  .carrusel-movil::-webkit-scrollbar { display: none; }
+
+  .carrusel-item {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    width: 78%;
+  }
+
+  .zoom-parent { overflow: hidden; }
+  .zoom-img {
+    transition: transform 0.9s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+  .zoom-parent:hover .zoom-img { transform: scale(1.06); }
+
+  /* Filete corto en amarillo, para separar un titular de su texto sin
+     usar la onda completa — el gesto es el mismo que WaveRule, más quieto. */
+  .rule-gold {
+    height: 3px;
+    width: 3rem;
+    border-radius: 999px;
+    background-color: var(--color-gold-500);
+  }
+
+  /* Trama suave para marcadores pendientes */
+  .media-hatch {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(177, 48, 11, 0.09) 0px,
+      rgba(177, 48, 11, 0.09) 1px,
+      transparent 1px,
+      transparent 11px
+    );
+  }
+
+  /* --- Sombras ---
+     El manual es plano: sin sombras. Las clases se conservan para no
+     romper marcado viejo, pero ya no pintan nada. */
+  .shadow-retro,
+  .shadow-retro-ink,
+  .shadow-retro-gold,
+  .shadow-soft,
+  .shadow-lifted {
+    box-shadow: none;
+  }
+
+  /* --- Botones: variantes de forma --- */
+  .btn-squared {
+    border-radius: 0;
+  }
+  .btn-soft {
+    border-radius: var(--radius-md);
+  }
+  .btn-minimal {
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.2s;
+  }
+  .btn-minimal:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* --- Wobble: inclinación sutil intencional --- */
+  .wobble {
+    transform: none;
+  }
+
+  /* Índice ancla: el primer número de una lista numerada, agrandado
+     para que arrastre la mirada al inicio de la fila. */
+  .t-index-hero {
+    font-size: clamp(4rem, 8vw, 6rem);
+    line-height: 0.85;
+    margin-top: -0.25rem;
+  }
+
+  /* Estructura editorial para páginas internas. La portada conserva sus
+     tarjetas y gestos juguetones; aquí la jerarquía viene de la retícula,
+     los filetes y el ritmo tipográfico. */
+  .internal-index {
+    border-block: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  }
+
+  .internal-index a {
+    border-right: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+    padding: 1rem 1.25rem;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  .internal-index a:first-child { border-left: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent); }
+  .internal-index a:hover { background: var(--color-gold-500); color: var(--color-ink); }
+
+  .service-row {
+    border-top: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+    transition: background-color 0.25s ease, padding-inline 0.25s ease;
+  }
+
+  .service-row:hover {
+    background: var(--color-cream);
+    padding-inline: 0.75rem;
+  }
+
+  .editorial-rule { border-top: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent); }
+
+  .product-shelf {
+    border-top: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+    transition: background-color 0.25s ease;
+  }
+
+  .product-shelf:hover { background: var(--color-cream); }
+
+  .product-spotlight {
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 15%, transparent);
+  }
+
+  .product-spotlight-media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-paper);
+  }
+
+  .product-spotlight-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: var(--color-ink);
+    color: var(--color-gold-500);
+    padding: 0.45rem 0.65rem;
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .store-toolbar {
+    border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  }
+
+  .store-filter {
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .store-filter:hover {
+    border-color: var(--color-ink);
+    transform: translateY(-1px);
+  }
+
+  .store-filter-active {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-gold-500);
+  }
+
+  .service-location-card {
+    display: block;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+    padding: 1.5rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  @media (min-width: 768px) {
+    .service-location-card { padding: 2.25rem; }
+  }
+
+  .service-location-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-terra);
+  }
+
+  .service-location-cta {
+    padding-bottom: 0.35rem;
+  }
+
+  .service-location-switcher {
+    border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  }
+
+  .service-location-pill {
+    border: 1px solid var(--color-stone);
+    border-radius: 999px;
+    padding: 0.7rem 1rem;
+    color: var(--color-clay);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .service-location-pill:hover {
+    border-color: var(--color-terra);
+    color: var(--color-terra-deep);
+  }
+
+  .service-location-pill-active {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-gold-500);
+  }
+
+  .about-hero {
+    min-height: 28rem;
+  }
+
+  .about-hero-background {
+    opacity: 0.58;
+  }
+
+  .about-hero-overlay {
+    background: linear-gradient(90deg, rgba(66, 0, 21, 0.94) 0%, rgba(66, 0, 21, 0.72) 45%, rgba(66, 0, 21, 0.48) 100%);
+  }
+
+  /* Titulares de páginas internas: el mismo serif de la portada, para
+     que todo el sitio tenga una sola voz de titular. */
+  .about-hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.75rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+  }
+
+  .about-experience-title {
+    max-width: 15ch;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.03;
+  }
+
+  .about-experience-note {
+    min-height: 20rem;
+    background: var(--color-ink);
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .about-experience-note { padding: 2rem; }
+  }
+
+  .about-experience-quote {
+    max-width: 11ch;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 0.98;
+  }
+
+  .team-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .service-location-modal {
+    animation: fade-up 0.25s ease both;
+  }
+
+  .service-location-option {
+    border: 1px solid var(--color-stone);
+    padding: 1rem;
+    text-align: left;
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .service-location-option:hover,
+  .service-location-option-active {
+    border-color: var(--color-ink);
+    background: var(--color-gold-100);
+    transform: translateY(-2px);
+  }
+
+  .reading-column { max-width: 44rem; }
+
+  .category-disclosure {
+    border-top: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
+    scroll-margin-top: 8rem;
+  }
+
+  .category-disclosure > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    list-style: none;
+    padding: 1.25rem 0;
+    transition: background-color 0.25s ease, padding-inline 0.25s ease;
+  }
+
+  .category-disclosure > summary::-webkit-details-marker { display: none; }
+  .category-disclosure > summary:hover { background: var(--color-cream); padding-inline: 0.75rem; }
+
+  .category-disclosure-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+
+  .category-disclosure-icon {
+    position: relative;
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid var(--color-ink);
+    border-radius: 999px;
+  }
+
+  .category-disclosure-icon::before,
+  .category-disclosure-icon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.55rem;
+    height: 1px;
+    background: var(--color-ink);
+    transform: translate(-50%, -50%);
+  }
+
+  .category-disclosure-icon::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+    transition: transform 0.25s ease;
+  }
+
+  .category-disclosure[open] > summary { padding-bottom: 1rem; }
+  .category-disclosure[open] .category-disclosure-icon::after { transform: translate(-50%, -50%) rotate(0deg); }
+  .category-disclosure-content { padding-bottom: 1.25rem; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+}
+
+/* Sin zoom al escribir en el teléfono: iOS amplía la página cuando un campo
+   tiene letra de menos de 16 px. En pantallas táctiles o angostas todos los
+   campos van a 16 px (en escritorio conservan su tamaño de diseño). No se
+   bloquea el zoom con el viewport: pellizcar para ampliar sigue funcionando. */
+@media (pointer: coarse), (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .intro-trazo,
+  .intro-letra,
+  .intro-linea,
+  .intro-sube,
+  .intro-foto,
+  .intro-fondo { animation: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

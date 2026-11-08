@@ -1,0 +1,15 @@
+﻿Awesome Serif (fuente del brandbook)
+=====================================
+
+Es una fuente comercial y no viene con el proyecto.
+
+Deja aqui los archivos con estos nombres exactos y el sitio la usa
+automaticamente en todos los titulos:
+
+  AwesomeSerif-Regular.woff2
+  AwesomeSerif-Medium.woff2
+  AwesomeSerif-Bold.woff2
+
+Mientras no esten, los titulos caen en Playfair Display, que es el
+sustituto configurado. No hay que tocar codigo: el @font-face ya esta
+declarado en src/app/globals.css.

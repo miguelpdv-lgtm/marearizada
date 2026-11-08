@@ -1,2 +1,58 @@
+# Config local de Claude Code (contiene el token de Supabase)
+.claude/settings.local.json
+
 node_modules/
+.next/
+out/
+build/
 .DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env*.local
+
+# Restos de la etapa con SQLite (la base ahora vive en Supabase)
+prisma/*.db
+prisma/*.db-journal
+
+# Media subida localmente
+public/uploads/*
+!public/uploads/.gitkeep
+
+# TS
+*.tsbuildinfo
+next-env.d.ts
+
+# Exports crudos del import de AgendaPro (datos reales de clientas, nunca a git)
+/clientes.csv
+/clientes.json
+/ventas.csv
+/ventas.json
+/productos.csv
+/productos.json
+/servicios.csv
+/servicios.json
+/profesionales.csv
+/profesionales.json
+/citas.csv
+/citas.json
+/abonos.csv
+/abonos.json
+/dossier.html
+/radiografia_agendapro.html
+/imagenes/
+/session-ses_feeb.md
+
+# Exports del catálogo de Siigo (se bajan cuando hacen falta, no se versionan)
+/Gesti*n de productos y servicios-*.xlsx
+/*.xlsx
+
+# Artefactos intermedios del manual (se regeneran con `npm run manual:pdf`)
+docs/manual/.fuentes.css
+docs/manual/.manual-pdf.html
