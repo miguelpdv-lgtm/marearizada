@@ -18,6 +18,8 @@ import { boldConfigurado, configCheckout, MONTO_MINIMO, type ConfigCheckout } fr
 import { tokenCambioCita, tokenPublico, tokenValido } from "@/lib/pagos";
 import { formatCOP } from "@/lib/format";
 import { urlSitio } from "@/lib/site";
+import { descuentoReserva } from "@/lib/cupones";
+import { etiquetaPromocion } from "@/lib/promociones";
 
 /* --- Consultas ------------------------------------------------------------- */
 
@@ -57,6 +59,35 @@ export async function proximoCupo(
   return hora ? { fecha, hora } : null;
 }
 
+/* --- Cupones -------------------------------------------------------------- */
+
+export type ResultadoCupon =
+  | { ok: true; nombre: string; etiqueta: string; descuento: number; precioFinal: number }
+  | { ok: false; error: string };
+
+/** Revisa un cupón contra el servicio elegido, antes de reservar. */
+export async function revisarCupon(serviceId: string, cupon: string): Promise<ResultadoCupon> {
+  const permiso = await consumir("cupon", await ipDeLaPeticion());
+  if (!permiso.ok) {
+    return { ok: false, error: `Probaste varios cupones seguidos. Espera ${esperaLegible(permiso.segundos)}.` };
+  }
+  const servicio = await prisma.service.findUnique({
+    where: { id: serviceId },
+    select: { id: true, categoryId: true, price: true, active: true },
+  });
+  if (!servicio?.active) return { ok: false, error: "Ese servicio ya no está disponible." };
+  const r = await descuentoReserva(servicio, cupon);
+  if (!r.ok) return r;
+  if (!r.descuento?.promocion.code) return { ok: false, error: "Ese cupón no mejora el precio de este servicio." };
+  return {
+    ok: true,
+    nombre: r.descuento.promocion.name,
+    etiqueta: etiquetaPromocion(r.descuento.promocion),
+    descuento: r.descuento.monto,
+    precioFinal: r.descuento.precioFinal,
+  };
+}
+
 /* --- Reserva --------------------------------------------------------------- */
 
 const esquema = z.object({
@@ -80,6 +111,7 @@ const esquema = z.object({
   notes: z.string().trim().max(600).optional(),
   firstVisit: z.boolean().optional(),
   curlType: z.enum(["ONDULADO", "RIZADO", "CRESPO", "NO_SE"]).optional(),
+  cupon: z.string().trim().max(40).optional(),
 });
 
 export type DatosReserva = z.infer<typeof esquema>;
@@ -100,6 +132,8 @@ export type ResultadoReserva =
       abono: { minimo: number; maximo: number; token: string } | null;
       /** Enlace para que la clienta mueva la cita sola. */
       cambiar: string;
+      /** Si se aplicó una promoción o cupón. */
+      precio: { lista: number; final: number; promocion: string } | null;
     }
   | { ok: false; error: string; campo?: string };
 
@@ -151,6 +185,11 @@ export async function crearReserva(
     return { ok: false, error: "Ese servicio no se presta en la sede elegida." };
   }
 
+  // El precio se resuelve acá, nunca con lo que mande el navegador.
+  const precio = await descuentoReserva(servicio, d.cupon);
+  if (!precio.ok) return { ok: false, error: precio.error, campo: "cupon" };
+  const descuento = precio.descuento;
+
   const inicio = aUtc(d.fecha, d.hora);
   const fin = new Date(inicio.getTime() + servicio.durationMin * 60_000);
 
@@ -200,6 +239,9 @@ export async function crearReserva(
           notes: d.notes || null,
           firstVisit: d.firstVisit ?? false,
           curlType: d.curlType ?? null,
+          ...(descuento
+            ? { promotionId: descuento.promocion.id, discount: descuento.monto, priceOverride: descuento.precioFinal }
+            : {}),
         },
       });
 
@@ -208,7 +250,7 @@ export async function crearReserva(
       // caída del correo no se ve como una reserva fallida.
       avisarCitaNueva(cita.id);
 
-      const maximo = maximoAbono(servicio.price);
+      const maximo = maximoAbono(descuento?.precioFinal ?? servicio.price);
 
       return {
         ok: true,
@@ -221,6 +263,9 @@ export async function crearReserva(
         whatsapp: sede.whatsapp,
         abono: maximo ? { minimo: MONTO_MINIMO, maximo, token: tokenPublico(cita.code) } : null,
         cambiar: `/reservar/cambiar?codigo=${cita.code}&t=${tokenCambioCita(cita.code)}`,
+        precio: descuento
+          ? { lista: servicio.price, final: descuento.precioFinal, promocion: descuento.promocion.name }
+          : null,
       };
     } catch (e) {
       const err = e as { code?: string };

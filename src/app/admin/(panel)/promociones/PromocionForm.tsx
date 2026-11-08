@@ -178,7 +178,7 @@ export function PromocionForm({
               label="Dónde vale"
               name="channel"
               errors={errors}
-              hint="Una promoción de la web no tiene por qué aplicarse sola en caja."
+              hint="Una promoción de las reservas en línea no tiene por qué aplicarse sola en caja."
             >
               <Select name="channel" defaultValue={promocion?.channel ?? "AMBOS"}>
                 {Object.entries(CANALES).map(([v, l]) => (
@@ -191,6 +191,31 @@ export function PromocionForm({
           </div>
 
           <div className="admin-card space-y-6">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <Field
+                label="Código de cupón"
+                name="code"
+                errors={errors}
+                hint="Opcional. Con código, el descuento solo aplica a quien lo escriba al reservar (ej.: BIENVENIDA). Sin código, aplica solo."
+              >
+                <Input
+                  name="code"
+                  defaultValue={promocion?.code ?? ""}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  maxLength={30}
+                  className="uppercase tracking-wider"
+                />
+              </Field>
+              <Field
+                label="Usos máximos"
+                name="maxUses"
+                errors={errors}
+                hint="Cuántas citas pueden usarla en total. Vacío = sin límite."
+              >
+                <Input name="maxUses" type="number" min={1} defaultValue={promocion?.maxUses ?? ""} />
+              </Field>
+            </div>
             <div className="grid gap-6 sm:grid-cols-2">
               <Field
                 label="Desde"

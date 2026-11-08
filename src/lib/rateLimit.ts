@@ -41,6 +41,10 @@ export const LIMITES = {
   "login-ip": { tope: 20, ventana: 900, bloqueo: 900 },
   /** 5 citas por IP en una hora es mucho más de lo que reserva una persona. */
   reserva: { tope: 5, ventana: 3600, bloqueo: 3600 },
+  /** Probar cupones: frena a quien intenta adivinar códigos. */
+  cupon: { tope: 12, ventana: 900, bloqueo: 900 },
+  /** Reseñas: una por cita, pero se frena el envío en masa desde una IP. */
+  resena: { tope: 8, ventana: 3600, bloqueo: 3600 },
   /** Los pedidos se reintentan más (pagos que fallan), así que va más suelto. */
   pedido: { tope: 10, ventana: 3600, bloqueo: 3600 },
   /** Buscar una cita por código y celular: frena a quien adivina códigos. */

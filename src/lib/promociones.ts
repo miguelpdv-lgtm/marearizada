@@ -5,14 +5,15 @@ import { prisma } from "@/lib/db";
 /**
  * Resolución de precios con promociones.
  *
- * La regla de oro: **el precio nunca se calcula en el navegador**. El carrito
- * vive en localStorage y cualquiera lo edita, así que tanto el checkout como
- * la venta de mostrador vuelven a resolver el precio contra la base. Lo que se
+ * La regla de oro: **el precio nunca se calcula en el navegador**. Tanto la
+ * reserva en línea como la venta en caja vuelven a resolver el precio contra
+ * la base. Lo que se
  * muestra en el sitio es informativo; lo que se cobra sale de acá.
  */
 
 export const TIPOS_PROMOCION = { PORCENTAJE: "Porcentaje", MONTO: "Monto fijo" } as const;
-export const CANALES = { AMBOS: "Tienda y mostrador", TIENDA: "Solo tienda", MOSTRADOR: "Solo mostrador" } as const;
+/** TIENDA es el canal en línea: las reservas del sitio. */
+export const CANALES = { AMBOS: "Reservas en línea y caja", TIENDA: "Solo reservas en línea", MOSTRADOR: "Solo caja" } as const;
 export const ALCANCES = {
   TODO: "Todo el catálogo",
   PRODUCTO: "Un producto",
@@ -87,6 +88,8 @@ export function mejorDescuento(
   let mejor: Descuento | null = null;
 
   for (const p of promociones) {
+    // Los cupones (con código) solo cuentan cuando alguien escribió el código;
+    // eso lo decide quien llama, filtrando la lista.
     if (p.channel !== "AMBOS" && p.channel !== canal) continue;
     if (!vigente(p, cuando)) continue;
     if (!cubre(p, item)) continue;

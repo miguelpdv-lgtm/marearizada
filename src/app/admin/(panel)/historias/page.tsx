@@ -14,15 +14,23 @@ import { prisma } from "@/lib/db";
 export const metadata = { title: "Historias reales" };
 
 export default async function TestimonialsAdminPage() {
-  const testimonials = await prisma.testimonial.findMany({
-    orderBy: [{ featured: "desc" }, { order: "asc" }],
+  const todas = await prisma.testimonial.findMany({
+    orderBy: [{ featured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
   });
+  // Primero las reseñas de clientas que esperan aprobación.
+  const porRevisar = (t: (typeof todas)[number]) => t.source === "CLIENTA" && !t.active;
+  const testimonials = [...todas.filter(porRevisar), ...todas.filter((t) => !porRevisar(t))];
+  const pendientes = todas.filter(porRevisar).length;
 
   return (
     <>
       <PageHeader
-        title="Historias reales"
-        description="Los testimonios que se muestran en la sección “Historias reales”."
+        title="Historias y reseñas"
+        description={
+          pendientes > 0
+            ? `${pendientes} ${pendientes === 1 ? "reseña nueva espera" : "reseñas nuevas esperan"} tu aprobación: ábrela, revisa el texto y actívala para publicarla en la portada.`
+            : "Las reseñas que llegan de las clientas después de su cita y las historias que cargue el equipo. Las activas salen en la portada."
+        }
         action={{ label: "Nueva historia", href: "/admin/historias/nueva" }}
       />
 
@@ -47,7 +55,12 @@ export default async function TestimonialsAdminPage() {
             {testimonials.map((t) => (
               <tr key={t.id} className="transition-colors hover:bg-sand/30">
                 <Td>
-                  <p className="text-sm text-ink">{t.clientName}</p>
+                  <p className="text-sm text-ink">
+                    {t.clientName}
+                    <span className="ml-2 text-xs text-terra" aria-label={`${t.rating} de 5`}>
+                      {"★".repeat(t.rating)}
+                    </span>
+                  </p>
                   <p className="text-xs font-normal text-muted">
                     {[t.city, t.serviceName].filter(Boolean).join(" · ") || "—"}
                   </p>
@@ -73,7 +86,8 @@ export default async function TestimonialsAdminPage() {
 
                 <Td>
                   <div className="flex flex-wrap gap-1.5">
-                    <ActiveBadge active={t.active} />
+                    {porRevisar(t) ? <Badge tone="warning">Por revisar</Badge> : <ActiveBadge active={t.active} />}
+                    {t.source === "CLIENTA" && <Badge>De la clienta</Badge>}
                     {t.featured && <Badge tone="gold">Destacada</Badge>}
                   </div>
                 </Td>

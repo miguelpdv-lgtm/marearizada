@@ -10,6 +10,8 @@ import {
   obtenerDiasConCupo,
   obtenerHoras,
   proximoCupo,
+  revisarCupon,
+  type ResultadoCupon,
   type ResultadoReserva,
 } from "./actions";
 import { etiquetaFecha, hora12 } from "./fechas";
@@ -24,6 +26,8 @@ export type Servicio = {
   durationMin: number;
   price: number;
   hidePrice: boolean;
+  /** Promoción automática vigente, si la hay. */
+  promo: { etiqueta: string; precioFinal: number } | null;
 };
 
 export type Linea = {
@@ -75,6 +79,7 @@ export function ReservaFlow({
   lineas,
   equipo,
   servicioInicial,
+  hayCupones = false,
 }: {
   hoy: string;
   maxDias: number;
@@ -82,6 +87,7 @@ export function ReservaFlow({
   lineas: Linea[];
   equipo: Profesional[];
   servicioInicial?: string;
+  hayCupones?: boolean;
 }) {
   const inicial = servicioInicial
     ? lineas.find((l) => l.servicios.some((s) => s.id === servicioInicial))
@@ -103,6 +109,10 @@ export function ReservaFlow({
   const [error, setError] = useState<{ campo?: string; texto: string } | null>(null);
   const [resultado, setResultado] = useState<Extract<ResultadoReserva, { ok: true }> | null>(null);
   const [enviando, enviar] = useTransition();
+  const [cupon, setCupon] = useState({ abierto: false, texto: "" });
+  const [cuponOk, setCuponOk] = useState<Extract<ResultadoCupon, { ok: true }> | null>(null);
+  const [cuponError, setCuponError] = useState<string | null>(null);
+  const [revisando, revisar] = useTransition();
   const ocupado = useRef(false);
   const titulo = useRef<HTMLHeadingElement>(null);
 
@@ -196,9 +206,15 @@ export function ReservaFlow({
         notes: datos.notas || undefined,
         firstVisit: datos.primera,
         curlType: linea?.pidePatron ? (datos.patron as "NO_SE" | "ONDULADO" | "RIZADO" | "CRESPO") : undefined,
+        cupon: cuponOk ? cupon.texto : undefined,
       });
       if (r.ok) {
         setResultado(r);
+        return;
+      }
+      if (r.campo === "cupon") {
+        setCuponOk(null);
+        setCuponError(r.error);
         return;
       }
       if (r.error.startsWith("Justo acaban de tomar")) {
@@ -217,6 +233,8 @@ export function ReservaFlow({
     setDia(null);
     setHora(null);
     setDatos({ nombre: "", celular: "", correo: "", patron: "NO_SE", notas: "", primera: false });
+    setCupon({ abierto: false, texto: "" });
+    setCuponOk(null);
     ir(lineas.length === 1 ? 2 : 1, "prev");
   };
 
@@ -318,6 +336,8 @@ export function ReservaFlow({
                       elegir(() => {
                         if (serviceId !== s.id) {
                           setServiceId(s.id);
+                          setCuponOk(null);
+                          setCuponError(null);
                           setStaffId(null);
                           setDia(null);
                           setHora(null);
@@ -329,7 +349,20 @@ export function ReservaFlow({
                       <b>{s.name}</b>
                       {s.tagline && <small>{s.tagline}</small>}
                       <span className="rf-meta">
-                        {s.durationMin} min aprox.{!s.hidePrice && s.price > 0 ? ` · ${formatCOP(s.price)}` : ""}
+                        {s.durationMin} min aprox.
+                        {!s.hidePrice && s.price > 0 && (
+                          <>
+                            {" · "}
+                            {s.promo ? (
+                              <>
+                                <s className="rf-old">{formatCOP(s.price)}</s> {formatCOP(s.promo.precioFinal)}{" "}
+                                <span className="rf-promo">{s.promo.etiqueta}</span>
+                              </>
+                            ) : (
+                              formatCOP(s.price)
+                            )}
+                          </>
+                        )}
                       </span>
                     </span>
                     <i className="rf-go" aria-hidden="true" />
@@ -580,6 +613,63 @@ export function ReservaFlow({
                   />
                   Es mi primera vez en Marea Rizada
                 </label>
+                {hayCupones && servicio && (
+                  <div className="rf-cupon rf-full">
+                    {cuponOk ? (
+                      <p className="rf-cupon-ok">
+                        Cupón <b>{cupon.texto.toUpperCase()}</b> aplicado ({cuponOk.etiqueta}): pagas{" "}
+                        <b>{formatCOP(cuponOk.precioFinal)}</b> en lugar de {formatCOP(servicio.price)}.{" "}
+                        <button
+                          type="button"
+                          className="rf-link"
+                          onClick={() => {
+                            setCuponOk(null);
+                            setCupon({ abierto: true, texto: "" });
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      </p>
+                    ) : !cupon.abierto ? (
+                      <button type="button" className="rf-link" onClick={() => setCupon({ ...cupon, abierto: true })}>
+                        ¿Tienes un cupón?
+                      </button>
+                    ) : (
+                      <div className="rf-field">
+                        <label htmlFor="rf-cupon">Cupón</label>
+                        <div className="rf-cupon-fila">
+                          <input
+                            id="rf-cupon"
+                            className="rf-input"
+                            autoCapitalize="characters"
+                            autoComplete="off"
+                            value={cupon.texto}
+                            aria-invalid={Boolean(cuponError)}
+                            onChange={(e) => {
+                              setCupon({ ...cupon, texto: e.target.value });
+                              setCuponError(null);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="rf-btn rf-btn--outline"
+                            disabled={revisando || !cupon.texto.trim()}
+                            onClick={() =>
+                              revisar(async () => {
+                                const r = await revisarCupon(servicio.id, cupon.texto);
+                                if (r.ok) setCuponOk(r);
+                                else setCuponError(r.error);
+                              })
+                            }
+                          >
+                            {revisando ? "Revisando…" : "Aplicar"}
+                          </button>
+                        </div>
+                        {cuponError && <span className="rf-err">{cuponError}</span>}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="rf-note rf-full">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -631,6 +721,14 @@ export function ReservaFlow({
                 <dt>Lugar</dt>
                 <dd>{resultado.direccion}</dd>
               </div>
+              {resultado.precio && (
+                <div>
+                  <dt>Precio</dt>
+                  <dd>
+                    <s className="rf-old">{formatCOP(resultado.precio.lista)}</s> {formatCOP(resultado.precio.final)}
+                  </dd>
+                </div>
+              )}
             </dl>
             {resultado.abono && (
               <div className="rf-abono">

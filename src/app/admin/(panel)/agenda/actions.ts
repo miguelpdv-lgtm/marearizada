@@ -212,7 +212,12 @@ async function guardarReserva(
     });
     await prisma.appointment.update({
       where: { id: citaId },
-      data: { ...data, cancelledAt: d.status === "CANCELADA" ? new Date() : null },
+      data: {
+        ...data,
+        cancelledAt: d.status === "CANCELADA" ? new Date() : null,
+        // Con fecha nueva, el recordatorio vuelve a salir para esa fecha.
+        ...(antes && antes.startsAt.getTime() !== inicio.getTime() ? { reminderSentAt: null } : {}),
+      },
     });
     // Si cambió la fecha u hora de una cita que sigue en pie, eso es lo que
     // la clienta necesita saber; si no, se entera de la confirmación o la
@@ -352,7 +357,12 @@ export async function reagendarCita(
 
   const guardada = await prisma.appointment.update({
     where: { id: citaId },
-    data: { startsAt: inicio, endsAt: fin, staffId },
+    data: {
+      startsAt: inicio,
+      endsAt: fin,
+      staffId,
+      ...(inicio.getTime() !== cita.startsAt.getTime() ? { reminderSentAt: null } : {}),
+    },
     select: { startsAt: true, endsAt: true, staff: { select: { name: true } } },
   });
   // Cambiar solo de profesional no le cambia nada a la clienta.

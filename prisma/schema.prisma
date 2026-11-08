@@ -53,43 +53,43 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Branch {
-  id           String  @id @default(cuid())
-  name         String
-  slug         String  @unique
-  city         String
-  address      String
-  neighborhood String?
-  phone        String?
-  whatsapp     String?
-  email        String?
-  mapsUrl      String?
+  id              String  @id @default(cuid())
+  name            String
+  slug            String  @unique
+  city            String
+  address         String
+  neighborhood    String?
+  phone           String?
+  whatsapp        String?
+  email           String?
+  mapsUrl         String?
   /// Coordenadas del local (SEO local): las mismas del pin de Google Maps.
-  latitude     Float?
-  longitude    Float?
+  latitude        Float?
+  longitude       Float?
   /// Departamento ("Atlántico") y código postal, para la ficha de Google.
-  region       String?
-  postalCode   String?
+  region          String?
+  postalCode      String?
   /// Enlace "Pedir reseñas" de Google Business Profile.
   googleReviewUrl String?
-  imageUrl     String?
-  description  String?
-  hours        String? // texto libre multilínea: "Lunes a viernes 9:00 - 19:00"
-  order        Int     @default(0)
-  active       Boolean @default(true)
+  imageUrl        String?
+  description     String?
+  hours           String? // texto libre multilínea: "Lunes a viernes 9:00 - 19:00"
+  order           Int     @default(0)
+  active          Boolean @default(true)
   /// Cierre temporal ("Cerrada hasta nuevo aviso…"). Con texto, la sede se
   /// sigue viendo en el sitio con este aviso, pero no recibe reservas ni
   /// despacha pedidos. Vacío = abierta. Distinto de `active`, que la oculta.
-  closedNotice String?
+  closedNotice    String?
 
-  team               TeamMember[]
-  users              User[]
-  services           Service[]
-  businessHours      BusinessHour[]
-  appointments       Appointment[]
-  timeOff            TimeOff[]
-  productStock       ProductStock[]
-  stockMovements     StockMovement[]
-  sales              Sale[]
+  team           TeamMember[]
+  users          User[]
+  services       Service[]
+  businessHours  BusinessHour[]
+  appointments   Appointment[]
+  timeOff        TimeOff[]
+  productStock   ProductStock[]
+  stockMovements StockMovement[]
+  sales          Sale[]
 
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
@@ -156,7 +156,6 @@ model Service {
 
   // Preparado para Fase 2 (agenda de reservas). En Fase 1 el CTA queda inactivo.
   bookable Boolean @default(false)
-
 
   categoryId String?
   category   ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -232,6 +231,17 @@ model Appointment {
   /// tipo ABONO aprobados). Es opcional para la clienta; 0 = no abonó. Se
   /// descuenta de lo que se le cobra en el salón.
   depositPaid Int @default(0)
+
+  /// Promoción o cupón aplicado al reservar. `discount` son los pesos
+  /// rebajados; el precio final queda en `priceOverride`.
+  promotionId String?
+  promotion   Promotion? @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  discount    Int        @default(0)
+
+  /// Cuándo salió el recordatorio del día anterior y la invitación a reseñar.
+  reminderSentAt    DateTime?
+  reviewRequestedAt DateTime?
+  review            Testimonial?
 
   cancelledAt DateTime?
   createdAt   DateTime  @default(now())
@@ -360,7 +370,6 @@ model Product {
   // Preparado para Fase 2 (tienda online + carrito + Bold).
   purchasable Boolean @default(false)
 
-
   categoryId String?
   category   ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
@@ -459,13 +468,11 @@ model Sale {
   /// medio principal (el de más valor) para las vistas que muestran uno solo.
   payments SalePayment[]
 
-
   /// La cita de la que salió esta venta, si se cerró con "Finalizar cita".
   /// Todo lo de la cita (servicio, adicionales, productos) se factura acá una
   /// sola vez; los reportes usan este enlace para no contarlo dos veces.
   appointmentId String?      @unique
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-
 
   createdAt DateTime @default(now())
 
@@ -597,6 +604,14 @@ model Promotion {
   /// aplicarse sola en caja.
   channel String @default("AMBOS")
 
+  /// Cupón: si tiene código, solo aplica cuando la clienta lo escribe al
+  /// reservar (o el equipo en caja). Sin código, aplica sola. En mayúsculas.
+  code    String? @unique
+  /// Cuántas citas pueden usar el cupón en total. null = sin límite.
+  maxUses Int?
+
+  appointments Appointment[]
+
   active Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -685,8 +700,14 @@ model Testimonial {
   beforeImageUrl String?
   afterImageUrl  String?
   featured       Boolean @default(false)
-  order          Int     @default(0)
-  active         Boolean @default(true)
+
+  /// PANEL (la cargó el equipo) | CLIENTA (llegó del enlace de reseña y
+  /// queda inactiva hasta que el equipo la apruebe).
+  source        String       @default("PANEL")
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  order         Int          @default(0)
+  active        Boolean      @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -801,8 +822,8 @@ model Client {
   /// los clientes importados de AgendaPro, que traían el número suelto.
   documentType String?
 
-  appointments       Appointment[]
-  sales              Sale[]
+  appointments Appointment[]
+  sales        Sale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -44,6 +44,9 @@ export function tokenValido(referencia: string, recibido: string | undefined) {
 /** Token del enlace con el que la clienta cambia su cita sola (distinto al del abono). */
 export const tokenCambioCita = (codigo: string) => tokenPublico(`cambiar:${codigo}`);
 
+/** Token del enlace para dejar la reseña de una cita. */
+export const tokenResena = (codigo: string) => tokenPublico(`resena:${codigo}`);
+
 export type DatosCobro = {
   boldPaymentId?: string | null;
   boldTransactionId?: string | null;

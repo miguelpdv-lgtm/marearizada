@@ -117,7 +117,7 @@ export function CambiarCita({
 
   if (listo) {
     return (
-      <div className="rf mt-8"><div className="rf-card mx-auto text-center">
+      <div className="rf mt-8"><div className="rf-card rf-card--plana mx-auto text-center">
         <h2>¡Listo! Tu cita cambió</h2>
         <p>
           Ahora es el <strong>{etiquetaFecha(listo.fecha)}</strong> a las <strong>{hora12(listo.hora)}</strong>.

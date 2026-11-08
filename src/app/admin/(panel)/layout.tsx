@@ -49,7 +49,7 @@ export default async function PanelLayout({
       title: "Contenido",
       items: [
         { label: "Espacios de medios", href: "/admin/medios" },
-        { label: "Historias reales", href: "/admin/historias" },
+        { label: "Reseñas e historias", href: "/admin/historias" },
         { label: "Galería", href: "/admin/galeria" },
       ],
     },

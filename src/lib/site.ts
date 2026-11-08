@@ -25,8 +25,10 @@ export class SiteSettings {
     return this.map.get(key) ?? fallback;
   }
 
-  bool(key: string) {
-    return this.map.get(key) === "true";
+  /** `fallback` aplica solo si la clave todavía no existe. */
+  bool(key: string, fallback = false) {
+    const value = this.map.get(key);
+    return value === undefined ? fallback : value === "true";
   }
 
   num(key: string, fallback = 0) {

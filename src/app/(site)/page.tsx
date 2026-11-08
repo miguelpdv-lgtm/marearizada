@@ -21,6 +21,12 @@ export default async function Portada() {
         select: { id: true },
       });
   const diagnostico = diag ? `/reservar?servicio=${diag.id}` : reservar;
+  const resenas = await prisma.testimonial.findMany({
+    where: { active: true },
+    orderBy: [{ featured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
+    take: 6,
+    select: { id: true, clientName: true, quote: true, rating: true, serviceName: true },
+  });
 
   return (
     <>
@@ -158,6 +164,31 @@ export default async function Portada() {
           </div>
         </div>
       </section>
+
+      {resenas.length > 0 && (
+        <section className="lp-section" id="resenas">
+          <div className="mr-wrap">
+            <div className="lp-head">
+              <span className="mr-eyebrow">Reseñas</span>
+              <h2>Lo que cuentan nuestras clientas</h2>
+            </div>
+            <div className="lp-reviews">
+              {resenas.map((r) => (
+                <figure key={r.id} className="mr-card lp-review">
+                  <span className="lp-review__stars" aria-label={`${r.rating} de 5`}>
+                    {"★".repeat(r.rating)}
+                  </span>
+                  <blockquote>“{r.quote}”</blockquote>
+                  <figcaption>
+                    <b>{r.clientName}</b>
+                    {r.serviceName && <span> · {r.serviceName}</span>}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Manifiesto */}
       <section className="lp-manifesto" aria-label="Manifiesto">

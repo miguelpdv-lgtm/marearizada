@@ -60,7 +60,7 @@ export function cuando(fecha: Date) {
 }
 
 /** El pie de cada correo: contacto de la marca y por qué le llega. */
-function pieDe(settings: Awaited<ReturnType<typeof getSettings>>, motivo: string): Pie {
+export function pieDe(settings: Awaited<ReturnType<typeof getSettings>>, motivo: string): Pie {
   return {
     whatsapp: whatsappLink(settings.get("contact.whatsapp"), "¡Hola Marea Rizada!"),
     instagram: settings.get("social.instagram") || null,
@@ -82,7 +82,7 @@ function avisosAlSalon(settings: Awaited<ReturnType<typeof getSettings>>) {
 }
 
 /** Enlace para que la clienta mueva su cita sola, sin escribir el código. */
-const enlaceCambiar = (codigo: string) =>
+export const enlaceCambiar = (codigo: string) =>
   `${urlSitio()}/reservar/cambiar?codigo=${encodeURIComponent(codigo)}&t=${tokenCambioCita(codigo)}`;
 
 const POR_CITA = "Te llega porque tienes una cita en Marea Rizada.";

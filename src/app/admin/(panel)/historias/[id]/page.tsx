@@ -25,7 +25,7 @@ export default async function EditTestimonialPage({
       <PageHeader
         title={testimonial.clientName}
         description={testimonial.city ?? undefined}
-        breadcrumb={{ label: "Historias reales", href: "/admin/historias" }}
+        breadcrumb={{ label: "Reseñas e historias", href: "/admin/historias" }}
       />
 
       <TestimonialForm

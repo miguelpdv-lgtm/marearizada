@@ -130,6 +130,8 @@ export async function cambiarMiCita(
       startsAt: inicio,
       endsAt: new Date(inicio.getTime() + cita.duracionMin * 60_000),
       staffId,
+      // El recordatorio vuelve a salir para la fecha nueva.
+      reminderSentAt: null,
     },
     select: { startsAt: true },
   });

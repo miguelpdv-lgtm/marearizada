@@ -9,7 +9,7 @@ export default function NewTestimonialPage() {
     <>
       <PageHeader
         title="Nueva historia"
-        breadcrumb={{ label: "Historias reales", href: "/admin/historias" }}
+        breadcrumb={{ label: "Reseñas e historias", href: "/admin/historias" }}
       />
       <TestimonialForm action={createTestimonial} submitLabel="Crear historia" />
     </>

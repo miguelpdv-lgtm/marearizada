@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getSettings } from "@/lib/site";
 import { hoyBogota } from "@/lib/agenda";
+import { etiquetaPromocion, mejorDescuento, promocionesVigentes } from "@/lib/promociones";
 import { whatsappLink } from "@/lib/format";
 import { ReservaFlow } from "./ReservaFlow";
 
@@ -25,7 +26,7 @@ export default async function ReservarPage({
   const settings = await getSettings();
   const activa = settings.bool("phase.bookingEnabled");
 
-  const [sede, categorias, equipo] = await Promise.all([
+  const [sede, categorias, equipo, promociones] = await Promise.all([
     prisma.branch.findFirst({ where: { active: true }, orderBy: { order: "asc" } }),
     prisma.serviceCategory.findMany({
       where: { active: true },
@@ -39,7 +40,11 @@ export default async function ReservarPage({
       orderBy: { order: "asc" },
       include: { services: { select: { serviceId: true } } },
     }),
+    promocionesVigentes(),
   ]);
+  // Las automáticas se muestran en la lista; los cupones solo piden el campo.
+  const automaticas = promociones.filter((p) => !p.code);
+  const hayCupones = promociones.some((p) => p.code && p.channel !== "MOSTRADOR");
 
   const lineas = categorias
     .filter((c) => c.services.length > 0)
@@ -53,14 +58,22 @@ export default async function ReservarPage({
         pidePatron: !nails,
         servicios: c.services
           .filter((s) => !s.branchId || s.branchId === sede?.id)
-          .map((s) => ({
-            id: s.id,
-            name: s.name,
-            tagline: s.tagline,
-            durationMin: s.durationMin,
-            price: s.price,
-            hidePrice: s.hidePrice,
-          })),
+          .map((s) => {
+            const promo = mejorDescuento(
+              { tipo: "SERVICIO", id: s.id, categoriaId: s.categoryId, precio: s.price },
+              automaticas,
+              "TIENDA",
+            );
+            return {
+              id: s.id,
+              name: s.name,
+              tagline: s.tagline,
+              durationMin: s.durationMin,
+              price: s.price,
+              hidePrice: s.hidePrice,
+              promo: promo ? { etiqueta: etiquetaPromocion(promo.promocion), precioFinal: promo.precioFinal } : null,
+            };
+          }),
       };
     })
     .filter((l) => l.servicios.length > 0);
@@ -97,6 +110,7 @@ export default async function ReservarPage({
       hoy={hoyBogota()}
       maxDias={Number(settings.get("booking.maxDaysAhead", "60")) || 60}
       servicioInicial={servicioInicial}
+      hayCupones={hayCupones}
       sede={{
         id: sede.id,
         name: sede.name,

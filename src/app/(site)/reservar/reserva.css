@@ -194,3 +194,26 @@ textarea.rf-input { min-height: 84px; resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   .rf *, .rf *::before, .rf *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---- Promociones y cupón ---------------------------------------------- */
+.rf-old { color: var(--rf-muted); font-weight: 400; }
+.rf-promo { display: inline-block; padding: 2px 6px; border-radius: 3px; background: var(--rf-warm); color: #fff; font: 600 .7rem/1.2 var(--font-mono); letter-spacing: .04em; }
+.rf-link { background: none; border: 0; padding: 0; color: var(--rf-accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.rf-cupon-fila { display: flex; gap: 10px; align-items: stretch; }
+.rf-cupon-fila .rf-input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: .06em; }
+.rf-cupon-fila .rf-btn { min-height: 0; padding-inline: 16px; }
+.rf-cupon-fila .rf-btn::after { display: none; }
+.rf-cupon-ok { padding: 12px 14px; border: 2px dashed var(--rf-accent); border-radius: 3px; font-size: .92rem; }
+
+/* ---- Reseña: estrellas --------------------------------------------------- */
+.rf-estrellas { border: 0; padding: 0; margin: 0; }
+.rf-estrellas legend { font-weight: 600; font-size: .92rem; color: var(--rf-strong); margin-bottom: 8px; }
+.rf-estrellas [role="radiogroup"] { display: flex; align-items: center; gap: 4px; }
+.rf-estrellas button { background: none; border: 0; padding: 4px; cursor: pointer; line-height: 0; }
+.rf-estrellas svg { width: 36px; height: 36px; fill: transparent; stroke: var(--rf-warm-soft); stroke-width: 1.6; stroke-linejoin: round; transition: fill .15s, stroke .15s, transform .15s; }
+.rf-estrellas button.on svg { fill: var(--rf-warm); stroke: var(--rf-warm); }
+.rf-estrellas button:hover svg { transform: scale(1.1); }
+.rf-estrellas-txt { margin-left: 8px; font-size: .9rem; color: var(--rf-muted); }
+
+/* Tarjeta fuera de la escena final: sin la espera de la animación. */
+.rf-card--plana { animation: none; }

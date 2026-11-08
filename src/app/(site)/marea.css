@@ -782,3 +782,13 @@ html.mr-intro-running .mr-rise { animation-play-state: paused; }
 @media (max-width: 520px) { .mr-intro__stage { flex-direction: column; text-align: center; } }
 
 }
+
+/* Reseñas aprobadas en la portada. */
+@layer components {
+.lp-reviews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-5); }
+@media (max-width: 900px) { .lp-reviews { grid-template-columns: 1fr; } }
+.lp-review { margin: 0; display: grid; gap: var(--sp-3); align-content: start; }
+.lp-review__stars { color: var(--mr-arcilla, #9a5b49); letter-spacing: .12em; font-size: 1.05rem; }
+.lp-review blockquote { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--fg-strong); }
+.lp-review figcaption { font-size: var(--fs-sm); color: var(--fg); }
+}

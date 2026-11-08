@@ -60,6 +60,16 @@ export default async function PromocionesPage() {
       serviceCategory: { select: { name: true } },
     },
   });
+  // Citas activas que usaron cada promoción (para "3 de 20 usos").
+  const conteo = await prisma.appointment.groupBy({
+    by: ["promotionId"],
+    where: { promotionId: { not: null }, status: { not: "CANCELADA" } },
+    _count: true,
+  });
+  const usos: Record<string, number> = Object.fromEntries(
+    conteo.map((c) => [c.promotionId as string, c._count]),
+  );
+
 
   const ahora = new Date();
 
@@ -67,7 +77,7 @@ export default async function PromocionesPage() {
     <>
       <PageHeader
         title="Promociones"
-        description="Descuentos que se aplican solos en la tienda y en la caja. Gana siempre la que más rebaja: nunca se acumulan."
+        description="Descuentos para las reservas en línea y la caja. Sin código se aplican solos; con código son cupones. Gana siempre el que más rebaja: nunca se acumulan."
         action={{ label: "Nueva promoción", href: "/admin/promociones/nueva" }}
       />
 
@@ -105,7 +115,17 @@ export default async function PromocionesPage() {
                     <p className="text-sm text-ink">{p.name}</p>
                     <p className="mt-0.5 text-xs font-semibold text-terra">
                       {etiquetaPromocion(p)}
+                      {p.code && (
+                        <span className="ml-2 border border-dashed border-ink/40 px-1.5 py-0.5 font-mono text-[11px] tracking-wider text-ink">
+                          {p.code}
+                        </span>
+                      )}
                     </p>
+                    {p.maxUses != null && (
+                      <p className="mt-0.5 text-xs text-clay">
+                        {usos[p.id] ?? 0} de {p.maxUses} usos
+                      </p>
+                    )}
                   </Td>
 
                   <Td>

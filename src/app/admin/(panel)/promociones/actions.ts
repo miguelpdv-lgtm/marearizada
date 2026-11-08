@@ -10,6 +10,7 @@ import { canManageContent } from "@/lib/constants";
 import {
   bool,
   int,
+  optionalInt,
   optionalStr,
   runAction,
   str,
@@ -49,6 +50,11 @@ const schema = z
     startsAt: z.date().nullable(),
     endsAt: z.date().nullable(),
     active: z.boolean(),
+    code: z
+      .string()
+      .regex(/^[A-Z0-9]{3,30}$/, "El código va con letras y números, de 3 a 30 caracteres, sin espacios.")
+      .nullable(),
+    maxUses: z.number().int().positive("Los usos máximos tienen que ser 1 o más.").nullable(),
   })
   .superRefine((d, ctx) => {
     if (d.kind === "PORCENTAJE" && d.value > 100) {
@@ -124,6 +130,8 @@ function readForm(formData: FormData) {
     startsAt: fecha(optionalStr(formData, "startsAt")),
     endsAt: fecha(optionalStr(formData, "endsAt"), true),
     active: bool(formData, "active"),
+    code: str(formData, "code").toUpperCase().replace(/\s+/g, "") || null,
+    maxUses: optionalInt(formData, "maxUses"),
   };
 }
 
@@ -132,10 +140,14 @@ function readForm(formData: FormData) {
  * crearla no se vería hasta el próximo despliegue.
  */
 function revalidarTodo() {
-  revalidatePath("/");
-  revalidatePath("/productos");
-  revalidatePath("/servicios");
+  revalidatePath("/reservar");
   revalidatePath("/admin/promociones");
+}
+
+/** Un código repetido llega como P2002: se muestra en el campo, no como error general. */
+function codigoRepetido(e: unknown): ActionState | null {
+  if ((e as { code?: string })?.code !== "P2002") return null;
+  return { ok: false, fieldErrors: { code: ["Ese código ya lo usa otra promoción."] } };
 }
 
 export async function crearPromocion(
@@ -148,7 +160,13 @@ export async function crearPromocion(
     const parsed = schema.safeParse(readForm(formData));
     if (!parsed.success) return zodToState(parsed.error);
 
-    await prisma.promotion.create({ data: parsed.data });
+    try {
+      await prisma.promotion.create({ data: parsed.data });
+    } catch (e) {
+      const repetido = codigoRepetido(e);
+      if (repetido) return repetido;
+      throw e;
+    }
     revalidarTodo();
     redirect("/admin/promociones?ok=creada");
   });
@@ -165,7 +183,13 @@ export async function actualizarPromocion(
     const parsed = schema.safeParse(readForm(formData));
     if (!parsed.success) return zodToState(parsed.error);
 
-    await prisma.promotion.update({ where: { id }, data: parsed.data });
+    try {
+      await prisma.promotion.update({ where: { id }, data: parsed.data });
+    } catch (e) {
+      const repetido = codigoRepetido(e);
+      if (repetido) return repetido;
+      throw e;
+    }
     revalidarTodo();
     return { ok: true, message: "Promoción actualizada." };
   });
