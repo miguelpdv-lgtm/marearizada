@@ -3,9 +3,16 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { BloqueHoras, Calendario, entrada } from "../ReservaFlow";
 import { etiquetaFecha, hora12 } from "../fechas";
 import { buscarMiCita, cambiarMiCita, diasParaCambiar, horasParaCambiar } from "./actions";
+import "../reserva.css";
+
+const entrada = "rf-input w-full";
+const DIAS_VISIBLES = 21;
+const CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const capital = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+const AVISO_ULTIMA =
+  "Última cita del día: tenemos un máximo de 15 minutos de espera. Si llegas más tarde, la reagendamos.";
 
 /** Código + celular → la cita. */
 export function BuscarCita({ codigoInicial }: { codigoInicial: string }) {
@@ -29,14 +36,14 @@ export function BuscarCita({ codigoInicial }: { codigoInicial: string }) {
           router.push(r.url);
         });
       }}
-      className="tarjeta space-y-5 border-2 border-stone bg-paper p-6"
+      className="space-y-5 border-2 border-stone bg-paper p-6"
     >
       <label className="block">
         <span className="mb-2 block text-sm font-medium text-ink">Código de la cita</span>
         <input
           value={codigo}
           onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-          placeholder="AMI-7K3P"
+          placeholder="MR-7K3P"
           autoCapitalize="characters"
           autoComplete="off"
           className={`${entrada} font-mono tracking-[0.08em]`}
@@ -75,11 +82,9 @@ export function CambiarCita({
   maxDias: number;
   ultimaCita: Record<number, string>;
 }) {
-  const [mesInicio, setMesInicio] = useState(hoy);
-  const [cupos, setCupos] = useState<Record<string, number>>({});
+  const [cupos, setCupos] = useState<Record<string, number> | null>(null);
   const [fecha, setFecha] = useState<string | null>(null);
-  const [horas, setHoras] = useState<string[]>([]);
-  const [cargando, setCargando] = useState(false);
+  const [horas, setHoras] = useState<string[] | null>(null);
   const [hora, setHora] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [listo, setListo] = useState<{ fecha: string; hora: string } | null>(null);
@@ -87,20 +92,22 @@ export function CambiarCita({
 
   useEffect(() => {
     let vivo = true;
-    diasParaCambiar(codigo, token, mesInicio, 42).then((r) => vivo && setCupos(r));
+    diasParaCambiar(codigo, token, hoy, Math.min(DIAS_VISIBLES, maxDias)).then((r) => {
+      if (!vivo) return;
+      setCupos(r);
+      setFecha((f) => f ?? Object.keys(r).sort().find((d) => r[d] > 0) ?? null);
+    });
     return () => {
       vivo = false;
     };
-  }, [codigo, token, mesInicio]);
+  }, [codigo, token, hoy, maxDias]);
 
   useEffect(() => {
     if (!fecha) return;
     let vivo = true;
-    setCargando(true);
+    setHoras(null);
     setHora(null);
-    horasParaCambiar(codigo, token, fecha)
-      .then((r) => vivo && setHoras(r))
-      .finally(() => vivo && setCargando(false));
+    horasParaCambiar(codigo, token, fecha).then((r) => vivo && setHoras(r));
     return () => {
       vivo = false;
     };
@@ -110,17 +117,13 @@ export function CambiarCita({
 
   if (listo) {
     return (
-      <div className="mx-auto mt-8 max-w-md border-2 border-emerald-600/40 bg-paper p-6 text-center">
-        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-lg text-paper">
-          ✓
-        </span>
-        <p className="t-card mt-4 text-ink">¡Listo! Tu cita cambió</p>
-        <p className="mt-2 text-ink">
-          Ahora es el <strong>{etiquetaFecha(listo.fecha)}</strong> a las{" "}
-          <strong>{hora12(listo.hora)}</strong>.
+      <div className="rf mt-8"><div className="rf-card mx-auto text-center">
+        <h2>¡Listo! Tu cita cambió</h2>
+        <p>
+          Ahora es el <strong>{etiquetaFecha(listo.fecha)}</strong> a las <strong>{hora12(listo.hora)}</strong>.
         </p>
-        <p className="t-small mt-3">Te enviamos la confirmación por correo. Tu código sigue siendo {codigo}.</p>
-      </div>
+        <p className="rf-fine">Te enviamos la confirmación por correo. Tu código sigue siendo {codigo}.</p>
+      </div></div>
     );
   }
 
@@ -141,68 +144,93 @@ export function CambiarCita({
     });
   };
 
-  return (
-    <div className="mt-10">
-      <p className="t-eyebrow mb-6 text-center text-terra-deep">Elige el nuevo día y hora</p>
-      <div className="grid gap-8 md:grid-cols-2">
-        <Calendario
-          hoy={hoy}
-          maxDias={maxDias}
-          mesInicio={mesInicio}
-          setMesInicio={setMesInicio}
-          cupos={cupos}
-          fecha={fecha}
-          onElegir={setFecha}
-        />
-        <div>
-          <p className="t-eyebrow mb-4 text-terra-deep">
-            {fecha ? etiquetaFecha(fecha) : "Elige un día primero"}
-          </p>
-          {!fecha && <p className="t-small">Los días con punto tienen cupo disponible.</p>}
-          {fecha && cargando && <p className="t-small">Buscando horas libres…</p>}
-          {fecha && !cargando && horas.length === 0 && (
-            <p className="tarjeta border-2 border-stone bg-cream p-5 text-sm text-ink">
-              No quedan horas ese día. Prueba con otra fecha.
-            </p>
-          )}
-          {fecha && !cargando && horas.length > 0 && (
-            <>
-              <BloqueHoras
-                titulo="Mañana"
-                horas={horas.filter((h) => Number(h.slice(0, 2)) < 12)}
-                elegida={hora}
-                onElegir={setHora}
-                ultima={ultima}
-              />
-              <BloqueHoras
-                titulo="Tarde"
-                horas={horas.filter((h) => Number(h.slice(0, 2)) >= 12)}
-                elegida={hora}
-                onElegir={setHora}
-                ultima={ultima}
-              />
-            </>
-          )}
+  const grupos = horas
+    ? ([
+        ["Mañana", horas.filter((h) => h < "12:00")],
+        ["Tarde", horas.filter((h) => h >= "12:00")],
+      ] as const)
+    : [];
 
-          {fecha && hora && (
-            <div className="mt-8 border-t-2 border-stone pt-6">
-              <p className="text-sm text-ink">
-                Tu cita pasa al <strong>{etiquetaFecha(fecha)}</strong> a las{" "}
-                <strong>{hora12(hora)}</strong>.
-              </p>
-              {error && <p className="mt-3 text-sm text-terra">{error}</p>}
-              <button
-                type="button"
-                onClick={confirmar}
-                disabled={pending}
-                className="btn btn-primary mt-4 disabled:opacity-60"
-              >
-                {pending ? "Cambiando…" : "Confirmar el cambio"}
-              </button>
-            </div>
-          )}
-          {error && !hora && <p className="mt-4 text-sm text-terra">{error}</p>}
-        </div>
+  return (
+    <div className="rf mt-10">
+      <div className="rf-wrap" style={{ paddingTop: 0 }}>
+        <h2 className="rf-when">Elige el nuevo día y hora</h2>
+        {cupos === null ? (
+          <p className="rf-loading">Buscando los días con cupo…</p>
+        ) : Object.values(cupos).every((n) => n === 0) ? (
+          <p className="rf-empty">No hay cupos en los próximos días. Escríbenos por WhatsApp y lo movemos.</p>
+        ) : (
+          <div className="rf-days" role="group" aria-label="Días">
+            {Object.keys(cupos)
+              .sort()
+              .map((f) => {
+                const n = cupos[f];
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    className="rf-day"
+                    aria-pressed={fecha === f}
+                    disabled={n === 0}
+                    onClick={() => setFecha(f)}
+                  >
+                    <span>{CORTOS[new Date(`${f}T12:00:00Z`).getUTCDay()]}</span>
+                    <b>{Number(f.slice(-2))}</b>
+                    <small>{n ? `${n} cupos` : "Sin cupos"}</small>
+                  </button>
+                );
+              })}
+          </div>
+        )}
+
+        {fecha && (
+          <div className="rf-slots-box">
+            <h3 className="rf-when">{capital(etiquetaFecha(fecha))}</h3>
+            {horas === null ? (
+              <p className="rf-loading">Cargando horarios…</p>
+            ) : horas.length === 0 ? (
+              <p className="rf-empty">No quedan horas ese día. Prueba con otra fecha.</p>
+            ) : (
+              grupos
+                .filter(([, lista]) => lista.length > 0)
+                .map(([nombre, lista]) => (
+                  <div key={nombre} className="rf-group">
+                    <h3>{nombre}</h3>
+                    <div className="rf-slots">
+                      {lista.map((h) => (
+                        <button
+                          key={h}
+                          type="button"
+                          className="rf-slot"
+                          aria-pressed={hora === h}
+                          onClick={() => setHora(h)}
+                        >
+                          {hora12(h)}
+                          {h === ultima && <span aria-hidden> *</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))
+            )}
+            {ultima && horas?.includes(ultima) && <p className="rf-fine">* {AVISO_ULTIMA}</p>}
+          </div>
+        )}
+
+        {fecha && hora && (
+          <div className="rf-recap" style={{ marginTop: 24 }}>
+            <span>
+              <b>Tu cita pasa al {etiquetaFecha(fecha)}</b>
+              <span>a las {hora12(hora)}</span>
+            </span>
+          </div>
+        )}
+        {error && <p className="rf-err">{error}</p>}
+        {fecha && hora && (
+          <button type="button" onClick={confirmar} disabled={pending} className="rf-btn rf-btn--full" style={{ marginTop: 16 }}>
+            {pending ? "Cambiando…" : "Confirmar el cambio"}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ export default function ErrorGlobal({
               fontWeight: 600,
             }}
           >
-            Amicrespa
+            Marea Rizada
           </p>
           <h1
             style={{

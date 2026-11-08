@@ -62,7 +62,7 @@ export function cuando(fecha: Date) {
 /** El pie de cada correo: contacto de la marca y por qué le llega. */
 function pieDe(settings: Awaited<ReturnType<typeof getSettings>>, motivo: string): Pie {
   return {
-    whatsapp: whatsappLink(settings.get("contact.whatsapp"), "¡Hola Amicrespa!"),
+    whatsapp: whatsappLink(settings.get("contact.whatsapp"), "¡Hola Marea Rizada!"),
     instagram: settings.get("social.instagram") || null,
     sitio: urlSitio(),
     motivo,
@@ -85,8 +85,8 @@ function avisosAlSalon(settings: Awaited<ReturnType<typeof getSettings>>) {
 const enlaceCambiar = (codigo: string) =>
   `${urlSitio()}/reservar/cambiar?codigo=${encodeURIComponent(codigo)}&t=${tokenCambioCita(codigo)}`;
 
-const POR_CITA = "Te llega porque tienes una cita en Amicrespa.";
-const INTERNO = "Aviso interno de amicrespa.com.";
+const POR_CITA = "Te llega porque tienes una cita en Marea Rizada.";
+const INTERNO = "Aviso interno de la agenda de Marea Rizada.";
 
 /* --- Citas ----------------------------------------------------------------- */
 
@@ -123,7 +123,7 @@ export function avisarCitaNueva(appointmentId: string) {
       if (cita.clientEmail) {
         await enviar({
           para: cita.clientEmail,
-          asunto: `Tu cita en Amicrespa quedó lista · ${cita.code}`,
+          asunto: `Tu cita en Marea Rizada quedó lista · ${cita.code}`,
           responderA: correoDelSalon(settings.get("contact.email")) || null,
           html: plantilla({
             titulo: "Tu cita quedó lista",
@@ -135,7 +135,7 @@ export function avisarCitaNueva(appointmentId: string) {
               parrafo(`Hola ${escapar(cita.clientName.split(" ")[0] ?? cita.clientName)}, te esperamos.`),
               resumen,
               parrafo(
-                "Guarda tu código: si algo se te cruza, con él y tu celular puedes cambiar la fecha tú misma en amicrespa.com/reservar/cambiar, o directo con este botón.",
+                "Guarda tu código: si algo se te cruza, con él y tu celular puedes cambiar la fecha tú misma desde la página de reservas, o directo con este botón.",
               ),
               boton("Cambiar mi cita", enlaceCambiar(cita.code)),
               parrafo(

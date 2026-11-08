@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const SESSION_COOKIE = "amicrespa_session";
+const SESSION_COOKIE = "marea_session";
 
 /**
  * Primera barrera del panel: valida la firma del token en el edge.

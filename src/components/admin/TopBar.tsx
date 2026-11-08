@@ -87,12 +87,12 @@ export function TopBar({
     <div ref={barRef} className="sticky top-0 z-40 border-b border-ink/15 bg-gold-500">
       <div className="hidden border-b border-gold-500/10 bg-wine-900 px-6 py-2 text-center lg:block">
         <p className="t-eyebrow text-[10px] tracking-[0.16em] text-gold-500/90">
-          Gestión interna · Amicrespa
+          Gestión interna · Marea Rizada
         </p>
       </div>
 
       <div className="flex h-[4.5rem] items-center gap-2 px-4 sm:px-6 lg:h-20">
-        <Link href={contextualHref("/admin")} aria-label="Amicrespa · panel" className="mr-3 flex shrink-0 items-center">
+        <Link href={contextualHref("/admin")} aria-label="Marea Rizada · panel" className="mr-3 flex shrink-0 items-center">
           <Logo variant="dark" markClassName="h-10 w-auto lg:h-12" />
         </Link>
 

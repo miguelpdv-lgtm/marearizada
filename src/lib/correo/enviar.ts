@@ -16,7 +16,7 @@ import { Resend } from "resend";
  *      con Siigo. En local no hace falta configurar nada para probar el resto.
  */
 
-const DESDE_POR_DEFECTO = "Amicrespa <hola@amicrespa.com>";
+const DESDE_POR_DEFECTO = "Marea Rizada <onboarding@resend.dev>";
 
 export function correoConfigurado() {
   return Boolean(process.env.RESEND_API_KEY);

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { ManchasSeccion } from "@/components/brand/Manchas";
 import { configAgenda, fechaBogota, horaBogota, hoyBogota } from "@/lib/agenda";
 import { whatsappLink } from "@/lib/format";
 import { getSettings } from "@/lib/site";
@@ -32,8 +31,7 @@ export default async function CambiarCitaPage({
   const settings = await getSettings();
 
   return (
-    <section className="con-manchas bg-cream">
-      <ManchasSeccion sobre="claro" variante={0} semilla={31} />
+    <section className="bg-cream">
       <div className="shell py-16 md:py-24">
         <div className="text-center">
           <p className="t-eyebrow text-terra-deep">{cita ? `Cita ${cita.code}` : "Tu cita"}</p>
@@ -48,7 +46,7 @@ export default async function CambiarCitaPage({
               </p>
             )}
             <p className="mb-6 text-center text-muted">
-              Escribe el código que te llegó al reservar (por ejemplo <strong>AMI-7K3P</strong>) y el
+              Escribe el código que te llegó al reservar (por ejemplo <strong>MR-7K3P</strong>) y el
               celular con el que reservaste.
             </p>
             <BuscarCita codigoInicial={codigo ?? ""} />
@@ -83,7 +81,7 @@ async function Detalle({
   const motivo = cita.branch.closedNotice ?? motivoNoCambiable(cita, cfg.minHorasAntes);
   const wa = whatsappLink(
     cita.branch.whatsapp || whatsappGeneral,
-    `¡Hola Amicrespa! Quiero cambiar mi cita ${cita.code}.`,
+    `¡Hola Marea Rizada! Quiero cambiar mi cita ${cita.code}.`,
   );
   const fecha = fechaBogota(cita.startsAt);
 

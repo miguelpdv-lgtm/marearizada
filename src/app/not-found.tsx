@@ -29,25 +29,9 @@ export default function NoEncontradaGlobal() {
           Puede que el enlace esté viejo o que hayamos movido algo de sitio.
         </p>
 
-        <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/"
-            className="rounded-full bg-ink px-6 py-3 text-sm font-semibold text-paper transition hover:bg-ink-soft"
-          >
-            Volver al inicio
-          </Link>
-          <Link
-            href="/servicios"
-            className="rounded-full border border-cream bg-bone px-5 py-3 text-sm font-semibold text-ink transition hover:border-ink"
-          >
-            Ver los servicios
-          </Link>
-          <Link
-            href="/productos"
-            className="rounded-full border border-cream bg-bone px-5 py-3 text-sm font-semibold text-ink transition hover:border-ink"
-          >
-            Ir a la tienda
-          </Link>
+        <div className="mt-9 flex flex-wrap justify-center gap-4">
+          <Link href="/" className="btn btn-primary">Volver al inicio</Link>
+          <Link href="/reservar" className="btn btn-outline">Reservar una cita</Link>
         </div>
       </div>
     </main>

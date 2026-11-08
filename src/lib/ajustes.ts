@@ -9,7 +9,7 @@ export { AJUSTES_NUEVOS, calcularComision } from "@/lib/ajustes-datos";
 /** Ajustes que ya no se usan y se quitan del panel. */
 // booking.depositAmount: el abono ya no es un valor fijo; la clienta elige
 // cuánto abonar (o pagar el total) al terminar de reservar.
-const AJUSTES_RETIRADOS = ["payroll.defaultCommissionPercent", "booking.depositAmount"];
+const AJUSTES_RETIRADOS = ["payroll.defaultCommissionPercent", "booking.depositAmount", "jobs.formUrl"];
 
 export async function asegurarAjustes() {
   await prisma.setting.createMany({

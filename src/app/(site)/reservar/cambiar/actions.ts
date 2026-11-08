@@ -18,7 +18,7 @@ import { cargarCita, motivoNoCambiable, normalizarCodigo, tokenCambio } from "./
 /**
  * La clienta cambia su cita sola con el código que le llegó al reservar.
  *
- * El código (AMI-XXXX) es corto y se puede adivinar, así que buscarlo pide
+ * El código (MR-XXXX) es corto y se puede adivinar, así que buscarlo pide
  * además el celular con el que reservó. Encontrada la cita, se trabaja con un
  * token firmado (el mismo que va en el enlace del correo), nunca con el código
  * solo.
@@ -41,7 +41,7 @@ export async function buscarMiCita(
   }
 
   const codigo = normalizarCodigo(codigoEscrito);
-  if (!codigo) return { ok: false, error: "Escribe el código de tu cita, por ejemplo AMI-7K3P." };
+  if (!codigo) return { ok: false, error: "Escribe el código de tu cita, por ejemplo MR-7K3P." };
   if (ultimos10(celular).length < 10) return { ok: false, error: "Escribe el celular con el que reservaste." };
 
   const cita = await prisma.appointment.findUnique({

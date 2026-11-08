@@ -79,10 +79,10 @@ const SERVICIOS = [
 ];
 
 const EQUIPO = [
-  { name: "Profesional A", role: "Estilista", specialty: "Rizos y corte en seco", categoria: "rizos", order: 1 },
-  { name: "Profesional B", role: "Estilista", specialty: "Afro y coily, 4A a 4C", categoria: "rizos", order: 2 },
-  { name: "Profesional C", role: "Manicurista", specialty: "Semipermanente y diseño", categoria: "nails", order: 3 },
-  { name: "Profesional D", role: "Manicurista", specialty: "Pedicura y cuidado", categoria: "nails", order: 4 },
+  { name: "Profesional A", imageUrl: "/equipo-ejemplo/profesional-a.jpg", role: "Estilista", specialty: "Rizos y corte en seco", categoria: "rizos", order: 1 },
+  { name: "Profesional B", imageUrl: "/equipo-ejemplo/profesional-b.jpg", role: "Estilista", specialty: "Afro y coily, 4A a 4C", categoria: "rizos", order: 2 },
+  { name: "Profesional C", imageUrl: "/equipo-ejemplo/profesional-c.jpg", role: "Manicurista", specialty: "Semipermanente y diseño", categoria: "nails", order: 3 },
+  { name: "Profesional D", imageUrl: "/equipo-ejemplo/profesional-d.jpg", role: "Manicurista", specialty: "Pedicura y cuidado", categoria: "nails", order: 4 },
 ];
 
 async function main() {
@@ -156,6 +156,11 @@ async function main() {
       });
     }
     console.log(`  OK ${EQUIPO.length} profesionales de ejemplo con horario y servicios`);
+  } else {
+    // Fotos de ejemplo para quien aún no tiene una.
+    for (const p of EQUIPO) {
+      await prisma.teamMember.updateMany({ where: { name: p.name, imageUrl: null }, data: { imageUrl: p.imageUrl } });
+    }
   }
 
   if (!ADMIN_PASSWORD) {

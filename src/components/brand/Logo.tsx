@@ -38,7 +38,7 @@ export function Logo({
     return (
       <Image
         src={src}
-        alt="Amicrespa"
+        alt="Marea Rizada"
         width={220}
         height={140}
         className={`h-auto w-auto object-contain ${markClassName} ${className}`}

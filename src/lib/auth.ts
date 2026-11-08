@@ -8,7 +8,7 @@ import { SignJWT, jwtVerify } from "jose";
 
 import { prisma } from "@/lib/db";
 
-export const SESSION_COOKIE = "amicrespa_session";
+export const SESSION_COOKIE = "marea_session";
 const SESSION_DAYS = 7;
 
 function secretKey() {

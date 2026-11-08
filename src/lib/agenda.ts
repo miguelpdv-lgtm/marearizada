@@ -284,6 +284,12 @@ function aProfesional(
   };
 }
 
+/** Si la clienta eligió profesional, el cálculo se hace solo con ella. Una
+ * profesional que no hace el servicio (o que no existe) deja la lista vacía. */
+function soloElegida<T extends { id: string }>(staff: T[], staffId?: string | null) {
+  return staffId ? staff.filter((s) => s.id === staffId) : staff;
+}
+
 /** Horas libres de un día concreto.
  *
  * `opciones` es para reagendar desde el panel: la cita que se mueve no se
@@ -293,13 +299,20 @@ export async function horasLibres(
   branchId: string,
   serviceId: string,
   fecha: string,
-  opciones: { excluirCitaId?: string; duracion?: number; sinAnticipacion?: boolean } = {},
+  opciones: {
+    excluirCitaId?: string;
+    duracion?: number;
+    sinAnticipacion?: boolean;
+    /** Solo las horas de esta profesional (la clienta la eligió en la web). */
+    staffId?: string | null;
+  } = {},
 ) {
-  const [servicio, staff, cfg] = await Promise.all([
+  const [servicio, todos, cfg] = await Promise.all([
     prisma.service.findUnique({ where: { id: serviceId } }),
     profesionalesDelServicio(branchId, serviceId),
     configAgenda(),
   ]);
+  const staff = soloElegida(todos, opciones.staffId);
 
   if (!servicio || staff.length === 0) return [];
 
@@ -334,14 +347,16 @@ export async function diasConCupo(
   serviceId: string,
   desde: string,
   dias: number,
-  /** Para mover una cita: no se cuenta a sí misma y usa su duración real. */
-  opciones: { excluirCitaId?: string; duracion?: number } = {},
+  /** Para mover una cita: no se cuenta a sí misma y usa su duración real.
+   * `staffId`: solo los días con cupo de esa profesional. */
+  opciones: { excluirCitaId?: string; duracion?: number; staffId?: string | null } = {},
 ) {
-  const [servicio, staff, cfg] = await Promise.all([
+  const [servicio, todos, cfg] = await Promise.all([
     prisma.service.findUnique({ where: { id: serviceId } }),
     profesionalesDelServicio(branchId, serviceId),
     configAgenda(),
   ]);
+  const staff = soloElegida(todos, opciones.staffId);
 
   if (!servicio || staff.length === 0) return {};
 
@@ -391,12 +406,19 @@ export async function asignarProfesional(
   hora: string,
   /** Al mover una cita: no choca consigo misma, usa su duración real y, si
    * su profesional sigue libre, se queda con ella. */
-  opciones: { excluirCitaId?: string; duracion?: number; preferir?: string | null } = {},
+  opciones: {
+    excluirCitaId?: string;
+    duracion?: number;
+    preferir?: string | null;
+    /** Obligatoria: si esa profesional no está libre, no se asigna a otra. */
+    staffId?: string | null;
+  } = {},
 ): Promise<string | null> {
-  const [servicio, staff] = await Promise.all([
+  const [servicio, todos] = await Promise.all([
     prisma.service.findUnique({ where: { id: serviceId } }),
     profesionalesDelServicio(branchId, serviceId),
   ]);
+  const staff = soloElegida(todos, opciones.staffId);
 
   if (!servicio || staff.length === 0) return null;
 
@@ -543,10 +565,10 @@ export async function lookupsReservaAdmin() {
   return { sedes, servicios, productos, clientes, equipo };
 }
 
-/** Código corto y legible para la clienta: AMI-7K3Q. */
+/** Código corto y legible para la clienta: MR-7K3Q. */
 export function generarCodigo() {
   const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin caracteres ambiguos
   let s = "";
   for (let i = 0; i < 4; i++) s += abc[Math.floor(Math.random() * abc.length)];
-  return `AMI-${s}`;
+  return `MR-${s}`;
 }

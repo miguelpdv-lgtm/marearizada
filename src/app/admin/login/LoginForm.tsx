@@ -22,7 +22,7 @@ export function LoginForm({ next }: { next?: string }) {
             name="email"
             type="email"
             autoComplete="username"
-            placeholder="tucorreo@amicrespa.com"
+            placeholder="tucorreo@marearizada.com"
             required
             autoFocus
           />

@@ -21,12 +21,14 @@ import { urlSitio } from "@/lib/site";
 
 /* --- Consultas ------------------------------------------------------------- */
 
+/** `staffId` vacío = "cualquiera disponible": cuentan todas las profesionales. */
 export async function obtenerHoras(
   branchId: string,
   serviceId: string,
   fecha: string,
+  staffId?: string | null,
 ) {
-  return horasLibres(branchId, serviceId, fecha);
+  return horasLibres(branchId, serviceId, fecha, { staffId: staffId || null });
 }
 
 export async function obtenerDiasConCupo(
@@ -34,8 +36,25 @@ export async function obtenerDiasConCupo(
   serviceId: string,
   desde: string,
   dias: number,
+  staffId?: string | null,
 ) {
-  return diasConCupo(branchId, serviceId, desde, Math.min(dias, 62));
+  return diasConCupo(branchId, serviceId, desde, Math.min(dias, 62), { staffId: staffId || null });
+}
+
+/** El primer día y hora libres de una profesional, para su tarjeta. */
+export async function proximoCupo(
+  branchId: string,
+  serviceId: string,
+  staffId: string,
+  desde: string,
+): Promise<{ fecha: string; hora: string } | null> {
+  const dias = await diasConCupo(branchId, serviceId, desde, 21, { staffId });
+  const fecha = Object.keys(dias)
+    .sort()
+    .find((f) => dias[f] > 0);
+  if (!fecha) return null;
+  const [hora] = await horasLibres(branchId, serviceId, fecha, { staffId });
+  return hora ? { fecha, hora } : null;
 }
 
 /* --- Reserva --------------------------------------------------------------- */
@@ -43,6 +62,8 @@ export async function obtenerDiasConCupo(
 const esquema = z.object({
   branchId: z.string().min(1, "Elige una sede."),
   serviceId: z.string().min(1, "Elige un servicio."),
+  /** Vacío = cualquiera disponible. */
+  staffId: z.string().trim().max(60).optional(),
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Elige una fecha."),
   hora: z.string().regex(/^\d{2}:\d{2}$/, "Elige una hora."),
   clientName: z.string().trim().min(2, "Escribe tu nombre."),
@@ -69,6 +90,7 @@ export type ResultadoReserva =
       codigo: string;
       inicio: string;
       servicio: string;
+      profesional: string | null;
       sede: string;
       direccion: string;
       whatsapp: string | null;
@@ -140,9 +162,11 @@ export async function crearReserva(
   }
 
   // Se vuelve a comprobar el cupo justo antes de guardar: entre que la clienta
-  // eligió la hora y confirmó, alguien más pudo tomarla. También elige quién
-  // atiende, entre los profesionales calificados y libres a esa hora.
-  const staffId = await asignarProfesional(sede.id, servicio.id, d.fecha, d.hora);
+  // eligió la hora y confirmó, alguien más pudo tomarla. Si eligió profesional
+  // se exige esa; si no, se elige entre las calificadas y libres a esa hora.
+  const staffId = await asignarProfesional(sede.id, servicio.id, d.fecha, d.hora, {
+    staffId: d.staffId || null,
+  });
 
   if (!staffId) {
     return {
@@ -191,6 +215,7 @@ export async function crearReserva(
         codigo: cita.code,
         inicio: cita.startsAt.toISOString(),
         servicio: servicio.name,
+        profesional: (await prisma.teamMember.findUnique({ where: { id: staffId }, select: { name: true } }))?.name ?? null,
         sede: sede.city,
         direccion: sede.address,
         whatsapp: sede.whatsapp,

@@ -1,8 +1,8 @@
 {
-  "name": "amicrespa",
+  "name": "marea-rizada",
   "version": "1.0.0",
   "private": true,
-  "description": "Amicrespa — Fase 1: sitio web premium y panel administrativo",
+  "description": "Marea Rizada: sitio, reservas en línea y panel administrativo",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -16,17 +16,9 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:check": "tsx prisma/check-db.ts",
-    "db:check-media": "tsx prisma/check-media.ts",
-    "siigo:mapear": "tsx -r dotenv/config scripts/siigo/aplicar-mapeo.ts dotenv_config_path=.env",
-    "siigo:verificar": "tsx -r dotenv/config scripts/siigo/verificar.ts dotenv_config_path=.env",
-    "siigo:catalogo": "tsx -r dotenv/config scripts/siigo/catalogo.ts dotenv_config_path=.env",
-    "siigo:auditar": "tsx -r dotenv/config scripts/siigo/auditar.ts dotenv_config_path=.env",
-    "siigo:probar": "tsx -r dotenv/config scripts/siigo/probar-factura.ts dotenv_config_path=.env",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "setup": "prisma generate && prisma migrate deploy && npm run db:seed",
-    "marca": "node scripts/marca.mjs",
-    "preflight": "tsx -r dotenv/config scripts/preflight.ts dotenv_config_path=.env",
     "manual:capturas": "node -r dotenv/config scripts/manual-capturas.mjs dotenv_config_path=.env",
     "manual:pdf": "node scripts/manual-pdf.mjs"
   },

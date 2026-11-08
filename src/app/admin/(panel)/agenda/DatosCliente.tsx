@@ -24,7 +24,7 @@ export function DatosCliente({
   tipoRizo: string | null;
   nota: string | null;
 }) {
-  const wa = whatsappLink(telefono, `¡Hola ${nombre.split(" ")[0]}! Te escribimos de Amicrespa.`);
+  const wa = whatsappLink(telefono, `¡Hola ${nombre.split(" ")[0]}! Te escribimos de Marea Rizada.`);
 
   return (
     <section className="border border-stone bg-white px-4 py-3">

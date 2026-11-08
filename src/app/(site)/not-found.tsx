@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ManchasSeccion } from "@/components/brand/Manchas";
 
 export const metadata: Metadata = {
   title: "Esta página no existe",
@@ -14,8 +13,7 @@ export const metadata: Metadata = {
  */
 export default function NoEncontrada() {
   return (
-    <section className="con-manchas bg-canvas py-24 md:py-32">
-      <ManchasSeccion sobre="claro" variante={0} semilla={24} />
+    <section className="bg-canvas py-24 md:py-32">
 
       <div className="shell max-w-2xl text-center">
         <p className="t-eyebrow text-terra">Error 404</p>
@@ -23,28 +21,14 @@ export default function NoEncontrada() {
           Esta página no existe
         </h1>
         <p className="mt-5 text-lg text-muted">
-          Puede que el enlace esté viejo o que hayamos movido algo de sitio. Lo
-          que buscas seguramente está en una de estas:
+          Puede que el enlace esté viejo o que hayamos movido algo de sitio.
         </p>
 
-        <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <Enlace href="/servicios">Ver los servicios</Enlace>
-          <Enlace href="/productos">Ir a la tienda</Enlace>
-          <Enlace href="/reservar">Reservar una cita</Enlace>
-          <Enlace href="/">Volver al inicio</Enlace>
+        <div className="mt-9 flex flex-wrap justify-center gap-4">
+          <Link href="/reservar" className="btn btn-primary">Reservar una cita</Link>
+          <Link href="/" className="btn btn-outline">Volver al inicio</Link>
         </div>
       </div>
     </section>
-  );
-}
-
-function Enlace({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-full border border-cream bg-bone px-5 py-3 text-sm font-semibold text-ink transition hover:border-ink hover:bg-ink hover:text-paper"
-    >
-      {children}
-    </Link>
   );
 }

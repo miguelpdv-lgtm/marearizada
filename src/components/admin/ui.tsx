@@ -26,7 +26,7 @@ export function PageHeader({
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="admin-kicker mb-3">Panel Amicrespa</p>
+          <p className="admin-kicker mb-3">Panel Marea Rizada</p>
           <h1 className="t-editorial text-ink">{title}</h1>
           {description && (
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">

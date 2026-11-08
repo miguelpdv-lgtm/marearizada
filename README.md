@@ -1,47 +1,38 @@
-# Marea Rizada · Sistema de diseño
+# Marea Rizada · Plataforma
 
-Sistema de diseño para **Marea Rizada** ([@marea.rizada](https://instagram.com/marea.rizada)), expertos en salud capilar que recuperan rizos. Incluye las submarcas Shop ([@marearizada_shop](https://instagram.com/marearizada_shop)) y Nails ([@marea.rizada_nails](https://instagram.com/marea.rizada_nails)).
+Sitio de **Marea Rizada** ([@marea.rizada](https://instagram.com/marea.rizada)) con reservas en línea y panel administrativo. Esta rama (`plataforma`) es la versión completa; `main` sigue publicando la landing estática en GitHub Pages hasta el lanzamiento.
 
-**Idea guía:** cada rizo es una ola. La paleta sale del logo (espuma aqua, arena rosada, gris roca del rotulado), la letra tiene rebote como un rizo definido y todo el movimiento imita el agua.
+## Qué incluye
 
-## Ver el sitio
+- **Sitio público**: la landing aprobada (intro del logo, hero con la fachada, descubre tu patrón, servicios, método, antes y después, familia de marca, preguntas), términos y política de datos.
+- **Reservas** (`/reservar`): línea (Rizos o Nails), servicio, profesional o "cualquiera disponible", día y hora, y datos. Cada elección pasa sola a la siguiente pantalla. Cierra con la animación de la marea y la botella; la confirmación llega por correo.
+- **Cambiar cita** (`/reservar/cambiar`): la clienta mueve su cita desde el enlace del correo o con su código y celular.
+- **Abono en línea** con Bold (tarjeta y PSE).
+- **Panel** (`/admin`): agenda, citas, clientas con su historial, servicios, profesionales con horarios y bloqueos, ventas, reportes, promociones, galería y configuración.
 
-- `index.html`: landing page de Marea Rizada (descubre tu patrón, servicios, método, familia de marca, preguntas).
-- `design-system.html`: guía navegable del sistema de diseño.
+## Stack
 
-Son HTML estáticos: ábrelos en el navegador o publícalos tal cual (GitHub Pages, Netlify…). No hay que compilar nada.
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind 4 · Prisma 6 + PostgreSQL (Supabase) · Resend (correo) · Bold (pagos).
 
-## Archivos
+## Correr en local
 
-| Archivo | Contenido |
-| --- | --- |
-| `design-system/tokens.css` | Color (claro y oscuro), tipografía, espaciado, radios, sombras y movimiento |
-| `design-system/components.css` | Botones, chips, tarjetas, formularios, navegación, separadores de ola |
-| `design-system/motion.css` | Marea de carga, trazos que se dibujan, texto que riza, burbujas |
-| `design-system/tide.js` | Olas rizadas en canvas (`MareaRizada.Tide`) y curvas de patrón 2A–4C (`MareaRizada.curlPath`) |
-| `design-system/tokens.json` | Tokens en formato W3C para Figma Tokens o Style Dictionary |
-| `assets/marea-mark.svg` | Isotipo **provisional**, reconstruido desde la foto de perfil de Instagram |
-| `index.html`, `site/landing.*` | Landing page |
-| `design-system.html`, `site/site.*` | Guía navegable del sistema |
-
-## Uso rápido
-
-```html
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&family=Martian+Mono:wght@400;500&family=Shantell+Sans:wght,BNCE,INFM@300..800,-100..100,0..100&display=swap">
-<link rel="stylesheet" href="design-system/tokens.css">
-<link rel="stylesheet" href="design-system/components.css">
-<link rel="stylesheet" href="design-system/motion.css">
-
-<button class="mr-btn">Reservar diagnóstico</button>
-<div class="mr-tide-loader" style="--level:60%"></div>
-
-<canvas id="mar" style="width:100%;height:240px"></canvas>
-<script src="design-system/tide.js"></script>
-<script>new MareaRizada.Tide(document.getElementById('mar'));</script>
+```bash
+cp .env.example .env      # completa DATABASE_URL, DIRECT_URL, AUTH_SECRET y SEED_ADMIN_PASSWORD
+npm install
+npm run setup             # migraciones + datos de ejemplo
+npm run dev               # http://localhost:3000 · panel en /admin
 ```
 
-## Pendiente
+Los datos de ejemplo crean una sede, 8 servicios (Rizos y Nails) y 4 profesionales de ejemplo con foto, horario y servicios. Se reemplazan desde el panel por los reales.
 
-- Las reservas se dirigen al mensaje directo de Instagram (`ig.me/m/marea.rizada`). Si hay sistema de citas, cambiar esos enlaces.
-- Añadir fotos reales de antes/después (ahora es una ilustración generada).
-- Sustituir el isotipo provisional por el logo oficial (SVG) y ajustar los colores de marca si el archivo original difiere.
+Verificación antes de subir cambios: `npm run typecheck && npm run lint && npm run build`.
+
+## Datos del negocio
+
+Se editan en el panel, en **Configuración**: contacto (WhatsApp, correo), redes, razón social y NIT para los documentos legales, y las reglas de la agenda (antelación mínima, días abiertos).
+
+## Sistema de diseño
+
+`public/design-system/` y `public/design-system.html` son la guía del sistema (tokens, componentes, movimiento y las olas de `tide.js`). El sitio público usa ese mismo CSS dentro de una capa de Tailwind (`src/app/(site)/marea.css`) y los scripts de `src/lib/marea/`. Si cambias el CSS de `public/design-system` o `public/site/landing.css`, vuelve a generar `marea.css` con el mismo contenido.
+
+`public/landing-estatica.html` es la landing estática original, como referencia.

@@ -1,980 +1,672 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 
-import { CurlMark } from "@/components/brand/Logo";
-import { IlustracionRizo, IlustracionServicio } from "@/components/brand/IlustracionServicio";
-import { CurlyHairOn } from "@/components/brand/CurlyHairOn";
-import { ManchasSeccion } from "@/components/brand/Manchas";
-import { formatCOP, formatDuration, whatsappLink } from "@/lib/format";
+import { Isotipo } from "@/components/brand/Marca";
+import { formatCOP, whatsappLink } from "@/lib/format";
 import {
   crearReserva,
   obtenerDiasConCupo,
   obtenerHoras,
+  proximoCupo,
   type ResultadoReserva,
 } from "./actions";
+import { etiquetaFecha, hora12 } from "./fechas";
+import { MareaFinal, SelloMarea } from "./MareaFinal";
 import { OfertaAbono } from "./OfertaAbono";
-import { etiquetaFecha } from "./fechas";
+import "./reserva.css";
 
-/* --- Tipos ----------------------------------------------------------------- */
-
-type Sede = {
+export type Servicio = {
   id: string;
-  city: string;
-  name: string;
-  address: string;
-  imageUrl: string | null;
-  hours: string | null;
-  whatsapp: string | null;
-  cerrados: number[];
-  /** Hora de la última cita de cada día de la semana (0 = domingo). */
-  ultimaCita: Record<number, string>;
-  /** Si la sede está cerrada temporalmente, el aviso que se muestra. */
-  cierre: string | null;
-};
-
-type Servicio = {
-  id: string;
-  branchId: string | null;
-  categoryId: string | null;
   name: string;
   tagline: string | null;
-  description: string;
-  price: number;
-  /** Precio que no se muestra en la web (se cotiza en la valoración). */
-  hidePrice?: boolean;
   durationMin: number;
-  imageUrl: string | null;
-  featured: boolean;
+  price: number;
+  hidePrice: boolean;
 };
 
-type Categoria = { id: string; name: string; description: string | null };
+export type Linea = {
+  id: string;
+  name: string;
+  description: string | null;
+  variante: "salon" | "nails";
+  /** Rizos pide el patrón; Nails no. */
+  pidePatron: boolean;
+  servicios: Servicio[];
+};
 
-const PASOS = ["Sede", "Servicio", "Día y hora", "Tus datos"] as const;
+export type Profesional = {
+  id: string;
+  name: string;
+  specialty: string;
+  imageUrl: string | null;
+  servicios: string[];
+};
 
-const RIZOS_OPCIONES = [
-  { valor: "ONDULADO", label: "Ondulado", pista: "Ondas suaves" },
-  { valor: "RIZADO", label: "Rizado", pista: "Rizos en espiral" },
-  { valor: "CRESPO", label: "Crespo", pista: "Rizo cerrado y denso" },
-  { valor: "NO_SE", label: "No sé", pista: "Lo vemos juntas" },
+type Sede = { id: string; name: string; address: string; whatsapp: string | null };
+
+const PASOS = 5;
+/** "" = cualquiera disponible. */
+const CUALQUIERA = "";
+
+const PATRONES = [
+  { valor: "NO_SE", label: "No lo sé" },
+  { valor: "ONDULADO", label: "Ondulado (2A a 2C)" },
+  { valor: "RIZADO", label: "Rizado (3A a 3C)" },
+  { valor: "CRESPO", label: "Afro o coily (4A a 4C)" },
 ] as const;
 
-const DIAS_CORTOS = ["D", "L", "M", "M", "J", "V", "S"];
-const MESES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
+const DIAS_VISIBLES = 21;
 
-function sumarDias(fecha: string, n: number) {
+/** "2026-11-10" → { corto: "lun", numero: 10 } en hora local del día. */
+function partesDia(fecha: string) {
   const [a, m, d] = fecha.split("-").map(Number);
-  return new Date(Date.UTC(a, m - 1, d + n)).toISOString().slice(0, 10);
+  const dt = new Date(Date.UTC(a, m - 1, d));
+  return { corto: ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"][dt.getUTCDay()], numero: d };
 }
 
-
-/* --- Componente ------------------------------------------------------------ */
+const capital = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 export function ReservaFlow({
-  sedes,
-  servicios,
-  categorias,
   hoy,
   maxDias,
-  sedeInicial,
+  sede,
+  lineas,
+  equipo,
   servicioInicial,
 }: {
-  sedes: Sede[];
-  servicios: Servicio[];
-  categorias: Categoria[];
   hoy: string;
   maxDias: number;
-  /** Preselección al llegar desde una tarjeta de servicio. */
-  sedeInicial?: string;
+  sede: Sede;
+  lineas: Linea[];
+  equipo: Profesional[];
   servicioInicial?: string;
 }) {
-  // Si llega con servicio elegido, se salta directo al calendario.
-  const abiertas = sedes.filter((s) => !s.cierre);
-  const preseleccion = servicios.find(
-    (s) => s.id === servicioInicial && (!s.branchId || abiertas.some((a) => a.id === s.branchId)),
-  );
-  const sedePre =
-    preseleccion?.branchId ??
-    (abiertas.some((s) => s.id === sedeInicial) ? sedeInicial : undefined);
+  const inicial = servicioInicial
+    ? lineas.find((l) => l.servicios.some((s) => s.id === servicioInicial))
+    : lineas.length === 1
+      ? lineas[0]
+      : undefined;
 
-  const [paso, setPaso] = useState(preseleccion ? 2 : sedePre ? 1 : 0);
-  const [sedeId, setSedeId] = useState<string | null>(sedePre ?? null);
-  const [servicioId, setServicioId] = useState<string | null>(
-    preseleccion?.id ?? null,
-  );
-  const [categoriaId, setCategoriaId] = useState<string | null>(null);
-  const [fecha, setFecha] = useState<string | null>(null);
+  const [paso, setPaso] = useState(inicial ? (servicioInicial ? 3 : 2) : 1);
+  const [direccion, setDireccion] = useState<"next" | "prev">("next");
+  const [lineaId, setLineaId] = useState<string | null>(inicial?.id ?? null);
+  const [serviceId, setServiceId] = useState<string | null>(servicioInicial && inicial ? servicioInicial : null);
+  const [staffId, setStaffId] = useState<string | null>(null);
+  const [dias, setDias] = useState<Record<string, number> | null>(null);
+  const [dia, setDia] = useState<string | null>(null);
+  const [horas, setHoras] = useState<string[] | null>(null);
   const [hora, setHora] = useState<string | null>(null);
+  const [proximos, setProximos] = useState<Record<string, { fecha: string; hora: string } | null>>({});
+  const [datos, setDatos] = useState({ nombre: "", celular: "", correo: "", patron: "NO_SE", notas: "", primera: false });
+  const [error, setError] = useState<{ campo?: string; texto: string } | null>(null);
+  const [resultado, setResultado] = useState<Extract<ResultadoReserva, { ok: true }> | null>(null);
+  const [enviando, enviar] = useTransition();
+  const ocupado = useRef(false);
+  const titulo = useRef<HTMLHeadingElement>(null);
 
-  const [cupos, setCupos] = useState<Record<string, number>>({});
-  const [horas, setHoras] = useState<string[]>([]);
-  const [cargandoHoras, setCargandoHoras] = useState(false);
+  const linea = lineas.find((l) => l.id === lineaId) ?? null;
+  const servicio = linea?.servicios.find((s) => s.id === serviceId) ?? null;
+  const profesionales = servicio ? equipo.filter((p) => p.servicios.includes(servicio.id)) : [];
+  const profesional = staffId ? equipo.find((p) => p.id === staffId) ?? null : null;
+  const maxConsulta = Math.min(DIAS_VISIBLES, maxDias);
 
-  const [nombre, setNombre] = useState("");
-  const [celular, setCelular] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [primeraVez, setPrimeraVez] = useState(false);
-  const [tipoRizo, setTipoRizo] = useState<string | null>(null);
-  const [notas, setNotas] = useState("");
+  const ir = useCallback((n: number, dir: "next" | "prev") => {
+    setDireccion(dir);
+    setPaso(n);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, []);
 
-  const [error, setError] = useState<string | null>(null);
-  const [resultado, setResultado] = useState<ResultadoReserva | null>(null);
-  const [enviando, iniciarEnvio] = useTransition();
-
-  const sede = sedes.find((s) => s.id === sedeId) ?? null;
-  // La última cita del día tiene un máximo de 15 minutos de espera: se avisa
-  // solo cuando la clienta elige justo esa hora.
-  const ultimaDelDia =
-    sede && fecha ? sede.ultimaCita[new Date(`${fecha}T12:00:00Z`).getUTCDay()] ?? null : null;
-  const esUltima = Boolean(hora && ultimaDelDia && hora === ultimaDelDia);
-  const servicio = servicios.find((s) => s.id === servicioId) ?? null;
-
-  const serviciosDeSede = useMemo(
-    () => servicios.filter((s) => !s.branchId || s.branchId === sedeId),
-    [servicios, sedeId],
-  );
-
-  const categoriasConServicios = useMemo(
-    () => categorias.filter((c) => serviciosDeSede.some((s) => s.categoryId === c.id)),
-    [categorias, serviciosDeSede],
-  );
-
-  const serviciosVisibles = useMemo(
-    () =>
-      categoriaId
-        ? serviciosDeSede.filter((s) => s.categoryId === categoriaId)
-        : serviciosDeSede,
-    [serviciosDeSede, categoriaId],
-  );
-
-  // Días con cupo del mes visible
-  const [mesInicio, setMesInicio] = useState(hoy);
-
+  // Al cambiar de pantalla el foco va al título (lectores de pantalla); no al cargar.
+  const primeraPantalla = useRef(true);
   useEffect(() => {
-    if (!sedeId || !servicioId) return;
-    let vivo = true;
-    obtenerDiasConCupo(sedeId, servicioId, mesInicio, 42).then((r) => {
-      if (vivo) setCupos(r);
-    });
-    return () => {
-      vivo = false;
-    };
-  }, [sedeId, servicioId, mesInicio]);
-
-  // Horas del día elegido
-  useEffect(() => {
-    if (!sedeId || !servicioId || !fecha) return;
-    let vivo = true;
-    setCargandoHoras(true);
-    setHora(null);
-    obtenerHoras(sedeId, servicioId, fecha)
-      .then((r) => vivo && setHoras(r))
-      .finally(() => vivo && setCargandoHoras(false));
-    return () => {
-      vivo = false;
-    };
-  }, [sedeId, servicioId, fecha]);
-
-  // Al elegir un día, el bloque de horas queda a la vista sin que haya
-  // que bajar a buscarlo — sobre todo en móvil, donde calendario y
-  // horas van apilados.
-  const horasRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (fecha) horasRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [fecha]);
-
-  // Cada paso arranca arriba, viendo su propio título — si no, tras
-  // avanzar automáticamente (por ejemplo al elegir la hora) la pantalla
-  // se queda donde estaba el botón de la hora, muy abajo.
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (primeraPantalla.current) {
+      primeraPantalla.current = false;
+      return;
+    }
+    titulo.current?.focus({ preventScroll: true });
   }, [paso]);
 
-  // Elegir la hora ya completa el paso: avanza sola en vez de esperar
-  // un "Continuar" de más.
-  const elegirHora = (h: string) => {
-    setHora(h);
-    setTimeout(() => setPaso(3), 300);
+  /** Marca la elección un instante y pasa sola a la siguiente pantalla. */
+  const elegir = (aplicar: () => void, siguiente: number) => {
+    if (ocupado.current) return;
+    ocupado.current = true;
+    aplicar();
+    window.setTimeout(() => {
+      ocupado.current = false;
+      ir(siguiente, "next");
+    }, 300);
   };
 
-  const puedeAvanzar =
-    (paso === 0 && sedeId) ||
-    (paso === 1 && servicioId) ||
-    (paso === 2 && fecha && hora) ||
-    paso === 3;
+  // Próximo cupo de cada profesional, para su tarjeta.
+  useEffect(() => {
+    if (paso !== 3 || !servicio) return;
+    let vivo = true;
+    Promise.all(
+      profesionales.map(async (p) => [p.id, await proximoCupo(sede.id, servicio.id, p.id, hoy)] as const),
+    ).then((pares) => vivo && setProximos(Object.fromEntries(pares)));
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paso, servicio?.id]);
 
-  const confirmar = () => {
+  // Días con cupo para la elección actual.
+  useEffect(() => {
+    if (paso !== 4 || !servicio || staffId === null) return;
+    let vivo = true;
+    setDias(null);
+    obtenerDiasConCupo(sede.id, servicio.id, hoy, maxConsulta, staffId || null).then((r) => {
+      if (!vivo) return;
+      setDias(r);
+      setDia((actual) => (actual && r[actual] > 0 ? actual : Object.keys(r).sort().find((f) => r[f] > 0) ?? null));
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [paso, servicio, staffId, sede.id, hoy, maxConsulta]);
+
+  // Horas del día elegido.
+  useEffect(() => {
+    if (paso !== 4 || !servicio || !dia || staffId === null) return;
+    let vivo = true;
+    setHoras(null);
+    obtenerHoras(sede.id, servicio.id, dia, staffId || null).then((r) => vivo && setHoras(r));
+    return () => {
+      vivo = false;
+    };
+  }, [paso, servicio, dia, staffId, sede.id]);
+
+  const reservar = (e: FormEvent) => {
+    e.preventDefault();
+    if (!servicio || !dia || !hora || staffId === null) return;
     setError(null);
-    iniciarEnvio(async () => {
+    enviar(async () => {
       const r = await crearReserva({
-        branchId: sedeId!,
-        serviceId: servicioId!,
-        fecha: fecha!,
-        hora: hora!,
-        clientName: nombre,
-        clientPhone: celular,
-        clientEmail: correo,
-        notes: notas,
-        firstVisit: primeraVez,
-        curlType: (tipoRizo as "ONDULADO" | "RIZADO" | "CRESPO" | "NO_SE") ?? undefined,
+        branchId: sede.id,
+        serviceId: servicio.id,
+        staffId: staffId || undefined,
+        fecha: dia,
+        hora,
+        clientName: datos.nombre,
+        clientPhone: datos.celular,
+        clientEmail: datos.correo,
+        notes: datos.notas || undefined,
+        firstVisit: datos.primera,
+        curlType: linea?.pidePatron ? (datos.patron as "NO_SE" | "ONDULADO" | "RIZADO" | "CRESPO") : undefined,
       });
-      if (r.ok) setResultado(r);
-      else setError(r.error);
+      if (r.ok) {
+        setResultado(r);
+        return;
+      }
+      if (r.error.startsWith("Justo acaban de tomar")) {
+        setHora(null);
+        ir(4, "prev");
+      }
+      setError({ campo: r.campo, texto: r.error });
     });
   };
 
-  /* --- Confirmación ------------------------------------------------------- */
+  const reiniciar = () => {
+    setResultado(null);
+    setLineaId(lineas.length === 1 ? lineas[0].id : null);
+    setServiceId(null);
+    setStaffId(null);
+    setDia(null);
+    setHora(null);
+    setDatos({ nombre: "", celular: "", correo: "", patron: "NO_SE", notas: "", primera: false });
+    ir(lineas.length === 1 ? 2 : 1, "prev");
+  };
 
-  // La pantalla de "tu cita quedó lista" reemplaza todo el flujo — sin
-  // esto, el scroll se queda donde estaba el formulario, muy abajo.
-  useEffect(() => {
-    if (resultado?.ok) window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [resultado]);
+  /* --- Rastro: lo elegido, tocable para volver a ese paso ------------------ */
+  const rastro: { paso: number; contenido: React.ReactNode; label: string }[] = [];
+  if (linea && paso > 1 && lineas.length > 1)
+    rastro.push({ paso: 1, label: linea.name, contenido: <><Isotipo variante={linea.variante} /><span>{linea.name}</span></> });
+  if (servicio && paso > 2) rastro.push({ paso: 2, label: servicio.name, contenido: <span>{servicio.name}</span> });
+  if (staffId !== null && paso > 3)
+    rastro.push({
+      paso: 3,
+      label: profesional?.name ?? "Cualquiera disponible",
+      contenido: profesional ? (
+        <>
+          {profesional.imageUrl && <img src={profesional.imageUrl} alt="" />}
+          <span>{profesional.name}</span>
+        </>
+      ) : (
+        <span>Cualquiera disponible</span>
+      ),
+    });
+  if (dia && hora && paso > 4)
+    rastro.push({ paso: 4, label: "Día y hora", contenido: <span>{capital(etiquetaFecha(dia))} · {hora12(hora)}</span> });
 
-  // Al confirmar, antes del resumen, el cartel "CURLY HAIR #ON".
-  const [celebrando, setCelebrando] = useState(false);
-  useEffect(() => {
-    if (resultado?.ok) setCelebrando(true);
-  }, [resultado?.ok]);
-  const finCelebracion = useCallback(() => setCelebrando(false), []);
-
-  if (resultado?.ok) {
-    const wa = whatsappLink(
-      resultado.whatsapp,
-      `¡Hola Amicrespa! Acabo de reservar con el código ${resultado.codigo}.`,
-    );
-    return (
-      <section className="con-manchas seccion bg-gold-500">
-        {celebrando && <CurlyHairOn onFin={finCelebracion} />}
-        <ManchasSeccion sobre="amarillo" variante={0} semilla={26} />
-        <div className="shell text-center">
-          <CurlMark className="mx-auto h-14 w-auto text-ink" />
-          <p className="t-eyebrow mt-8 text-terra-deep">Tu cita quedó lista</p>
-          <h1 className="t-editorial mt-4 text-balance text-ink">
-            Nos vemos pronto, {nombre.split(" ")[0]}
-          </h1>
-
-          <div className="tarjeta mx-auto mt-10 max-w-md bg-paper p-8 text-left">
-            <p className="t-eyebrow text-clay">Tu código</p>
-            <p className="t-pop mt-1 text-4xl text-terra">{resultado.codigo}</p>
-
-            <dl className="mt-7 space-y-3 border-t border-stone pt-6 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Servicio</dt>
-                <dd className="text-right text-ink">{resultado.servicio}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Cuándo</dt>
-                <dd className="text-right text-ink">
-                  {etiquetaFecha(fecha!)} · {hora}
-                </dd>
-              </div>
-              {esUltima && (
-                <div className="text-xs text-terra-deep">
-                  Es la última cita del día: tenemos un máximo de 15 minutos de espera.
-                </div>
-              )}
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Dónde</dt>
-                <dd className="text-right text-ink">
-                  {resultado.sede}
-                  <span className="block text-xs text-muted">{resultado.direccion}</span>
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {resultado.abono && (
-            <OfertaAbono
-              codigo={resultado.codigo}
-              token={resultado.abono.token}
-              minimo={resultado.abono.minimo}
-              maximo={resultado.abono.maximo}
-            />
-          )}
-
-          <p className="t-small mx-auto mt-6 max-w-sm text-ink">
-            Te enviamos la confirmación a tu correo. Si necesitas mover la cita, puedes{" "}
-            <Link href={resultado.cambiar} className="underline underline-offset-2 hover:text-terra">
-              cambiarla tú misma
-            </Link>{" "}
-            con tu código.
-          </p>
-
-          <div className="mt-9 flex flex-wrap justify-center gap-4">
-            {wa && (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                Escribirnos por WhatsApp
-              </a>
-            )}
-            <Link href="/" className="btn btn-outline">
-              Volver al inicio
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  /* --- Flujo -------------------------------------------------------------- */
+  const errorDe = (campo: string) => (error?.campo === campo ? error.texto : null);
 
   return (
-    <section className="bg-canvas">
-      {/* Cabecera con progreso: amarilla, sigue a la barra de navegación
-          como una sola pieza, igual que el hero de la portada. */}
-      <div className="con-manchas bg-gold-500">
-        <ManchasSeccion sobre="amarillo" variante={2} semilla={27} />
-        <div className="shell py-10 md:py-14">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <p className="t-eyebrow text-terra-deep">Reserva tu cita</p>
-            <Link href="/reservar/cambiar" className="text-sm text-ink underline underline-offset-4 hover:text-terra-deep">
-              ¿Ya tienes cita? Cámbiala aquí
-            </Link>
-          </div>
-          <h1 className="t-editorial mt-3 text-ink">
-            {paso === 0 && "¿En cuál de nuestras casas te esperamos?"}
-            {paso === 1 && "¿Qué necesita tu cabello hoy?"}
-            {paso === 2 && "Elige el día y la hora"}
-            {paso === 3 && "Cuéntanos de ti"}
-          </h1>
-
-          {/* Progreso: cuatro tramos a tope, como bloques */}
-          <ol className="mt-8 grid max-w-3xl grid-cols-4 gap-1.5">
-            {PASOS.map((p, i) => (
-              <li key={p} aria-current={i === paso ? "step" : undefined}>
-                <span
-                  className={`block h-1.5 transition-colors duration-500 ${
-                    i < paso ? "bg-terra" : i === paso ? "bg-ink" : "bg-ink/15"
-                  }`}
-                />
-                <span
-                  className={`t-eyebrow mt-2.5 block text-[10px] sm:text-xs ${
-                    i === paso ? "text-ink" : "text-ink/75"
-                  }`}
-                >
-                  <span className="hidden sm:inline">{i + 1}. </span>
-                  {p}
-                  {i < paso && <span className="sr-only"> (listo)</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-
-      <div className="con-manchas">
-      <ManchasSeccion sobre="claro" variante={1} semilla={31} />
-      <div className="shell grid grid-cols-1 gap-8 py-10 md:py-14 lg:grid-cols-12 lg:gap-12">
-        <div className="order-1 min-w-0 lg:order-none lg:col-start-1 lg:col-span-8 lg:row-start-1">
-          {/* PASO 1 · Sede */}
-          {paso === 0 && (
-            <div className="grid gap-5 sm:grid-cols-2">
-              {sedes.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  disabled={!!s.cierre}
-                  onClick={() => {
-                    setSedeId(s.id);
-                    setServicioId(null);
-                    setCategoriaId(null);
-                    setPaso(1);
-                  }}
-                  className={`tarjeta zoom-parent group border-2 bg-paper text-left transition-all duration-300 ${
-                    s.cierre ? "cursor-not-allowed" : "hover:-translate-y-1"
-                  } ${sedeId === s.id ? "border-terra" : "border-transparent"}`}
-                >
-                  <div className="relative aspect-[4/3] bg-cream">
-                    {s.imageUrl ? (
-                      <Image
-                        src={s.imageUrl}
-                        alt={s.city}
-                        fill
-                        sizes="(max-width: 640px) 92vw, 40vw"
-                        className="zoom-img object-cover"
-                      />
-                    ) : (
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center ${
-                          sedes.indexOf(s) % 2 === 0 ? "bg-terra-pale" : "bg-sky"
-                        }`}
-                      >
-                        <span className="t-poster text-[clamp(2rem,5vw,3.25rem)] text-ink">{s.city}</span>
-                      </div>
-                    )}
-                    <span className="t-eyebrow absolute top-4 left-4 bg-gold-500 px-3.5 py-1.5 text-ink">
-                      {s.city}
-                    </span>
-                    {s.cierre && (
-                      <span className="absolute inset-0 flex items-end bg-ink/60 p-4">
-                        <span className="t-eyebrow bg-paper px-3.5 py-1.5 text-terra-deep">
-                          Cerrada temporalmente
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <p className="t-card text-ink">{s.name}</p>
-                    <p className="t-small mt-1.5">{s.address}</p>
-                    {s.cierre ? (
-                      <p className="mt-3 text-sm font-semibold text-terra-deep">{s.cierre}</p>
-                    ) : s.hours && (
-                      <p className="t-small mt-3 whitespace-pre-line text-clay">
-                        {s.hours}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
+    <div className="rf">
+      <div className="rf-wrap">
+        <div className="rf-bar">
+          {paso > 1 && !(paso === 2 && lineas.length === 1) && (
+            <button type="button" className="rf-back" onClick={() => ir(paso - 1, "prev")}>
+              Anterior
+            </button>
           )}
+          <span className="rf-count">
+            Paso {paso} de {PASOS}
+          </span>
+        </div>
+        <div className="rf-tide" aria-hidden="true">
+          <i style={{ width: `calc(${(paso / PASOS) * 100}% + 40px)` }} />
+        </div>
+        {rastro.length > 0 && (
+          <nav className="rf-trail" aria-label="Lo que elegiste">
+            {rastro.map((r) => (
+              <button key={r.paso} type="button" onClick={() => ir(r.paso, "prev")} aria-label={`Cambiar: ${r.label}`}>
+                {r.contenido}
+              </button>
+            ))}
+          </nav>
+        )}
 
-          {/* PASO 2 · Servicio */}
+        <section key={paso} className={`rf-screen ${direccion === "prev" ? "rf-in-prev" : "rf-in-next"}`} aria-live="polite">
           {paso === 1 && (
-            <div>
-              <div className="no-scrollbar -mx-5 mb-7 flex gap-2 overflow-x-auto overscroll-x-contain px-5 md:mx-0 md:flex-wrap md:px-0">
-                <Chip activo={!categoriaId} onClick={() => setCategoriaId(null)}>
-                  Todos
-                </Chip>
-                {categoriasConServicios.map((c) => (
-                  <Chip
-                    key={c.id}
-                    activo={categoriaId === c.id}
-                    onClick={() => setCategoriaId(c.id)}
-                  >
-                    {c.name}
-                  </Chip>
-                ))}
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                {serviciosVisibles.map((s) => (
+            <>
+              <h1 ref={titulo} tabIndex={-1}>¿Qué quieres agendar?</h1>
+              <div className="rf-choices">
+                {lineas.map((l) => (
                   <button
-                    key={s.id}
+                    key={l.id}
                     type="button"
-                    onClick={() => {
-                      setServicioId(s.id);
-                      setFecha(null);
-                      setHora(null);
-                      setPaso(2);
-                    }}
-                    className={`tarjeta flex gap-4 border-2 bg-paper p-4 text-left transition-all duration-300 ${
-                      servicioId === s.id
-                        ? "border-ink bg-cream"
-                        : "border-transparent hover:-translate-y-0.5"
-                    }`}
+                    className="rf-choice rf-choice--line"
+                    aria-pressed={lineaId === l.id}
+                    onClick={() =>
+                      elegir(() => {
+                        if (lineaId !== l.id) {
+                          setLineaId(l.id);
+                          setServiceId(null);
+                          setStaffId(null);
+                          setDia(null);
+                          setHora(null);
+                        }
+                      }, 2)
+                    }
                   >
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-cream">
-                      {s.imageUrl ? (
-                        <Image
-                          src={s.imageUrl}
-                          alt=""
-                          fill
-                          sizes="80px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <IlustracionServicio
-                          nombre={s.name}
-                          categoria={categorias.find((c) => c.id === s.categoryId)?.name}
-                          className="absolute inset-0"
-                        />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="t-card text-ink">{s.name}</p>
-                      {s.tagline && <p className="t-small mt-0.5">{s.tagline}</p>}
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {s.hidePrice ? (
-                          <span className="text-sm text-ink">Precio en valoración</span>
-                        ) : s.price === 0 ? (
-                          <span className="bg-gold-500 px-2.5 py-0.5 text-[11px] font-semibold text-ink">
-                            Gratis
-                          </span>
-                        ) : (
-                          <span className="text-sm text-ink">
-                            {formatCOP(s.price)}
-                          </span>
-                        )}
-                        <span className="t-small text-clay">
-                          {formatDuration(s.durationMin)}
-                        </span>
-                      </div>
-                    </div>
+                    <Isotipo variante={l.variante} />
+                    <span>
+                      <b>{l.name}</b>
+                      {l.description && <small>{l.description}</small>}
+                    </span>
+                    <i className="rf-go" aria-hidden="true" />
                   </button>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
-          {/* PASO 3 · Día y hora */}
-          {paso === 2 && (
-            <div className="grid gap-8 md:grid-cols-2">
-              <Calendario
-                hoy={hoy}
-                maxDias={maxDias}
-                mesInicio={mesInicio}
-                setMesInicio={setMesInicio}
-                cupos={cupos}
-                fecha={fecha}
-                onElegir={setFecha}
-              />
+          {paso === 2 && linea && (
+            <>
+              <h1 ref={titulo} tabIndex={-1}>Elige el servicio</h1>
+              <div className="rf-choices">
+                {linea.servicios.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="rf-choice"
+                    aria-pressed={serviceId === s.id}
+                    onClick={() =>
+                      elegir(() => {
+                        if (serviceId !== s.id) {
+                          setServiceId(s.id);
+                          setStaffId(null);
+                          setDia(null);
+                          setHora(null);
+                        }
+                      }, 3)
+                    }
+                  >
+                    <span>
+                      <b>{s.name}</b>
+                      {s.tagline && <small>{s.tagline}</small>}
+                      <span className="rf-meta">
+                        {s.durationMin} min aprox.{!s.hidePrice && s.price > 0 ? ` · ${formatCOP(s.price)}` : ""}
+                      </span>
+                    </span>
+                    <i className="rf-go" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
-              <div ref={horasRef} className="scroll-mt-28">
-                <p className="t-eyebrow mb-4 text-terra-deep">
-                  {fecha ? etiquetaFecha(fecha) : "Elige un día primero"}
+          {paso === 3 && servicio && linea && (
+            <>
+              <h1 ref={titulo} tabIndex={-1}>¿Con quién quieres tu cita?</h1>
+              {profesionales.length === 0 ? (
+                <p className="rf-empty">Por ahora nadie del equipo tiene este servicio en su agenda. Escríbenos por WhatsApp y lo coordinamos.</p>
+              ) : (
+                <div className="rf-pros">
+                  {profesionales.map((p) => {
+                    const prox = proximos[p.id];
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="rf-pro"
+                        aria-pressed={staffId === p.id}
+                        onClick={() =>
+                          elegir(() => {
+                            if (staffId !== p.id) {
+                              setStaffId(p.id);
+                              setHora(null);
+                            }
+                          }, 4)
+                        }
+                      >
+                        {p.imageUrl ? (
+                          <img src={p.imageUrl} alt={`Foto de ${p.name}`} />
+                        ) : (
+                          <span className="rf-sinfoto" aria-hidden="true">{p.name.charAt(0)}</span>
+                        )}
+                        <span className="rf-cap">
+                          <b>{p.name}</b>
+                          <small>{p.specialty}</small>
+                          {p.id in proximos && (
+                            <span className="rf-meta">
+                              {prox ? `Próximo cupo: ${partesDia(prox.fecha).corto} ${partesDia(prox.fecha).numero} · ${hora12(prox.hora)}` : "Sin cupos próximos"}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {profesionales.length > 1 && (
+                    <button
+                      type="button"
+                      className="rf-pro rf-pro--any"
+                      aria-pressed={staffId === CUALQUIERA}
+                      onClick={() =>
+                        elegir(() => {
+                          if (staffId !== CUALQUIERA) {
+                            setStaffId(CUALQUIERA);
+                            setHora(null);
+                          }
+                        }, 4)
+                      }
+                    >
+                      <Isotipo variante={linea.variante} />
+                      <span>
+                        <b>Cualquiera disponible</b>
+                        <small>Ves todos los horarios del salón</small>
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {paso === 4 && servicio && staffId !== null && (
+            <>
+              <h1 ref={titulo} tabIndex={-1}>Elige día y hora</h1>
+              <p className="rf-lead">
+                Horarios libres de {profesional ? profesional.name : "todo el equipo"} para{" "}
+                {servicio.name.toLowerCase()}, unos {servicio.durationMin} minutos.
+              </p>
+              {error && !error.campo && <p className="rf-err">{error.texto}</p>}
+              {dias === null ? (
+                <p className="rf-loading">Buscando los días con cupo…</p>
+              ) : Object.values(dias).every((n) => n === 0) ? (
+                <p className="rf-empty">
+                  No hay cupos en las próximas {maxConsulta} días. Prueba con otra profesional o escríbenos por WhatsApp.
                 </p>
+              ) : (
+                <>
+                  <div className="rf-days" role="group" aria-label="Días">
+                    {Object.keys(dias)
+                      .sort()
+                      .map((f) => {
+                        const n = dias[f];
+                        const { corto, numero } = partesDia(f);
+                        return (
+                          <button
+                            key={f}
+                            type="button"
+                            className="rf-day"
+                            aria-pressed={dia === f}
+                            disabled={n === 0}
+                            aria-label={`${capital(etiquetaFecha(f))}, ${n ? `${n} cupos` : "sin cupos"}`}
+                            onClick={() => {
+                              setDia(f);
+                              setHora(null);
+                            }}
+                          >
+                            <span>{corto}</span>
+                            <b>{numero}</b>
+                            <small>{n ? `${n} cupos` : "Sin cupos"}</small>
+                          </button>
+                        );
+                      })}
+                  </div>
+                  {dia && (
+                    <div className="rf-slots-box">
+                      <h2 className="rf-when">{capital(etiquetaFecha(dia))}</h2>
+                      {horas === null ? (
+                        <p className="rf-loading">Cargando horarios…</p>
+                      ) : horas.length === 0 ? (
+                        <p className="rf-empty">Ese día ya no quedan horarios. Elige otro.</p>
+                      ) : (
+                        (
+                          [
+                            ["Mañana", horas.filter((h) => h < "12:00")],
+                            ["Tarde", horas.filter((h) => h >= "12:00")],
+                          ] as const
+                        )
+                          .filter(([, lista]) => lista.length > 0)
+                          .map(([nombre, lista]) => (
+                            <div key={nombre} className="rf-group">
+                              <h3>{nombre}</h3>
+                              <div className="rf-slots">
+                                {lista.map((h) => (
+                                  <button
+                                    key={h}
+                                    type="button"
+                                    className="rf-slot"
+                                    aria-pressed={hora === h}
+                                    onClick={() => elegir(() => setHora(h), 5)}
+                                  >
+                                    {hora12(h)}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
 
-                {!fecha && (
-                  <p className="t-small">
-                    Los días con punto tienen cupo disponible.
-                  </p>
-                )}
-
-                {fecha && cargandoHoras && (
-                  <p className="t-small">Buscando horas libres…</p>
-                )}
-
-                {fecha && !cargandoHoras && horas.length === 0 && (
-                  <div className="tarjeta border-2 border-stone bg-cream p-5">
-                    <p className="text-sm text-ink">
-                      No quedan horas ese día para este servicio.
-                    </p>
-                    <p className="t-small mt-1">Prueba con otra fecha.</p>
+          {paso === 5 && servicio && dia && hora && (
+            <>
+              <h1 ref={titulo} tabIndex={-1}>Tus datos</h1>
+              <div className="rf-recap">
+                {profesional?.imageUrl ? <img src={profesional.imageUrl} alt="" /> : <Isotipo variante={linea?.variante ?? "salon"} />}
+                <span>
+                  <b>{servicio.name}</b>
+                  <span>
+                    {profesional ? `${profesional.name} · ` : ""}
+                    {capital(etiquetaFecha(dia))} · {hora12(hora)}
+                  </span>
+                </span>
+              </div>
+              <form className="rf-form" onSubmit={reservar} noValidate>
+                <div className="rf-field rf-full">
+                  <label htmlFor="rf-nombre">Nombre y apellido</label>
+                  <input
+                    id="rf-nombre"
+                    className="rf-input"
+                    autoComplete="name"
+                    value={datos.nombre}
+                    aria-invalid={Boolean(errorDe("clientName"))}
+                    onChange={(e) => setDatos({ ...datos, nombre: e.target.value })}
+                  />
+                  {errorDe("clientName") && <span className="rf-err">{errorDe("clientName")}</span>}
+                </div>
+                <div className="rf-field">
+                  <label htmlFor="rf-celular">Celular</label>
+                  <input
+                    id="rf-celular"
+                    className="rf-input"
+                    type="tel"
+                    autoComplete="tel"
+                    value={datos.celular}
+                    aria-invalid={Boolean(errorDe("clientPhone"))}
+                    onChange={(e) => setDatos({ ...datos, celular: e.target.value })}
+                  />
+                  {errorDe("clientPhone") && <span className="rf-err">{errorDe("clientPhone")}</span>}
+                </div>
+                <div className="rf-field">
+                  <label htmlFor="rf-correo">Correo electrónico</label>
+                  <input
+                    id="rf-correo"
+                    className="rf-input"
+                    type="email"
+                    autoComplete="email"
+                    value={datos.correo}
+                    aria-invalid={Boolean(errorDe("clientEmail"))}
+                    onChange={(e) => setDatos({ ...datos, correo: e.target.value })}
+                  />
+                  {errorDe("clientEmail") && <span className="rf-err">{errorDe("clientEmail")}</span>}
+                </div>
+                {linea?.pidePatron && (
+                  <div className="rf-field">
+                    <label htmlFor="rf-patron">
+                      Tu patrón de rizo <em>(opcional)</em>
+                    </label>
+                    <select
+                      id="rf-patron"
+                      className="rf-input"
+                      value={datos.patron}
+                      onChange={(e) => setDatos({ ...datos, patron: e.target.value })}
+                    >
+                      {PATRONES.map((p) => (
+                        <option key={p.valor} value={p.valor}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
-
-                {fecha && !cargandoHoras && horas.length > 0 && (
-                  <>
-                    <BloqueHoras
-                      titulo="Mañana"
-                      horas={horas.filter((h) => Number(h.slice(0, 2)) < 12)}
-                      elegida={hora}
-                      onElegir={elegirHora}
-                      ultima={ultimaDelDia}
-                    />
-                    <BloqueHoras
-                      titulo="Tarde"
-                      horas={horas.filter((h) => Number(h.slice(0, 2)) >= 12)}
-                      elegida={hora}
-                      onElegir={elegirHora}
-                      ultima={ultimaDelDia}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* PASO 4 · Datos */}
-          {paso === 3 && (
-            <div className="space-y-8">
-              {esUltima && <AvisoUltima />}
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Campo label="¿Cómo te llamas?" requerido>
-                  <input
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    placeholder="Tu nombre"
-                    className={entrada}
-                    autoComplete="name"
+                <div className={`rf-field ${linea?.pidePatron ? "" : "rf-full"}`}>
+                  <label htmlFor="rf-notas">
+                    ¿Algo que debamos saber? <em>(opcional)</em>
+                  </label>
+                  <textarea
+                    id="rf-notas"
+                    className="rf-input"
+                    rows={2}
+                    value={datos.notas}
+                    onChange={(e) => setDatos({ ...datos, notas: e.target.value })}
                   />
-                </Campo>
-                <Campo label="Celular (WhatsApp)" requerido>
-                  <input
-                    value={celular}
-                    onChange={(e) => setCelular(e.target.value)}
-                    placeholder="300 000 0000"
-                    inputMode="tel"
-                    className={entrada}
-                    autoComplete="tel"
-                  />
-                </Campo>
-              </div>
-
-              <Campo label="Correo" requerido ayuda="Ahí te llega la confirmación de la cita.">
-                <input
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                  placeholder="tucorreo@ejemplo.com"
-                  type="email"
-                  className={entrada}
-                  autoComplete="email"
-                />
-              </Campo>
-
-              <div>
-                <p className="t-eyebrow mb-1 text-terra-deep">¿Cómo es tu rizo?</p>
-                <p className="t-small mb-4">
-                  Nos ayuda a prepararnos. Si no sabes, no importa.
-                </p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {RIZOS_OPCIONES.map((o) => (
-                    <button
-                      key={o.valor}
-                      type="button"
-                      onClick={() =>
-                        setTipoRizo(tipoRizo === o.valor ? null : o.valor)
-                      }
-                      className={`tarjeta zoom-parent group border-2 bg-paper text-left transition-all duration-300 ${
-                        tipoRizo === o.valor
-                          ? "-translate-y-1 border-ink"
-                          : "border-transparent hover:-translate-y-0.5"
-                      }`}
-                    >
-                      <div className="relative aspect-square">
-                        <IlustracionRizo tipo={o.valor} className="absolute inset-0" />
-                        {tipoRizo === o.valor && (
-                          <span className="absolute inset-0 flex items-center justify-center bg-ink/55 text-2xl text-gold-500">
-                            ✓
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="text-sm font-medium text-ink">{o.label}</p>
-                        <p className="t-small">{o.pista}</p>
-                      </div>
-                    </button>
-                  ))}
                 </div>
-              </div>
-
-              <label className="tarjeta flex cursor-pointer items-start gap-3 border-2 border-stone bg-paper p-4">
-                <input
-                  type="checkbox"
-                  checked={primeraVez}
-                  onChange={(e) => setPrimeraVez(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-terra"
-                />
-                <span>
-                  <span className="block text-sm text-ink">
-                    Es mi primera vez en Amicrespa
-                  </span>
-                  <span className="t-small">
-                    Nos tomamos un rato más contigo al inicio de la cita.
-                  </span>
-                </span>
-              </label>
-
-              <Campo label="¿Algo que debamos saber?" ayuda="Opcional.">
-                <textarea
-                  value={notas}
-                  onChange={(e) => setNotas(e.target.value)}
-                  rows={3}
-                  placeholder="Alergias, tratamientos recientes, lo que quieras contarnos…"
-                  className={`${entrada} resize-y`}
-                />
-              </Campo>
-
-              {error && (
-                <p className="border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </p>
-              )}
-            </div>
+                <label className="rf-check rf-full">
+                  <input
+                    type="checkbox"
+                    checked={datos.primera}
+                    onChange={(e) => setDatos({ ...datos, primera: e.target.checked })}
+                  />
+                  Es mi primera vez en Marea Rizada
+                </label>
+                <div className="rf-note rf-full">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="M3 7l9 6 9-6" />
+                  </svg>
+                  <span>Te enviaremos la confirmación de tu cita a este correo, con la fecha, la hora y cómo llegar al salón.</span>
+                </div>
+                {error && !error.campo && <p className="rf-err rf-full">{error.texto}</p>}
+                <div className="rf-full">
+                  <button type="submit" className="rf-btn rf-btn--full" disabled={enviando}>
+                    {enviando ? "Agendando…" : "Agendar cita"}
+                  </button>
+                </div>
+              </form>
+            </>
           )}
+        </section>
+      </div>
 
-        </div>
-
-        {/* Resumen: en móvil va antes del botón de confirmar (2º),
-            para que se lea "esto es lo que vas a confirmar" antes del
-            botón, no después. */}
-        <aside className="order-2 min-w-0 lg:order-none lg:col-start-9 lg:col-span-4 lg:row-start-1 lg:row-span-2">
-          <div className="tarjeta bg-ink p-6 text-paper md:p-7 lg:sticky lg:top-28">
-            <p className="t-eyebrow text-gold-500">Tu cita</p>
-
-            <dl className="mt-6 space-y-4 text-sm">
-              <Resumen etiqueta="Sede" valor={sede ? `${sede.city} · ${sede.address}` : null} />
-              <Resumen etiqueta="Servicio" valor={servicio?.name ?? null} />
-              <Resumen
-                etiqueta="Duración"
-                valor={servicio ? formatDuration(servicio.durationMin) : null}
-              />
-              <Resumen
-                etiqueta="Cuándo"
-                valor={fecha ? `${etiquetaFecha(fecha)}${hora ? ` · ${hora}` : ""}` : null}
-              />
-            </dl>
-            {esUltima && (
-              <p className="mt-4 text-xs text-gold-300">
-                Última cita del día: máximo 15 minutos de espera.
-              </p>
-            )}
-
-            {servicio && (
-              <div className="mt-6 flex items-baseline justify-between border-t border-paper/20 pt-5">
-                <span className="t-eyebrow text-gold-500">Total</span>
-                <span className="display text-2xl text-paper">
-                  {servicio.hidePrice
-                    ? "En valoración"
-                    : servicio.price === 0
-                      ? "Gratis"
-                      : formatCOP(servicio.price)}
-                </span>
-              </div>
-            )}
-
-            <p className="mt-5 text-sm leading-relaxed text-paper/80">
-              Abono opcional. Confirmamos por correo.
+      {resultado && (
+        <MareaFinal etiqueta="Tu cita quedó agendada">
+          <div className="rf-card">
+            <SelloMarea />
+            <h2>Tu cita quedó agendada</h2>
+            <p>
+              La marea ya lleva tu confirmación a <span className="rf-to">{datos.correo.trim()}</span>
             </p>
-          </div>
-        </aside>
-
-        {/* Navegación: fija abajo en móvil para que el CTA nunca se
-            pierda al bajar por una lista larga (servicios, calendario).
-            3º en móvil — después del resumen, nunca antes. */}
-        <div className="order-3 sticky bottom-0 z-10 -mx-5 flex items-center justify-between gap-4 border-t border-stone bg-canvas px-5 py-5 shadow-[0_-8px_20px_-12px_rgba(0,0,0,0.15)] md:static md:mx-0 md:bg-transparent md:px-0 md:pt-6 md:shadow-none lg:order-none lg:col-start-1 lg:col-span-8 lg:row-start-2">
-          <button
-            type="button"
-            onClick={() => setPaso((p) => Math.max(0, p - 1))}
-            disabled={paso === 0}
-            className="btn-link disabled:pointer-events-none disabled:opacity-30"
-          >
-            ← Atrás
-          </button>
-
-          {paso < 3 ? (
-            <button
-              type="button"
-              onClick={() => setPaso((p) => p + 1)}
-              disabled={!puedeAvanzar}
-              className="btn btn-primary disabled:pointer-events-none disabled:opacity-35"
-            >
-              Continuar
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={confirmar}
-              disabled={enviando}
-              className="btn btn-primary disabled:opacity-60"
-            >
-              {enviando ? "Reservando…" : "Confirmar mi cita"}
-            </button>
-          )}
-        </div>
-      </div>
-      </div>
-    </section>
-  );
-}
-
-/* --- Piezas ---------------------------------------------------------------- */
-
-export const entrada =
-  "w-full rounded border-2 border-stone bg-paper px-4 py-3.5 text-sm text-ink placeholder:text-clay transition-colors focus:border-terra focus:outline-none";
-
-function Campo({
-  label,
-  ayuda,
-  requerido,
-  children,
-}: {
-  label: string;
-  ayuda?: string;
-  requerido?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="t-eyebrow mb-2 block text-terra-deep">
-        {label}
-        {requerido && <span className="ml-1 text-terra">*</span>}
-      </label>
-      {children}
-      {ayuda && <p className="t-small mt-1.5">{ayuda}</p>}
-    </div>
-  );
-}
-
-function Chip({
-  activo,
-  onClick,
-  children,
-}: {
-  activo: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`t-eyebrow shrink-0 rounded-full border-2 px-4 py-2 transition-colors ${
-        activo
-          ? "border-ink bg-ink text-gold-500"
-          : "border-stone text-ink hover:border-terra"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Resumen({ etiqueta, valor }: { etiqueta: string; valor: string | null }) {
-  return (
-    <div>
-      <dt className="t-eyebrow text-gold-500">{etiqueta}</dt>
-      <dd className={`mt-1 ${valor ? "text-paper" : "text-paper/60"}`}>
-        {valor ?? "Por elegir"}
-      </dd>
-    </div>
-  );
-}
-
-export function BloqueHoras({
-  titulo,
-  horas,
-  elegida,
-  onElegir,
-  ultima,
-}: {
-  titulo: string;
-  horas: string[];
-  elegida: string | null;
-  onElegir: (h: string) => void;
-  /** Hora de la última cita del día, que lleva su aviso. */
-  ultima?: string | null;
-}) {
-  if (horas.length === 0) return null;
-  return (
-    <div className="mt-5">
-      <p className="t-small mb-2 text-clay">{titulo}</p>
-      <div className="flex flex-wrap gap-2">
-        {horas.map((h) => (
-          <button
-            key={h}
-            type="button"
-            onClick={() => onElegir(h)}
-            className={`rounded-full border-2 px-4 py-2.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 ${
-              elegida === h
-                ? "border-ink bg-ink text-gold-500"
-                : "border-stone text-ink hover:border-terra"
-            }`}
-          >
-            {h}
-            {h === ultima && <span aria-hidden> *</span>}
-          </button>
-        ))}
-      </div>
-      {ultima && horas.includes(ultima) && (
-        <p className="t-small mt-2 text-clay">* {AVISO_ULTIMA}</p>
-      )}
-    </div>
-  );
-}
-
-const AVISO_ULTIMA =
-  "Última cita del día: tenemos un máximo de 15 minutos de espera. Si llegas más tarde, la reagendamos.";
-
-function AvisoUltima() {
-  return (
-    <p className="mt-4 border border-gold-500 bg-gold-100 px-4 py-3 text-left text-sm text-ink">
-      {AVISO_ULTIMA}
-    </p>
-  );
-}
-
-export function Calendario({
-  hoy,
-  maxDias,
-  mesInicio,
-  setMesInicio,
-  cupos,
-  fecha,
-  onElegir,
-}: {
-  hoy: string;
-  maxDias: number;
-  mesInicio: string;
-  setMesInicio: (f: string) => void;
-  cupos: Record<string, number>;
-  fecha: string | null;
-  onElegir: (f: string) => void;
-}) {
-  const [a, m] = mesInicio.split("-").map(Number);
-  const primero = new Date(Date.UTC(a, m - 1, 1));
-  const diasDelMes = new Date(Date.UTC(a, m, 0)).getUTCDate();
-  const desplazamiento = primero.getUTCDay();
-  const ultimo = sumarDias(hoy, maxDias);
-
-  const celdas: (string | null)[] = [
-    ...Array(desplazamiento).fill(null),
-    ...Array.from({ length: diasDelMes }, (_, i) =>
-      `${a}-${String(m).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`,
-    ),
-  ];
-
-  const mover = (delta: number) => {
-    const nuevo = new Date(Date.UTC(a, m - 1 + delta, 1)).toISOString().slice(0, 10);
-    setMesInicio(nuevo < hoy ? hoy : nuevo);
-  };
-
-  return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => mover(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-stone text-ink transition-colors hover:border-terra hover:bg-cream"
-          aria-label="Mes anterior"
-        >
-          ←
-        </button>
-        <p className="t-card text-ink">
-          {MESES[m - 1]} {a}
-        </p>
-        <button
-          type="button"
-          onClick={() => mover(1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-stone text-ink transition-colors hover:border-terra hover:bg-cream"
-          aria-label="Mes siguiente"
-        >
-          →
-        </button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 text-center">
-        {DIAS_CORTOS.map((d, i) => (
-          <span key={i} className="t-small py-1 text-clay">
-            {d}
-          </span>
-        ))}
-
-        {celdas.map((f, i) => {
-          if (!f) return <span key={`v${i}`} />;
-          const cupo = cupos[f] ?? 0;
-          const fuera = f < hoy || f > ultimo;
-          const libre = cupo > 0 && !fuera;
-          const activo = fecha === f;
-
-          return (
-            <button
-              key={f}
-              type="button"
-              disabled={!libre}
-              onClick={() => onElegir(f)}
-              className={`relative aspect-square rounded-full border-2 text-sm font-medium transition-all duration-200 ${
-                activo
-                  ? "border-ink bg-ink text-gold-500"
-                  : libre
-                    ? "border-stone text-ink hover:-translate-y-0.5 hover:border-terra"
-                    : "cursor-not-allowed border-transparent text-clay/50"
-              }`}
-            >
-              {Number(f.slice(-2))}
-              {libre && !activo && (
-                <span className="absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-terra" />
+            <p className="rf-code" aria-label={`Código de tu cita: ${resultado.codigo}`}>{resultado.codigo}</p>
+            <dl>
+              <div>
+                <dt>Servicio</dt>
+                <dd>{resultado.servicio}</dd>
+              </div>
+              {resultado.profesional && (
+                <div>
+                  <dt>Con</dt>
+                  <dd>{resultado.profesional}</dd>
+                </div>
               )}
-            </button>
-          );
-        })}
-      </div>
+              <div>
+                <dt>Día</dt>
+                <dd>{dia && capital(etiquetaFecha(dia))}</dd>
+              </div>
+              <div>
+                <dt>Hora</dt>
+                <dd>{hora && hora12(hora)}</dd>
+              </div>
+              <div>
+                <dt>Lugar</dt>
+                <dd>{resultado.direccion}</dd>
+              </div>
+            </dl>
+            {resultado.abono && (
+              <div className="rf-abono">
+                <OfertaAbono
+                  codigo={resultado.codigo}
+                  token={resultado.abono.token}
+                  minimo={resultado.abono.minimo}
+                  maximo={resultado.abono.maximo}
+                />
+              </div>
+            )}
+            <p className="rf-fine">
+              Si no ves el correo en unos minutos, revisa la carpeta de spam. ¿Se te cruzó algo? Puedes{" "}
+              <Link href={resultado.cambiar} className="underline underline-offset-2">
+                cambiar tu cita tú misma
+              </Link>
+              .
+            </p>
+            <div className="rf-links">
+              {resultado.whatsapp && (
+                <a
+                  className="rf-btn rf-btn--outline"
+                  href={whatsappLink(resultado.whatsapp, `¡Hola Marea Rizada! Acabo de reservar con el código ${resultado.codigo}.`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Escribir por WhatsApp
+                </a>
+              )}
+              <button type="button" className="rf-btn rf-btn--light" onClick={reiniciar}>
+                Agendar otra cita
+              </button>
+            </div>
+          </div>
+        </MareaFinal>
+      )}
     </div>
   );
 }

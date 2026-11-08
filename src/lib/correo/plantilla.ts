@@ -12,33 +12,32 @@ import "server-only";
  *   1. **Una sola imagen y ningún bloque de color de fondo.** La versión con
  *      varias imágenes (logo, ondas) y bloques rosa/amarillo caía en
  *      Promociones; la sencilla, con texto y datos, llega a Principal. La
- *      marca va en el encabezado —el logo completo en vino sobre rosa, los
- *      colores de la foto de perfil de Instagram, como UNA imagen— y en el
- *      texto: vino con acentos rosa.
+ *      marca va en el encabezado —el isotipo y el nombre de Marea Rizada
+ *      sobre sal, con una ola, como UNA imagen— y en el texto: abismo con
+ *      líneas aqua suaves.
  *   2. **Siempre claro.** El correo se declara "solo claro" (`color-scheme:
  *      light only`): Apple Mail, iOS Mail y Outlook lo muestran blanco aunque
  *      el teléfono esté en modo oscuro.
  *   3. **La app de Gmail no obedece eso** y en modo oscuro recolorea todo lo
  *      que no sea imagen (fondo a gris oscuro, texto vino a rosa claro). No se
  *      puede evitar sin arriesgar la lectura: el truco de fijar el fondo como
- *      imagen deja el fondo blanco pero Gmail igual aclara el texto, y queda
- *      rosa claro sobre blanco. Por eso el diseño está pensado para que esa
+ *      imagen deja el fondo blanco pero Gmail igual aclara el texto. Por eso el diseño está pensado para que esa
  *      inversión se vea pareja: el encabezado (imagen) no cambia y todo lo
  *      demás es blanco con texto y líneas de un solo tono, sin bloques de
  *      color que se vuelvan verde oliva o morado.
  *
- * Colores del manual (`docs/DESIGN_SYSTEM.md`): vino #5b001d, rosa #df9dbd,
- * rosa 300 #ecc4d7.
+ * Colores del sistema de diseño de Marea Rizada (public/design-system):
+ * abismo #0F3236, roca #3D4643 y la línea aqua suave #D3E3E1.
  */
 
-const VINO = "#5b001d";
-const ROSA = "#df9dbd";
-const ROSA_SUAVE = "#ecc4d7";
+const ABISMO = "#0f3236";
+const SAL = "#f2f8f7";
+const LINEA = "#d3e3e1";
 const BLANCO = "#ffffff";
-const SUAVE = "#7f384f";
+const SUAVE = "#5f6b68";
 
-const SERIF = "'Playfair Display',Georgia,'Times New Roman',serif";
-const SANS = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+const DISPLAY = "'Shantell Sans','Trebuchet MS',Helvetica,Arial,sans-serif";
+const SANS = "Figtree,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
 export function escapar(texto: string) {
   return texto
@@ -48,36 +47,36 @@ export function escapar(texto: string) {
     .replace(/"/g, "&quot;");
 }
 
-/** Una fila de "etiqueta: valor" de las que arman el resumen de una cita o un pedido. */
+/** Una fila de "etiqueta: valor" de las que arman el resumen de una cita. */
 export function fila(etiqueta: string, valor: string) {
   return `
     <tr>
-      <td style="padding:10px 0;border-bottom:1px solid ${ROSA_SUAVE};color:${SUAVE};font-family:${SANS};font-size:14px;vertical-align:top;white-space:nowrap;">${escapar(etiqueta)}</td>
-      <td class="em-dato" style="padding:10px 0 10px 16px;border-bottom:1px solid ${ROSA_SUAVE};color:${VINO};font-family:${SANS};font-size:14px;font-weight:600;vertical-align:top;">${valor}</td>
+      <td style="padding:10px 0;border-bottom:1px solid ${LINEA};color:${SUAVE};font-family:${SANS};font-size:14px;vertical-align:top;white-space:nowrap;">${escapar(etiqueta)}</td>
+      <td class="em-dato" style="padding:10px 0 10px 16px;border-bottom:1px solid ${LINEA};color:${ABISMO};font-family:${SANS};font-size:14px;font-weight:600;vertical-align:top;">${valor}</td>
     </tr>`;
 }
 
-/** Botón píldora de contorno vino: sin fondo, para que Gmail oscuro no lo recoloree raro. */
+/** Botón de letrero con contorno abismo: sin fondo, para que Gmail oscuro no lo recoloree raro. */
 export function boton(texto: string, url: string) {
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px;">
-      <tr><td style="border:2px solid ${VINO};border-radius:999px;">
-        <a href="${escapar(url)}" style="display:inline-block;padding:11px 26px;color:${VINO};font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;">${escapar(texto)}</a>
+      <tr><td style="border:2px solid ${ABISMO};border-radius:3px;">
+        <a href="${escapar(url)}" style="display:inline-block;padding:11px 26px;color:${ABISMO};font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;">${escapar(texto)}</a>
       </td></tr>
     </table>`;
 }
 
 export function parrafo(texto: string) {
-  return `<p style="margin:0 0 14px;color:${VINO};font-family:${SANS};font-size:15px;line-height:1.65;">${texto}</p>`;
+  return `<p style="margin:0 0 14px;color:${ABISMO};font-family:${SANS};font-size:15px;line-height:1.65;">${texto}</p>`;
 }
 
 export function tablaDatos(filas: string) {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:20px 0;border-top:1px solid ${ROSA_SUAVE};">${filas}</table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:20px 0;border-top:1px solid ${LINEA};">${filas}</table>`;
 }
 
 /** Dirección pública del sitio, para las imágenes (en un correo van absolutas). */
 function sitio() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.amicrespa.com").replace(/\/+$/, "");
+  return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 }
 
 /** Los enlaces del pie. Todos opcionales: se muestra lo que haya. */
@@ -90,7 +89,7 @@ export type Pie = {
 };
 
 function enlacePie(texto: string, url: string) {
-  return `<a href="${escapar(url)}" style="color:${VINO};font-weight:600;text-decoration:underline;">${escapar(texto)}</a>`;
+  return `<a href="${escapar(url)}" style="color:${ABISMO};font-weight:600;text-decoration:underline;">${escapar(texto)}</a>`;
 }
 
 /*
@@ -147,33 +146,33 @@ export function plantilla({
 <meta name="supported-color-schemes" content="light only">
 <meta name="format-detection" content="telephone=no,address=no,date=no,email=no">
 <title>${escapar(titulo)}</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Shantell+Sans:wght@700&display=swap" rel="stylesheet">
 <style>${ESTILOS}</style>
 </head>
 <body id="cuerpo" style="margin:0;padding:0;background:${BLANCO};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapar(preencabezado)}</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${BLANCO}" style="background:${BLANCO};padding:24px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${BLANCO}" style="max-width:540px;background:${BLANCO};border:1px solid ${ROSA_SUAVE};">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${BLANCO}" style="max-width:540px;background:${BLANCO};border:1px solid ${LINEA};">
 
-        <tr><td bgcolor="${ROSA}" style="background:${ROSA};line-height:0;font-size:0;">
-          <img src="${sitio()}/brand/correo-cabecera-rosa.png" width="540" alt="Amicrespa" style="display:block;width:100%;max-width:540px;height:auto;border:0;color:${VINO};font-family:${SERIF};font-size:22px;font-weight:700;letter-spacing:.2em;line-height:1.4;">
+        <tr><td bgcolor="${SAL}" style="background:${SAL};line-height:0;font-size:0;">
+          <img src="${sitio()}/brand/correo-cabecera.png" width="540" alt="Marea Rizada" style="display:block;width:100%;max-width:540px;height:auto;border:0;color:${ABISMO};font-family:${DISPLAY};font-size:22px;font-weight:700;line-height:1.4;">
         </td></tr>
 
         <tr><td class="em-caja" style="padding:34px 36px 26px;">
           ${etiqueta ? `<p style="margin:0 0 10px;color:${SUAVE};font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;">${escapar(etiqueta)}</p>` : ""}
-          <h1 style="margin:0 0 18px;color:${VINO};font-family:${SERIF};font-size:27px;line-height:1.2;font-weight:700;">${escapar(titulo)}</h1>
+          <h1 style="margin:0 0 18px;color:${ABISMO};font-family:${DISPLAY};font-size:27px;line-height:1.2;font-weight:700;">${escapar(titulo)}</h1>
           ${cuerpo}
           ${
             despedida
-              ? `<p style="margin:26px 0 0;color:${VINO};font-family:${SANS};font-size:15px;line-height:1.6;">Con cariño,<br><span style="font-family:${SERIF};font-size:17px;font-weight:700;">el equipo de Amicrespa</span></p>`
+              ? `<p style="margin:26px 0 0;color:${ABISMO};font-family:${SANS};font-size:15px;line-height:1.6;">Con cariño,<br><span style="font-family:${DISPLAY};font-size:17px;font-weight:700;">el equipo de Marea Rizada</span></p>`
               : ""
           }
         </td></tr>
 
-        <tr><td class="em-caja" style="padding:20px 36px 26px;border-top:1px solid ${ROSA_SUAVE};color:${SUAVE};font-family:${SANS};font-size:12px;line-height:1.7;">
+        <tr><td class="em-caja" style="padding:20px 36px 26px;border-top:1px solid ${LINEA};color:${SUAVE};font-family:${SANS};font-size:12px;line-height:1.7;">
           ${enlaces.length ? `<p style="margin:0 0 6px;">${enlaces.join(" &nbsp;·&nbsp; ")}</p>` : ""}
-          <p style="margin:0;">Salón especializado en cabello crespo, rizado y ondulado · Barranquilla y Cali</p>
+          <p style="margin:0;">Marea Rizada · Expertos en salud capilar</p>
           ${pie?.motivo ? `<p style="margin:6px 0 0;">${escapar(pie.motivo)}</p>` : ""}
         </td></tr>
 

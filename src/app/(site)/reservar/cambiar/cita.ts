@@ -5,12 +5,12 @@ import { tokenCambioCita, tokenValido } from "@/lib/pagos";
 
 export const tokenCambio = tokenCambioCita;
 
-/** "ami 7k3p", "7K3P" o "AMI-7K3P" → "AMI-7K3P". null si no parece un código. */
+/** "mr 7k3p", "7K3P" o "MR-7K3P" → "MR-7K3P". null si no parece un código. */
 export function normalizarCodigo(texto: string) {
   const limpio = texto.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  // Con prefijo son 7 caracteres; sin él, 4 (y el código mismo puede empezar por AMI).
-  const sufijo = limpio.length === 7 && limpio.startsWith("AMI") ? limpio.slice(3) : limpio;
-  return /^[A-Z0-9]{4}$/.test(sufijo) ? `AMI-${sufijo}` : null;
+  // Con prefijo son 6 caracteres; sin él, 4 (y el código mismo puede empezar por MR).
+  const sufijo = limpio.length === 6 && limpio.startsWith("MR") ? limpio.slice(2) : limpio;
+  return /^[A-Z0-9]{4}$/.test(sufijo) ? `MR-${sufijo}` : null;
 }
 
 /** La cita del enlace, si el token es válido. */

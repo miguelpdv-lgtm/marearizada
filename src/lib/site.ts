@@ -230,7 +230,7 @@ export function bookingTarget(settings: SiteSettings) {
   const whatsapp = settings.get("contact.whatsapp");
   const message = settings.get(
     "contact.whatsappMessage",
-    "¡Hola Amicrespa! Quiero agendar una cita.",
+    "¡Hola Marea Rizada! Quiero agendar una cita.",
   );
   const digits = whatsapp.replace(/\D/g, "");
   const number = digits.startsWith("57") ? digits : `57${digits}`;

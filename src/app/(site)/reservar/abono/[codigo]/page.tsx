@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CurlMark } from "@/components/brand/Logo";
-import { ManchasSeccion } from "@/components/brand/Manchas";
 import { fechaBogota, horaBogota } from "@/lib/agenda";
 import { prisma } from "@/lib/db";
 import { formatCOP, whatsappLink } from "@/lib/format";
@@ -56,7 +55,7 @@ export default async function EstadoAbonoPage({
   const settings = await getSettings();
   const wa = whatsappLink(
     cita.branch.whatsapp || settings.get("contact.whatsapp"),
-    `¡Hola Amicrespa! Escribo por el abono de mi cita ${cita.code}.`,
+    `¡Hola Marea Rizada! Escribo por el abono de mi cita ${cita.code}.`,
   );
 
   // Si abonó el valor completo, la cita quedó paga: no es un "abono".
@@ -79,8 +78,7 @@ export default async function EstadoAbonoPage({
         : "Algunos medios de pago se demoran unos minutos. Actualiza esta página en un rato.";
 
   return (
-    <section className="con-manchas bg-cream">
-      <ManchasSeccion sobre="claro" variante={0} semilla={30} />
+    <section className="bg-cream">
       <div className="shell py-16 text-center md:py-24">
         <CurlMark className="mx-auto h-14 w-auto text-ink" />
         <p className="t-eyebrow mt-8 text-terra-deep">Cita {cita.code}</p>

@@ -1,110 +1,82 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Amicrespa — sistema visual
-   Fuente: BRANDBOOK AMICRESPA (Brandguide 2026).
-
-   Colores tomados de los rellenos reales de las muestras del capítulo 03
-   (las etiquetas HEX impresas quedaron con valores de plantilla).
-
-   Tono: cercano y cálido, con el lenguaje gráfico del manual: bloques de
-   color planos y de esquina recta, titulares serif grandes, las ondas del
-   capítulo 04 usadas como láminas completas (ver brand/Grafismo.tsx). Sin
-   sombras, inclinaciones ni adornos que no estén en el manual.
+   Marea Rizada — estilos del panel y de las páginas internas.
+   El sitio público usa además el sistema de diseño de la landing
+   ((site)/marea.css, generado desde public/design-system).
    ========================================================================== */
 
 @theme {
   /* ------------------------------------------------------------------
-     Valores medidos de los rellenos vectoriales de la página de paleta
-     del manual (capítulo 03, la que lleva el título "INSIGHT"). En el
-     Brandguide 2026 las etiquetas "HEX #…" impresas coinciden con esos
-     rellenos: hay una sola fuente de verdad. El design system completo
-     (reglas de uso, contrastes, logos) está en docs/DESIGN_SYSTEM.md.
-
-     El manual no tiene negros, grises ni marrones: todo el texto va en
-     vino. Los tonos de texto secundario de abajo son el mismo vino
-     aclarado, no colores nuevos.
-
-     REGLAS DE COMBINACIÓN (medidas contra estos valores):
-       · sobre ROSA      → solo VINO (6.6). Terracota 2.9, amarillo y
-                           papel no alcanzan: ahí la terracota es
-                           dibujo, nunca texto.
-       · sobre VINO      → amarillo (11.8), papel (13.6), rosa (6.6).
-                           Terracota 2.3: tampoco.
-       · sobre AMARILLO  → vino (11.8) y terracota (5.2).
-       · sobre CREMA/CANVAS → vino (11.1+), terracota (4.9+), muted (6.3+).
+     Marea Rizada — tokens del sistema de diseño (public/design-system).
+     Los NOMBRES de los tokens vienen de la base (ink, gold, terra…) y se
+     conservan para no reescribir cada componente; lo que cambia es el
+     valor. Equivalencias con la paleta de Marea Rizada:
+       ink   → abismo (texto principal y fondos oscuros)
+       gold  → espuma (aqua del logo: acentos y texto sobre abismo)
+       terra → arcilla (acento cálido, botones de acción secundarios)
+       pink  → concha (arena rosada del sol del logo)
+       sky   → espuma media
+       canvas/paper → sal (fondo frío) y blanco
+     Contraste: abismo sobre sal 13.9; espuma sobre abismo 9.7; arcilla
+     sobre sal 4.9; muted sobre sal 5.6.
      ------------------------------------------------------------------ */
 
-  /* --- Vino: el bloque grande de la página de paleta --- */
-  --color-wine-50: #f5f0f1;
-  --color-wine-100: #e3d4d9;
-  --color-wine-300: #b58c99;
-  --color-wine-500: #7f384f;
-  --color-wine-700: #5b001d;
-  --color-wine-900: #420015;
+  --color-wine-50: #effbfb;
+  --color-wine-100: #d8f5f6;
+  --color-wine-300: #6fcfd3;
+  --color-wine-500: #1c6f75;
+  --color-wine-700: #155257;
+  --color-wine-900: #0f3236;
 
-  /* --- Rosa: fila 1 de la cuadrícula --- */
-  --color-pink: #df9dbd;
-  --color-pink-soft: #ecc4d7;
-  --color-pink-pale: #f7e7ef;
+  --color-pink: #cdaa9c;
+  --color-pink-soft: #e6ccc1;
+  --color-pink-pale: #f3e3dc;
 
-  /* --- Terracota: fila 2. terra-deep no está en el manual — es el
-         mismo terra oscurecido, para texto pequeño donde terra no
-         alcanza el contraste mínimo. --- */
-  --color-terra-deep: #8a2509;
-  --color-terra: #b1300b;
-  --color-terra-soft: #d0836d;
-  --color-terra-pale: #e0ac9d;
+  --color-terra-deep: #7a4436;
+  --color-terra: #9a5b49;
+  --color-terra-soft: #cdaa9c;
+  --color-terra-pale: #e6ccc1;
 
-  /* --- Amarillo: fila 3 del manual (#f5ec85, #f9f4b6, #fbf7ce). Es el
-         amarillo del logo PRINCIPAL sobre vino: limón pastel, no mostaza.
-         gold-50 y gold-300 son pasos intermedios derivados de esos tres. --- */
-  --color-gold-50: #fdfbe6;
-  --color-gold-100: #fbf7ce;
-  --color-gold-200: #f9f4b6;
-  --color-gold-300: #f7f09e;
-  --color-gold-400: #f5ec85;
-  --color-gold-500: #f5ec85;
+  --color-gold-50: #effbfb;
+  --color-gold-100: #d8f5f6;
+  --color-gold-200: #bdeeef;
+  --color-gold-300: #9ee5e7;
+  --color-gold-400: #9ee5e7;
+  --color-gold-500: #9ee5e7;
 
-  /* --- Azul de apoyo: fila 4. Este no se había corrido. --- */
-  --color-sky: #abc3fc;
-  --color-sky-soft: #bccffd;
-  --color-sky-pale: #dde7fe;
+  --color-sky: #6fcfd3;
+  --color-sky-soft: #bdeeef;
+  --color-sky-pale: #effbfb;
 
-  /* --- Neutros: fila 5. El propio fondo de la página del manual es
-         este crema — el manual lo presenta como muestra de marca, no
-         solo como "el papel del PDF", así que es fondo legítimo. --- */
-  /* El blanco puro no está en la paleta: lo más claro del manual es
-     #faf9f5. Se redefine `white` para que `text-white`/`bg-white`
-     también caigan en el papel de la marca. */
-  --color-white: #faf9f5;
-  --color-bone: #faf9f5;
-  --color-paper: #faf9f5;
-  --color-canvas: #f1eee2;
-  --color-shell: #f1eee2;
-  --color-smoke: #f1eee2;
-  --color-cream: #e7e2cf;
-  --color-sand: #e7e2cf;
-  /* Texto secundario y bordes: el vino aclarado hacia el papel, no los
-     marrones que había antes (el manual no tiene marrón). Contraste:
-       · muted  #7f384f → 7.7 sobre paper, 6.3 sobre cream, 5.2 sobre
-                          pink-soft (el fondo claro más exigente).
-       · clay   #8b4b5e → 6.1 sobre paper, 5.5 sobre canvas. Metadatos y
-                          placeholders; no sobre rosa fuerte.
-       · stone  #bd9e9a → bordes y separadores (no es color de texto).
-     ink-soft es el mismo vino medio, para texto largo y hovers. */
-  --color-stone: #bd9e9a;
-  --color-clay: #8b4b5e;
-  --color-muted: #7f384f;
-  --color-ink-soft: #7f384f;
-  --color-ink: #5b001d;
+  --color-white: #ffffff;
+  --color-bone: #ffffff;
+  --color-paper: #ffffff;
+  --color-canvas: #f2f8f7;
+  --color-shell: #f2f8f7;
+  --color-smoke: #f2f8f7;
+  --color-cream: #e9f4f3;
+  --color-sand: #e9f4f3;
+  --color-stone: #d3e3e1;
+  --color-clay: #5f6b68;
+  --color-muted: #5f6b68;
+  --color-ink-soft: #3d4643;
+  --color-ink: #0f3236;
 
-  /* --- Tipografía ---
-     El manual reparte así: el serif manda en los titulares grandes,
-     Inter toma los subtítulos, las etiquetas y el cuerpo. */
-  --font-display: "Awesome Serif", var(--font-playfair), "Playfair Display",
-    Georgia, serif;
-  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Marea Rizada (nombres propios, para lo nuevo) */
+  --color-espuma: #9ee5e7;
+  --color-marea: #1c6f75;
+  --color-abismo: #0f3236;
+  --color-concha: #cdaa9c;
+  --color-arcilla: #9a5b49;
+  --color-roca: #3d4643;
+  --color-sal: #f2f8f7;
+
+  /* --- Tipografía: Shantell Sans (titulares, eco del rotulado del logo),
+         Figtree (texto) y Martian Mono (datos y etiquetas). --- */
+  --font-display: var(--font-shantell), "Shantell Sans", "Trebuchet MS", sans-serif;
+  --font-sans: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-martian), "Martian Mono", ui-monospace, monospace;
 
   /* --- Esquinas generosas: la base del carácter amable --- */
   --radius-sm: 0.75rem;
@@ -122,37 +94,6 @@
   --animate-bump: bump 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
-/* Awesome Serif es comercial y no viene con el proyecto: mientras tanto
-   manda Playfair Display, que tiene el mismo aire.
-
-   PARA ACTIVARLA: compra la licencia, deja los .woff2 en public/fonts/ con
-   estos nombres y descomenta el bloque. "Awesome Serif" ya va primero en
-   --font-display, así que no hay que tocar nada más. Se mantiene comentado
-   para no pedirle al navegador tres archivos que no existen. */
-
-/*
-@font-face {
-  font-family: "Awesome Serif";
-  src: url("/fonts/AwesomeSerif-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Awesome Serif";
-  src: url("/fonts/AwesomeSerif-Italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Awesome Serif";
-  src: url("/fonts/AwesomeSerif-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-*/
 
 @keyframes flotar {
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -206,36 +147,6 @@
 }
 
 /* --- Celebración "CURLY HAIR #ON" al reservar (CurlyHairOn.tsx) --- */
-@keyframes cel-entra {
-  from { clip-path: inset(100% 0 0 0); }
-  to { clip-path: inset(0 0 0 0); }
-}
-
-@keyframes cel-sale {
-  from { transform: translateY(0); }
-  to { transform: translateY(-100%); }
-}
-
-@keyframes cel-fondo {
-  from { transform: translateY(0); }
-  to { transform: translateY(-8%); }
-}
-
-@keyframes cel-cartel {
-  from { clip-path: circle(0% at 50% 50%); }
-  to { clip-path: circle(75% at 50% 50%); }
-}
-
-@keyframes cel-letra {
-  from { transform: translateY(110%); }
-  to { transform: translateY(0); }
-}
-
-@keyframes cel-on {
-  0% { opacity: 0; transform: scale(0.4) rotate(-6deg); }
-  65% { opacity: 1; transform: scale(1.12) rotate(0deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0deg); }
-}
 
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(22px); }
@@ -493,42 +404,18 @@
     .seccion-amplia { padding-block: 8rem; }
   }
 
-  /* Sección con manchas de color de fondo (ver brand/Manchas.tsx): las
-     manchas quedan detrás y todo lo demás por encima. `:where` deja que
-     un `sticky` o `absolute` puesto en el marcado siga mandando. */
-  .con-manchas {
-    position: relative;
-    overflow: hidden;
-  }
-  .con-manchas > :where(:not(.manchas)) {
-    position: relative;
-    /* Por encima de las manchas que cruzan de una sección a otra (z 1). */
-    z-index: 2;
-  }
-
-  /* Celebración al reservar */
-  .cel-entra { animation: cel-entra 0.45s cubic-bezier(0.65, 0, 0.35, 1) both; }
-  .cel-sale { animation: cel-sale 0.6s cubic-bezier(0.65, 0, 0.35, 1) both; }
-  .cel-fondo { animation: cel-fondo 2.8s linear both; }
-  .cel-cartel { animation: cel-cartel 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.35s both; }
-  .cel-linea { display: block; overflow: hidden; padding-bottom: 0.04em; }
-  .cel-letra {
-    display: inline-block;
-    animation: cel-letra 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--retraso, 0s) both;
-  }
-  .cel-on {
-    animation: cel-on 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) 1.3s both;
-  }
-
-  /* --- Botones tipo píldora -------------------------------------------- */
+  /* --- Botones de letrero ----------------------------------------------
+     Del sistema de diseño de Marea Rizada: esquina casi recta (3 px), borde
+     firme, mayúsculas espaciadas y una sombra desplazada que funciona como
+     relieve. Al pasar el cursor el botón se hunde. Nada de píldoras. */
 
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    border-radius: 999px;
-    padding: 0.95rem 1.9rem;
+    border-radius: 3px;
+    padding: 0.95rem 1.6rem;
     font-family: var(--font-sans);
     font-size: 0.8125rem;
     font-weight: 700;
@@ -537,24 +424,27 @@
     line-height: 1;
     white-space: nowrap;
     border: 2px solid transparent;
+    box-shadow: 4px 4px 0 var(--btn-sombra, var(--color-concha));
     transition:
-      transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
       background-color 0.25s ease,
       border-color 0.25s ease,
-      color 0.25s ease,
-      box-shadow 0.25s ease;
+      color 0.25s ease;
   }
 
   .btn:hover {
-    transform: translateY(-2px);
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--btn-sombra, var(--color-concha));
   }
   .btn:active {
-    transform: translateY(0) scale(0.99);
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 transparent;
   }
 
   .btn-primary {
-    background-color: var(--color-terra);
-    border-color: var(--color-terra);
+    background-color: var(--color-marea);
+    border-color: var(--color-marea);
     color: var(--color-paper);
   }
   .btn-primary:hover {
@@ -568,19 +458,19 @@
     color: var(--color-gold-500);
   }
   .btn-dark:hover {
-    background-color: var(--color-terra);
-    border-color: var(--color-terra);
+    background-color: var(--color-marea);
+    border-color: var(--color-marea);
     color: var(--color-paper);
   }
 
   .btn-outline {
-    background-color: transparent;
+    --btn-sombra: var(--color-espuma);
+    background-color: var(--color-paper);
     border-color: var(--color-ink);
     color: var(--color-ink);
   }
   .btn-outline:hover {
-    background-color: var(--color-gold-500);
-    border-color: var(--color-ink);
+    background-color: var(--color-gold-100);
   }
 
   .btn-light {
@@ -593,7 +483,7 @@
     border-color: var(--color-gold-500);
   }
 
-  /* Para fondos vino: el amarillo del logo hace de acción principal */
+  /* Para fondos de abismo: la espuma del logo hace de acción principal. */
   .btn-gold {
     background-color: var(--color-gold-500);
     border-color: var(--color-gold-500);
@@ -604,7 +494,6 @@
     border-color: var(--color-paper);
   }
 
-  /* Enlace con flechita en círculo */
   .btn-link {
     display: inline-flex;
     align-items: center;
@@ -615,18 +504,16 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-ink);
-    border-radius: 999px;
+    border-radius: 3px;
     border: 2px solid var(--color-ink);
-    padding: 0.6rem 1.2rem;
+    padding: 0.6rem 1.1rem;
     transition:
       background-color 0.25s ease,
-      color 0.25s ease,
-      transform 0.25s ease;
+      color 0.25s ease;
   }
   .btn-link:hover {
     background-color: var(--color-ink);
     color: var(--color-gold-500);
-    transform: translateY(-2px);
   }
 
   /* --- Piezas ----------------------------------------------------------- */

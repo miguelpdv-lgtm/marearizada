@@ -37,7 +37,7 @@ export function BranchForm({
               <Input
                 name="name"
                 defaultValue={branch?.name}
-                placeholder="Amicrespa Barranquilla"
+                placeholder="Marea Rizada"
                 required
               />
             </Field>

@@ -1,21 +1,15 @@
 import type { MetadataRoute } from "next";
 
-/**
- * Manifiesto para "Agregar a la pantalla de inicio" en Android y para que el
- * navegador pinte su barra con el amarillo de la marca. Los íconos son el
- * isotipo vino sobre amarillo (versión ISOTIPO del manual), con aire alrededor
- * para que Android pueda recortarlos en círculo sin cortar las puntas.
- */
+/** Manifiesto para "Agregar a la pantalla de inicio" y el color de la barra. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Amicrespa · Salón de cabello rizado",
-    short_name: "Amicrespa",
-    description:
-      "Salón especializado en cabello crespo, rizado y ondulado en Barranquilla y Cali.",
+    name: "Marea Rizada · Expertos en salud capilar",
+    short_name: "Marea Rizada",
+    description: "Salón especializado en salud capilar y rizos.",
     start_url: "/",
     display: "browser",
-    background_color: "#f1eee2",
-    theme_color: "#f5ec85",
+    background_color: "#f2f8f7",
+    theme_color: "#0f3236",
     lang: "es-CO",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

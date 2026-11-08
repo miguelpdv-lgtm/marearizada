@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { ManchasSeccion } from "@/components/brand/Manchas";
 
 /**
  * Cuando algo falla en el sitio público.
@@ -24,8 +23,7 @@ export default function ErrorDelSitio({
   }, [error]);
 
   return (
-    <section className="con-manchas bg-canvas py-24 md:py-32">
-      <ManchasSeccion sobre="claro" variante={0} semilla={23} />
+    <section className="bg-canvas py-24 md:py-32">
 
       <div className="shell max-w-2xl text-center">
         <p className="t-eyebrow text-terra">Algo se rompió</p>

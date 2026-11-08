@@ -181,7 +181,7 @@ async function main() {
       });
       if (p.sesion !== false) {
         await pagina.setCookie({
-          name: "amicrespa_session",
+          name: "marea_session",
           value: token,
           domain: "localhost",
           path: "/",
