@@ -174,6 +174,22 @@ export function ServiceForm({
                 ))}
               </Select>
             </Field>
+
+            <Field
+              label="Comisión propia (%)"
+              name="commissionPercent"
+              errors={errors}
+              hint="Vacío = usa el % de su categoría (en Categorías)."
+            >
+              <Input
+                name="commissionPercent"
+                type="number"
+                min={0}
+                max={100}
+                placeholder="Según la categoría"
+                defaultValue={service?.commissionPercent ?? ""}
+              />
+            </Field>
           </div>
 
           <ImageField

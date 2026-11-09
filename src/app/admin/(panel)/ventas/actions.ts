@@ -13,6 +13,7 @@ import { formatCOP } from "@/lib/format";
 import { moverStock } from "@/lib/stock";
 import { vincularCliente } from "@/lib/clients";
 import { mejorDescuento, promocionesVigentes } from "@/lib/promociones";
+import { conPorcentajes } from "@/lib/comisiones";
 import { avisarVentaMostrador } from "@/lib/correo/avisos";
 import {
   CODIGOS_DOCUMENTO,
@@ -256,7 +257,7 @@ export async function crearVenta(datos: VentaInput): Promise<VentaResultado> {
           soldById: user.id,
           paymentMethod: medioPrincipal,
           notes: d.notes || null,
-          items: { create: itemsData },
+          items: { create: await conPorcentajes(itemsData) },
           payments: { create: pagosData },
         },
         select: { id: true, code: true },

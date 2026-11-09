@@ -8,24 +8,6 @@
  */
 export const AJUSTES_NUEVOS = [
   {
-    key: "payroll.commissionStep",
-    value: "100000",
-    label: "Comisión — por cada (COP vendidos)",
-    group: "operacion",
-    type: "NUMBER",
-    hint: "Tramo de ventas. Por cada tramo completo que venda una profesional se le asigna el valor de abajo.",
-    order: 0,
-  },
-  {
-    key: "payroll.commissionAmount",
-    value: "0",
-    label: "Comisión — se le asignan (COP)",
-    group: "operacion",
-    type: "NUMBER",
-    hint: "Ej.: por cada $100.000 vendidos se le asignan $10.000. Aplica igual a todo el equipo.",
-    order: 1,
-  },
-  {
     key: "email.avisosSalon",
     value: "false",
     label: "Enviar avisos administrativos por correo",
@@ -116,13 +98,3 @@ export const AJUSTES_NUEVOS = [
     order: 1,
   },
 ] as const;
-
-/**
- * La comisión por valor: por cada tramo completo de `paso` pesos vendidos se
- * asignan `valor` pesos. Con $250.000 vendidos, tramos de $100.000 y $10.000
- * por tramo, son $20.000 (los $50.000 sueltos no completan tramo).
- */
-export function calcularComision(ventas: number, paso: number, valor: number) {
-  if (paso <= 0 || valor <= 0 || ventas <= 0) return 0;
-  return Math.floor(ventas / paso) * valor;
-}

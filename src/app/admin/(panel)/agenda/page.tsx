@@ -163,21 +163,23 @@ export default async function AgendaPage({
   const rango =
     vista === "semana" ? 7 : vista === "profesionales" ? 1 : Math.min(Number(sp.dias) || 14, 60);
 
-  // Un solo local con dos líneas: la agenda se mira por Salón o por Nails.
-  // Cada línea es una categoría de servicios; su equipo, quien presta alguno.
-  const categorias = await prisma.serviceCategory.findMany({
+  // Un solo local con dos agendas: Salón y Nails. Cada categoría de
+  // servicios dice en cuál aparece (Cejas, Pestañas… pueden ir en Nails); el
+  // equipo de una agenda es quien presta algún servicio de sus categorías.
+  const agendasUsadas = await prisma.serviceCategory.findMany({
     where: { active: true, services: { some: { active: true } } },
-    orderBy: { order: "asc" },
-    select: { id: true, name: true },
+    select: { agenda: true },
+    distinct: ["agenda"],
   });
-  const lineas = categorias.map((c) => ({
-    id: c.id,
-    nombre: /nail|uña/i.test(c.name) ? "Nails" : /rizo/i.test(c.name) ? "Salón" : c.name,
-  }));
+  const lineas = (["SALON", "NAILS"] as const)
+    .filter((a) => agendasUsadas.some((c) => c.agenda === a))
+    .map((a) => ({ id: a, nombre: a === "NAILS" ? "Nails" : "Salón" }));
   const lineaId =
     lineas.length > 1 ? (lineas.find((l) => l.id === sp.linea)?.id ?? lineas[0].id) : undefined;
-  const filtroLineaCita = lineaId ? { service: { categoryId: lineaId } } : {};
-  const filtroLineaEquipo = lineaId ? { services: { some: { service: { categoryId: lineaId } } } } : {};
+  const filtroLineaCita = lineaId ? { service: { category: { agenda: lineaId } } } : {};
+  const filtroLineaEquipo = lineaId
+    ? { services: { some: { service: { category: { agenda: lineaId } } } } }
+    : {};
 
   const [citas, bloqueosTodos, horarios, equipo, scheduleTodo, habilitadasTodas] = await Promise.all([
     prisma.appointment.findMany({
@@ -254,7 +256,7 @@ export default async function AgendaPage({
     <>
       <PageHeader
         title="Agenda"
-        description="Las reservas en línea entran confirmadas cuando se paga el abono. Cambia entre Salón y Nails para ver cada agenda."
+        description="Las reservas en línea entran confirmadas cuando se paga el abono. Cambia entre Salón y Nails para ver cada agenda; cada categoría elige la suya en Servicios → Categorías."
         action={{ label: "Bloqueo de horas", href: "/admin/agenda/bloqueos" }}
       />
 

@@ -11,6 +11,7 @@ import { slugify } from "@/lib/format";
 import {
   bool,
   int,
+  optionalInt,
   optionalStr,
   urlList,
   runAction,
@@ -25,6 +26,7 @@ const schema = z.object({
   description: z.string().min(10, "Escribe una descripción de al menos 10 caracteres."),
   durationMin: z.number().int().min(5, "La duración mínima es 5 minutos."),
   price: z.number().int().min(0, "El precio no puede ser negativo."),
+  commissionPercent: z.number().int().min(0, "Entre 0 y 100.").max(100, "Entre 0 y 100.").nullable(),
 });
 
 function readForm(formData: FormData) {
@@ -51,6 +53,7 @@ function readForm(formData: FormData) {
     order: int(formData, "order"),
     active: bool(formData, "active"),
     bookable: bool(formData, "bookable"),
+    commissionPercent: optionalInt(formData, "commissionPercent"),
   };
 }
 
@@ -179,6 +182,24 @@ export async function createServiceCategory(
     revalidateSite();
     return { ok: true, message: "Categoría creada." };
   });
+}
+
+/** % de comisión y agenda (Salón o Nails) de una categoría, desde su fila. */
+export async function actualizarComisionCategoria(formData: FormData) {
+  await requireUserForAction(canManageContent);
+
+  const id = str(formData, "id");
+  const porcentaje = optionalInt(formData, "commissionPercent");
+  const agenda = str(formData, "agenda") === "NAILS" ? "NAILS" : "SALON";
+  if (!id || (porcentaje != null && (porcentaje < 0 || porcentaje > 100))) return;
+
+  await prisma.serviceCategory.update({
+    where: { id },
+    data: { commissionPercent: porcentaje, agenda },
+  });
+  revalidatePath("/admin/servicios/categorias");
+  revalidatePath("/admin/reportes/comisiones");
+  revalidatePath("/admin/agenda");
 }
 
 export async function deleteServiceCategory(formData: FormData) {

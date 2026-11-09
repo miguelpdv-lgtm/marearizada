@@ -44,8 +44,13 @@ export default async function ComisionesPage({
     );
   }
 
-  const { filas, paso, valor } = await comisionesReporte({ desde, hasta, branchId: sedeId });
+  const { filas } = await comisionesReporte({ desde, hasta, branchId: sedeId });
   const totalComision = filas.reduce((a, f) => a + f.comision, 0);
+  const porcentajes = await prisma.serviceCategory.findMany({
+    where: { active: true, services: { some: { active: true } } },
+    orderBy: { order: "asc" },
+    select: { name: true, commissionPercent: true },
+  });
 
   const enlace = (extra: Record<string, string | undefined>, ruta = "/admin/reportes/comisiones") => {
     const p = new URLSearchParams();
@@ -70,7 +75,7 @@ export default async function ComisionesPage({
     <>
       <PageHeader
         title="Comisiones"
-        description={`${etiquetaPeriodo(periodo, fecha)} · citas atendidas y ventas de mostrador.`}
+        description={`${etiquetaPeriodo(periodo, fecha)} · un porcentaje por cada servicio realizado.`}
         breadcrumb={{ label: "Reportes", href: "/admin/reportes" }}
       />
 
@@ -118,23 +123,23 @@ export default async function ComisionesPage({
       />
 
       <p className="mb-6 border border-stone bg-white px-4 py-3 text-sm text-ink">
-        {valor > 0 ? (
-          <>
-            Por cada <strong>{formatCOP(paso)}</strong> vendidos se asignan{" "}
-            <strong>{formatCOP(valor)}</strong> de comisión.
-          </>
-        ) : (
-          <>Todavía no hay un valor de comisión configurado.</>
-        )}{" "}
-        <Link href="/admin/configuracion" className="text-terra underline underline-offset-2">
-          Cambiar en Configuración
+        Cada servicio deja a quien lo hizo el porcentaje de su línea sobre lo cobrado:{" "}
+        {porcentajes.map((c, i) => (
+          <span key={c.name}>
+            {i > 0 && ", "}
+            {c.name} <strong>{c.commissionPercent ?? 0}%</strong>
+          </span>
+        ))}
+        . Los productos no comisionan.{" "}
+        <Link href="/admin/servicios" className="text-terra underline underline-offset-2">
+          Cambiar en Servicios
         </Link>
       </p>
 
       {filas.length === 0 ? (
         <EmptyState
           title="Sin comisiones en este período"
-          description="Aparecen acá cuando hay citas atendidas o ventas con profesional asignada."
+          description="Aparecen acá cuando hay servicios en citas atendidas o ventas con profesional asignada."
         />
       ) : (
         <>
@@ -142,8 +147,8 @@ export default async function ComisionesPage({
             <thead>
               <tr>
                 <Th>Profesional</Th>
-                <Th>Vendido</Th>
-                <Th>Tramos</Th>
+                <Th>Servicios</Th>
+                <Th>Cobrado</Th>
                 <Th>Comisión</Th>
                 <Th className="text-right">Historial</Th>
               </tr>
@@ -156,8 +161,8 @@ export default async function ComisionesPage({
                       {f.name}
                     </Link>
                   </Td>
+                  <Td className="text-sm font-normal text-muted">{f.servicios}</Td>
                   <Td className="text-sm font-normal text-muted">{formatCOP(f.ventas)}</Td>
-                  <Td className="text-sm font-normal text-muted">{f.tramos}</Td>
                   <Td className="text-sm text-ink">{formatCOP(f.comision)}</Td>
                   <Td className="text-right">
                     <Link

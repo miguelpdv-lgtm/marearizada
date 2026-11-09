@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { ESTADOS_ACTIVOS, aUtc, diaSemanaBogota, fechaBogota, sumarDias } from "@/lib/agenda";
-import { calcularComision } from "@/lib/ajustes-datos";
+import { SELECT_PORCENTAJE, comision, porcentajeDe } from "@/lib/comisiones";
 
 export type RangoReporte = { desde: string; hasta: string; branchId?: string };
 
@@ -202,14 +202,18 @@ export type LineaComision = {
   descuento: number;
   /** Lo que cuenta para la comisión: valorLista − descuento. */
   valor: number;
+  /** % de comisión del servicio (foto de la venta, o el vigente si aún no se vendió). */
+  porcentaje: number;
+  /** Pesos de comisión de esta línea. */
+  comision: number;
   /** Para abrir la venta en el panel, cuando es una venta. */
   href?: string;
 };
 
 /**
- * Todo lo que cuenta para comisiones en el rango, línea por línea: cada
- * servicio de una cita atendida (sin finalizar todavía) y cada línea de una
- * venta (incluidas las de citas finalizadas). Cada línea es de quien la
+ * Todo lo que comisiona en el rango, línea por línea: cada servicio de una
+ * cita atendida (sin finalizar todavía) y cada servicio de una venta
+ * (incluidas las de citas finalizadas). Los productos no comisionan. Cada línea es de quien la
  * vendió; si no tiene, de la profesional de la cita o la venta.
  *
  * `comisionesReporte` suma estas mismas líneas, así que el detalle de una
@@ -248,9 +252,17 @@ export async function lineasComision({
         clientName: true,
         staffId: true,
         priceOverride: true,
-        service: { select: { name: true, price: true } },
+        service: { select: { name: true, price: true, ...SELECT_PORCENTAJE } },
         items: {
-          select: { id: true, name: true, unitPrice: true, quantity: true, staffId: true },
+          select: {
+            id: true,
+            kind: true,
+            name: true,
+            unitPrice: true,
+            quantity: true,
+            staffId: true,
+            service: { select: SELECT_PORCENTAJE },
+          },
           orderBy: { createdAt: "asc" },
         },
       },
@@ -265,15 +277,25 @@ export async function lineasComision({
         clientName: true,
         staffId: true,
         items: {
-          select: { id: true, name: true, unitPrice: true, quantity: true, discount: true, staffId: true },
+          select: {
+            id: true,
+            kind: true,
+            name: true,
+            unitPrice: true,
+            quantity: true,
+            discount: true,
+            staffId: true,
+            commissionPercent: true,
+            service: { select: SELECT_PORCENTAJE },
+          },
         },
       },
     }),
   ]);
 
   const lineas: LineaComision[] = [];
-  const agregar = (l: LineaComision) => {
-    if (!staffId || l.staffId === staffId) lineas.push(l);
+  const agregar = (l: Omit<LineaComision, "comision">) => {
+    if (!staffId || l.staffId === staffId) lineas.push({ ...l, comision: comision(l.valor, l.porcentaje) });
   };
 
   for (const c of citas) {
@@ -293,13 +315,14 @@ export async function lineasComision({
         valorLista,
         descuento: valorLista - valor,
         valor,
+        porcentaje: porcentajeDe(c.service),
       });
     }
     // Lo que se vendió dentro de la cita cuenta para quien lo vendió, que
     // puede ser otra persona del equipo.
     for (const i of c.items) {
       const quien = i.staffId ?? c.staffId;
-      if (!quien) continue;
+      if (!quien || i.kind !== "SERVICE") continue;
       const valor = i.unitPrice * i.quantity;
       agregar({
         id: `cita-item-${i.id}`,
@@ -313,6 +336,7 @@ export async function lineasComision({
         valorLista: valor,
         descuento: 0,
         valor,
+        porcentaje: porcentajeDe(i.service),
       });
     }
   }
@@ -320,7 +344,7 @@ export async function lineasComision({
   for (const v of ventas) {
     for (const i of v.items) {
       const quien = i.staffId ?? v.staffId;
-      if (!quien) continue;
+      if (!quien || i.kind !== "SERVICE") continue;
       const valorLista = i.unitPrice * i.quantity;
       agregar({
         id: `venta-item-${i.id}`,
@@ -334,6 +358,7 @@ export async function lineasComision({
         valorLista,
         descuento: i.discount,
         valor: valorLista - i.discount,
+        porcentaje: i.commissionPercent ?? porcentajeDe(i.service),
         href: `/admin/ventas/${v.id}`,
       });
     }
@@ -342,53 +367,34 @@ export async function lineasComision({
   return lineas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 }
 
-/** El valor de la comisión configurado: por cada `paso` vendido, `valor`. */
-export async function reglaComision() {
-  const ajustes = await prisma.setting.findMany({
-    where: { key: { in: ["payroll.commissionStep", "payroll.commissionAmount"] } },
-  });
-  const ajuste = (key: string, fallback: number) => {
-    const v = Number(ajustes.find((a) => a.key === key)?.value);
-    return Number.isFinite(v) && v > 0 ? v : fallback;
-  };
-  return { paso: ajuste("payroll.commissionStep", 100000), valor: ajuste("payroll.commissionAmount", 0) };
-}
-
 /**
- * Cuánto pagarle a cada profesional en el rango.
- *
- * La comisión es por valor, no por porcentaje: por cada tramo completo de
- * ventas (`payroll.commissionStep`) se le asigna un monto fijo
- * (`payroll.commissionAmount`). Cuenta lo que vendió en sus citas atendidas y
- * en ventas de mostrador — las mismas líneas de `lineasComision`.
+ * Cuánto pagarle a cada profesional en el rango: la suma de la comisión de
+ * cada servicio que hizo (`lineasComision`), así que el detalle de una
+ * profesional siempre cuadra con su total.
  */
 export async function comisionesReporte({ desde, hasta, branchId }: RangoReporte) {
-  const [lineas, staff, { paso, valor }] = await Promise.all([
+  const [lineas, staff] = await Promise.all([
     lineasComision({ desde, hasta, branchId }),
     prisma.teamMember.findMany({
       where: { active: true, ...(branchId ? { branchId } : {}) },
       select: { id: true, name: true },
       orderBy: { order: "asc" },
     }),
-    reglaComision(),
   ]);
 
-  const ventasPorStaff = new Map<string, number>();
-  for (const l of lineas) ventasPorStaff.set(l.staffId, (ventasPorStaff.get(l.staffId) ?? 0) + l.valor);
+  const suma = new Map<string, { ventas: number; comision: number; servicios: number }>();
+  for (const l of lineas) {
+    const s = suma.get(l.staffId) ?? { ventas: 0, comision: 0, servicios: 0 };
+    s.ventas += l.valor;
+    s.comision += l.comision;
+    s.servicios += l.cantidad;
+    suma.set(l.staffId, s);
+  }
 
   const filas = staff
-    .map((s) => {
-      const vendido = ventasPorStaff.get(s.id) ?? 0;
-      return {
-        id: s.id,
-        name: s.name,
-        ventas: vendido,
-        tramos: paso > 0 ? Math.floor(vendido / paso) : 0,
-        comision: calcularComision(vendido, paso, valor),
-      };
-    })
+    .map((s) => ({ id: s.id, name: s.name, ...(suma.get(s.id) ?? { ventas: 0, comision: 0, servicios: 0 }) }))
     .filter((s) => s.ventas > 0)
     .sort((a, b) => b.comision - a.comision || b.ventas - a.ventas);
 
-  return { filas, paso, valor };
+  return { filas };
 }

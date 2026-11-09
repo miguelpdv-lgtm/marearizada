@@ -62,9 +62,14 @@ const HORARIO_PROFESIONAL = [1, 2, 3, 4, 5]
     { weekday: 0, opensAt: "00:00", closesAt: "00:00", closed: true },
   ]);
 
+// Comisión por servicio según la línea (lo que definió el salón) y en qué
+// agenda del panel se ve cada una.
 const CATEGORIAS = [
-  { slug: "rizos", name: "Marea Rizada · Rizos", description: "Salud capilar, corte y tratamientos para rizos.", order: 1 },
-  { slug: "nails", name: "Marea Rizada Nails", description: "Manicura y pedicura.", order: 2 },
+  { slug: "rizos", name: "Marea Rizada · Rizos", description: "Salud capilar, corte y tratamientos para rizos.", order: 1, commissionPercent: 30, agenda: "SALON" },
+  { slug: "nails", name: "Marea Rizada Nails", description: "Manicura y pedicura.", order: 2, commissionPercent: 50, agenda: "NAILS" },
+  { slug: "cejas", name: "Cejas", description: "Diseño y laminado de cejas.", order: 3, commissionPercent: 50, agenda: "NAILS" },
+  { slug: "pestanas", name: "Pestañas", description: "Lifting y extensiones de pestañas.", order: 4, commissionPercent: 50, agenda: "NAILS" },
+  { slug: "depilacion", name: "Depilación", description: "Depilación con cera.", order: 5, commissionPercent: 40, agenda: "NAILS" },
 ];
 
 const SERVICIOS = [
@@ -76,13 +81,19 @@ const SERVICIOS = [
   { categoria: "nails", slug: "manicura-tradicional", name: "Manicura tradicional", tagline: "Limpieza, forma y esmalte", durationMin: 45, price: 30000 },
   { categoria: "nails", slug: "pedicura-spa", name: "Pedicura spa", tagline: "Exfoliación e hidratación", durationMin: 60, price: 50000 },
   { categoria: "nails", slug: "retiro-y-nivelacion", name: "Retiro y nivelación", tagline: "Retiro seguro de producto", durationMin: 45, price: 25000 },
+  { categoria: "cejas", slug: "diseno-de-cejas", name: "Diseño de cejas", tagline: "Forma según tu rostro", durationMin: 30, price: 30000 },
+  { categoria: "cejas", slug: "laminado-de-cejas", name: "Laminado de cejas", tagline: "Cejas peinadas por semanas", durationMin: 60, price: 70000 },
+  { categoria: "pestanas", slug: "lifting-de-pestanas", name: "Lifting de pestañas", tagline: "Curvatura natural", durationMin: 60, price: 80000 },
+  { categoria: "pestanas", slug: "extensiones-de-pestanas", name: "Extensiones de pestañas", tagline: "Pelo a pelo", durationMin: 120, price: 150000 },
+  { categoria: "depilacion", slug: "depilacion-de-rostro", name: "Depilación de rostro", tagline: "Con cera", durationMin: 30, price: 25000 },
+  { categoria: "depilacion", slug: "depilacion-de-axilas", name: "Depilación de axilas", tagline: "Con cera", durationMin: 20, price: 20000 },
 ];
 
 const EQUIPO = [
-  { name: "Profesional A", imageUrl: "/equipo-ejemplo/profesional-a.jpg", role: "Estilista", specialty: "Rizos y corte en seco", categoria: "rizos", order: 1 },
-  { name: "Profesional B", imageUrl: "/equipo-ejemplo/profesional-b.jpg", role: "Estilista", specialty: "Afro y coily, 4A a 4C", categoria: "rizos", order: 2 },
-  { name: "Profesional C", imageUrl: "/equipo-ejemplo/profesional-c.jpg", role: "Manicurista", specialty: "Semipermanente y diseño", categoria: "nails", order: 3 },
-  { name: "Profesional D", imageUrl: "/equipo-ejemplo/profesional-d.jpg", role: "Manicurista", specialty: "Pedicura y cuidado", categoria: "nails", order: 4 },
+  { name: "Profesional A", imageUrl: "/equipo-ejemplo/profesional-a.jpg", role: "Estilista", specialty: "Rizos y corte en seco", categorias: ["rizos"], order: 1 },
+  { name: "Profesional B", imageUrl: "/equipo-ejemplo/profesional-b.jpg", role: "Estilista", specialty: "Afro y coily, 4A a 4C", categorias: ["rizos"], order: 2 },
+  { name: "Profesional C", imageUrl: "/equipo-ejemplo/profesional-c.jpg", role: "Manicurista", specialty: "Semipermanente y diseño", categorias: ["nails", "cejas", "pestanas"], order: 3 },
+  { name: "Profesional D", imageUrl: "/equipo-ejemplo/profesional-d.jpg", role: "Manicurista", specialty: "Pedicura y cuidado", categorias: ["nails", "cejas", "depilacion"], order: 4 },
 ];
 
 async function main() {
@@ -143,23 +154,31 @@ async function main() {
   }
   console.log(`  OK ${SERVICIOS.length} servicios de ejemplo`);
 
+  const serviciosDe = (cats: string[]) => cats.flatMap((c) => serviciosPorCategoria[c] ?? []);
   if ((await prisma.teamMember.count()) === 0) {
     for (const p of EQUIPO) {
-      const { categoria: cat, ...datos } = p;
+      const { categorias: cats, ...datos } = p;
       await prisma.teamMember.create({
         data: {
           ...datos,
           branchId: sede.id,
           schedule: { create: HORARIO_PROFESIONAL },
-          services: { create: serviciosPorCategoria[cat].map((serviceId) => ({ serviceId })) },
+          services: { create: serviciosDe(cats).map((serviceId) => ({ serviceId })) },
         },
       });
     }
     console.log(`  OK ${EQUIPO.length} profesionales de ejemplo con horario y servicios`);
   } else {
-    // Fotos de ejemplo para quien aún no tiene una.
+    // Al equipo de ejemplo que ya existe: foto si no tiene, y los servicios
+    // de sus líneas que se hayan sumado después (sin quitar nada).
     for (const p of EQUIPO) {
       await prisma.teamMember.updateMany({ where: { name: p.name, imageUrl: null }, data: { imageUrl: p.imageUrl } });
+      const miembro = await prisma.teamMember.findFirst({ where: { name: p.name }, select: { id: true } });
+      if (!miembro) continue;
+      await prisma.staffService.createMany({
+        data: serviciosDe(p.categorias).map((serviceId) => ({ staffId: miembro.id, serviceId })),
+        skipDuplicates: true,
+      });
     }
   }
 

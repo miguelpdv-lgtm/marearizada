@@ -34,13 +34,13 @@ const GROUP_META: Record<string, { title: string; description: string }> = {
       "Verificación del sitio en Google Search Console y Bing. Los datos de cada sede (coordenadas, enlace de reseñas) se editan en Sucursales.",
   },
   fases: {
-    title: "Fases del proyecto",
+    title: "Reservas en línea",
     description:
-      "Interruptores de las funcionalidades que llegan en fases posteriores. Actívalos solo cuando esa fase esté implementada.",
+      "Si la reserva en línea está abierta, con cuánta anticipación se reserva, el abono y el tiempo para pagarlo.",
   },
   operacion: {
     title: "Operación",
-    description: "Ajustes internos del negocio, como la comisión del equipo y las tarifas de envío.",
+    description: "Ajustes internos del negocio. Las comisiones se definen por categoría en Servicios → Categorías.",
   },
 };
 

@@ -13,6 +13,7 @@ import { vincularCliente } from "@/lib/clients";
 import { generarCodigoVenta } from "@/lib/codigos";
 import { avisarVentaMostrador } from "@/lib/correo/avisos";
 import { ESTADOS } from "./estado";
+import { conPorcentajes } from "@/lib/comisiones";
 
 /** `metodoPago` es opcional a propósito: el equipo puede elegirlo, pero no
  * es obligatorio para guardar el cambio de estado. Solo se toca el campo si
@@ -448,6 +449,8 @@ export async function finalizarCita(
     })),
   ];
   const total = lineas.reduce((a, l) => a + l.unitPrice * l.quantity, 0);
+  // Cada servicio guarda el % de comisión vigente hoy.
+  const lineasConComision = await conPorcentajes(lineas);
 
   // El abono ya entró en línea; lo que falta, con el medio que se eligió.
   const abono = Math.min(cita.depositPaid, total);
@@ -478,7 +481,7 @@ export async function finalizarCita(
             soldById: user.id,
             paymentMethod: medioPrincipal,
             notes: `Cita ${cita.code}`,
-            items: { create: lineas },
+            items: { create: lineasConComision },
             payments: { create: pagos },
           },
           select: { id: true },

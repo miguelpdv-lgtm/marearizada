@@ -124,6 +124,12 @@ model ServiceCategory {
   active      Boolean   @default(true)
   services    Service[]
 
+  /// % de comisión de la profesional sobre cada servicio de esta categoría
+  /// (Cabello 30, Nails 50…). Cada servicio puede tener el suyo.
+  commissionPercent Int?
+  /// En qué agenda del panel aparece: SALON | NAILS.
+  agenda            String @default("SALON")
+
   promotions Promotion[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
@@ -172,6 +178,9 @@ model Service {
   promotions Promotion[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+
+  /// Si está, reemplaza el % de comisión de la categoría para este servicio.
+  commissionPercent Int?
 
   @@index([active, order])
   @@index([branchId, active])
@@ -508,6 +517,10 @@ model SaleItem {
   /// venta (`Sale.staffId`).
   staffId String?
   staff   TeamMember? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  /// % de comisión vigente al vender (foto: si después cambia el % de la
+  /// categoría, lo ya vendido no se recalcula). Los productos no comisionan.
+  commissionPercent Int?
 }
 
 /// Una parte del pago de una venta. Una venta pagada con un solo medio tiene
@@ -640,9 +653,6 @@ model TeamMember {
   instagram String?
   order     Int     @default(0)
   active    Boolean @default(true)
-
-  /// Vacío = usa el % por defecto del negocio (Setting payroll.defaultCommissionPercent).
-  commissionPercent Int?
 
   branchId String?
   branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)

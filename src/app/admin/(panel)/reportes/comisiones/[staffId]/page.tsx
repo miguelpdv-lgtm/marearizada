@@ -7,10 +7,9 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { sedeEfectiva, sedesPermitidas } from "@/lib/branchAccess";
 import { hoyBogota } from "@/lib/agenda";
-import { calcularComision } from "@/lib/ajustes-datos";
 import { esPeriodo, etiquetaPeriodo, moverPeriodo, rangoPeriodo, type Periodo } from "@/lib/reportPeriod";
 import { formatCOP, formatDateTime } from "@/lib/format";
-import { lineasComision, reglaComision } from "../../queries";
+import { lineasComision } from "../../queries";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Historial de la profesional" };
@@ -51,14 +50,11 @@ export default async function HistorialProfesionalPage({
   // Solo se ve el historial de alguien de una sede a la que se tiene acceso.
   if (!profesional || !sedes.some((s) => s.id === profesional.branchId)) notFound();
 
-  const [lineas, { paso, valor }] = await Promise.all([
-    lineasComision({ desde, hasta, branchId: sedeId, staffId }),
-    reglaComision(),
-  ]);
+  const lineas = await lineasComision({ desde, hasta, branchId: sedeId, staffId });
   const vendido = lineas.reduce((a, l) => a + l.valor, 0);
   const descuentos = lineas.reduce((a, l) => a + l.descuento, 0);
-  const comision = calcularComision(vendido, paso, valor);
-  const tramos = paso > 0 ? Math.floor(vendido / paso) : 0;
+  const comision = lineas.reduce((a, l) => a + l.comision, 0);
+  const servicios = lineas.reduce((a, l) => a + l.cantidad, 0);
 
   const enlace = (extra: Record<string, string | undefined>, base = `/admin/reportes/comisiones/${staffId}`) => {
     const p = new URLSearchParams();
@@ -107,16 +103,16 @@ export default async function HistorialProfesionalPage({
       />
 
       <div className="mb-6 grid gap-px border border-stone bg-stone sm:grid-cols-4">
-        <Cifra label="vendido" valor={formatCOP(vendido)} />
+        <Cifra label={servicios === 1 ? "servicio" : "servicios"} valor={String(servicios)} />
+        <Cifra label="cobrado en servicios" valor={formatCOP(vendido)} />
         <Cifra label="descuentos dados" valor={descuentos > 0 ? `−${formatCOP(descuentos)}` : formatCOP(0)} />
-        <Cifra label={`tramos de ${formatCOP(paso)}`} valor={String(tramos)} />
         <Cifra label="comisión" valor={formatCOP(comision)} destacado />
       </div>
 
       {lineas.length === 0 ? (
         <EmptyState
           title="Sin movimientos en este período"
-          description="Aquí aparece cada cita atendida y cada venta en la que participó."
+          description="Aquí aparece cada servicio que hizo en citas atendidas y ventas."
         />
       ) : (
         <Table>
@@ -125,10 +121,11 @@ export default async function HistorialProfesionalPage({
               <Th>Fecha</Th>
               <Th>Origen</Th>
               <Th>Clienta</Th>
-              <Th>Servicio o producto</Th>
+              <Th>Servicio</Th>
               <Th className="hidden md:table-cell">Valor</Th>
               <Th className="hidden md:table-cell">Descuento</Th>
-              <Th>Cuenta</Th>
+              <Th>Cobrado</Th>
+              <Th>Comisión</Th>
             </tr>
           </thead>
           <tbody>
@@ -159,7 +156,10 @@ export default async function HistorialProfesionalPage({
                     <span className="text-muted">—</span>
                   )}
                 </Td>
-                <Td className="whitespace-nowrap text-sm font-semibold text-ink">{formatCOP(l.valor)}</Td>
+                <Td className="whitespace-nowrap text-sm text-ink">{formatCOP(l.valor)}</Td>
+                <Td className="whitespace-nowrap text-sm font-semibold text-ink">
+                  {formatCOP(l.comision)} <span className="text-xs font-normal text-muted">({l.porcentaje}%)</span>
+                </Td>
               </tr>
             ))}
           </tbody>
@@ -168,7 +168,7 @@ export default async function HistorialProfesionalPage({
 
       {lineas.length > 0 && (
         <p className="mt-4 text-right text-sm text-ink">
-          {lineas.length} {lineas.length === 1 ? "línea" : "líneas"} · Total vendido{" "}
+          {servicios} {servicios === 1 ? "servicio" : "servicios"} · Cobrado{" "}
           <span className="font-semibold">{formatCOP(vendido)}</span> · Comisión{" "}
           <span className="font-semibold">{formatCOP(comision)}</span>
         </p>

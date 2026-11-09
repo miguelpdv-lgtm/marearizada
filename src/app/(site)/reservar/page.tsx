@@ -50,13 +50,14 @@ export default async function ReservarPage({
   const lineas = categorias
     .filter((c) => c.services.length > 0)
     .map((c) => {
-      const nails = /nail|uña/i.test(`${c.slug} ${c.name}`);
+      const nails = c.agenda === "NAILS";
       return {
         id: c.id,
         name: c.name,
         description: c.description,
         variante: nails ? ("nails" as const) : ("salon" as const),
-        pidePatron: !nails,
+        // El patrón de rizo solo tiene sentido en los servicios de cabello.
+        pidePatron: !nails && /rizo|cabello|pelo/i.test(`${c.slug} ${c.name}`),
         servicios: c.services
           .filter((s) => !s.branchId || s.branchId === sede?.id)
           .map((s) => {

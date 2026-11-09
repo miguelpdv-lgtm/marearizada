@@ -6,8 +6,7 @@ import { sedeEfectiva, sedesPermitidas } from "@/lib/branchAccess";
 import { formatCOP } from "@/lib/format";
 import { ETIQUETA } from "../../agenda/estado";
 import { fechaBogota, horaBogota } from "@/lib/agenda";
-import { calcularComision } from "@/lib/ajustes-datos";
-import { comisionesReporte, lineasComision, reglaComision, resumenReporte } from "../queries";
+import { comisionesReporte, lineasComision, resumenReporte } from "../queries";
 
 /** Arma un CSV a mano — sin librería nueva, sirve para dos tablas chicas. */
 function aCsv(encabezados: string[], filas: (string | number)[][]) {
@@ -61,13 +60,11 @@ export async function GET(request: Request) {
     if (!profesional || !permitidas.some((s) => s.id === profesional.branchId)) {
       return NextResponse.json({ error: "Profesional no encontrada." }, { status: 404 });
     }
-    const [lineas, { paso, valor }] = await Promise.all([
-      lineasComision({ desde, hasta, branchId, staffId }),
-      reglaComision(),
-    ]);
+    const lineas = await lineasComision({ desde, hasta, branchId, staffId });
     const vendido = lineas.reduce((a, l) => a + l.valor, 0);
+    const totalComision = lineas.reduce((a, l) => a + l.comision, 0);
     const csv = aCsv(
-      ["Fecha", "Hora", "Origen", "Código", "Clienta", "Servicio o producto", "Cantidad", "Valor", "Descuento", "Cuenta para comisión"],
+      ["Fecha", "Hora", "Origen", "Código", "Clienta", "Servicio", "Cantidad", "Valor", "Descuento", "Cobrado", "% comisión", "Comisión"],
       [
         ...lineas.map((l) => [
           fechaBogota(l.fecha),
@@ -80,10 +77,11 @@ export async function GET(request: Request) {
           l.valorLista,
           l.descuento,
           l.valor,
+          l.porcentaje,
+          l.comision,
         ]),
         [],
-        ["", "", "", "", "", "Total vendido", "", "", "", vendido],
-        ["", "", "", "", "", "Comisión", "", "", "", calcularComision(vendido, paso, valor)],
+        ["", "", "", "", "", "Total", "", "", "", vendido, "", totalComision],
       ],
     );
     const nombre = profesional.name.normalize("NFD").replace(/[^\w]+/g, "-").toLowerCase();
@@ -93,8 +91,8 @@ export async function GET(request: Request) {
   if (tipo === "comisiones") {
     const { filas } = await comisionesReporte({ desde, hasta, branchId });
     const csv = aCsv(
-      ["Profesional", "Ventas", "Tramos completos", "Comisión"],
-      filas.map((f) => [f.name, f.ventas, f.tramos, f.comision]),
+      ["Profesional", "Servicios", "Cobrado en servicios", "Comisión"],
+      filas.map((f) => [f.name, f.servicios, f.ventas, f.comision]),
     );
     return respuestaCsv(csv, `comisiones_${desde}_${hasta}.csv`);
   }

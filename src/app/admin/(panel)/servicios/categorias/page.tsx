@@ -2,7 +2,7 @@
 import { DeleteButton } from "@/components/admin/form";
 import { prisma } from "@/lib/db";
 import { CategoryForm } from "@/components/admin/CategoryForm";
-import { createServiceCategory, deleteServiceCategory } from "../actions";
+import { actualizarComisionCategoria, createServiceCategory, deleteServiceCategory } from "../actions";
 
 export const metadata = { title: "Categorías de servicios" };
 
@@ -16,7 +16,7 @@ export default async function ServiceCategoriesPage() {
     <>
       <PageHeader
         title="Categorías de servicios"
-        description="Agrupan los servicios en la página pública."
+        description="Agrupan los servicios al reservar. Cada una define el % de comisión de sus servicios y en qué agenda (Salón o Nails) aparecen."
         breadcrumb={{ label: "Servicios", href: "/admin/servicios" }}
       />
 
@@ -32,7 +32,7 @@ export default async function ServiceCategoriesPage() {
                 <tr>
                   <Th>Categoría</Th>
                   <Th>Servicios</Th>
-                  <Th>Orden</Th>
+                  <Th>Comisión y agenda</Th>
                   <Th className="text-right">Acciones</Th>
                 </tr>
               </thead>
@@ -50,7 +50,37 @@ export default async function ServiceCategoriesPage() {
                     <Td className="text-sm font-normal text-muted">
                       {c._count.services}
                     </Td>
-                    <Td className="text-sm font-normal text-muted">{c.order}</Td>
+                    <Td>
+                      <form action={actualizarComisionCategoria} className="flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="id" value={c.id} />
+                        <label className="flex items-center gap-1 text-sm text-ink">
+                          <span className="sr-only">Comisión de {c.name} (%)</span>
+                          <input
+                            name="commissionPercent"
+                            type="number"
+                            min={0}
+                            max={100}
+                            defaultValue={c.commissionPercent ?? ""}
+                            placeholder="0"
+                            className="admin-control w-20 px-2 py-1.5 text-sm"
+                          />
+                          %
+                        </label>
+                        <label className="sr-only" htmlFor={`agenda-${c.id}`}>Agenda de {c.name}</label>
+                        <select
+                          id={`agenda-${c.id}`}
+                          name="agenda"
+                          defaultValue={c.agenda}
+                          className="admin-control w-auto px-2 py-1.5 text-sm"
+                        >
+                          <option value="SALON">Salón</option>
+                          <option value="NAILS">Nails</option>
+                        </select>
+                        <button type="submit" className="btn btn-outline px-3 py-1.5 text-[10px]">
+                          Guardar
+                        </button>
+                      </form>
+                    </Td>
                     <Td className="text-right">
                       <form action={deleteServiceCategory}>
                         <input type="hidden" name="id" value={c.id} />
