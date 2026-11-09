@@ -1,80 +1,77 @@
 import { Suspense } from "react";
 
 import { OkToast } from "@/components/admin/Toast";
-import { TopBar, type NavEntry } from "@/components/admin/TopBar";
+import { PanelShell, type GrupoNav } from "@/components/admin/PanelShell";
 import { requireUser } from "@/lib/auth";
 import { canManageSettings, canManageUsers } from "@/lib/constants";
 import { logoutAction } from "@/app/admin/login/actions";
-import { prisma } from "@/lib/db";
 
+/**
+ * Estructura del panel de Marea Rizada: un solo local, dos agendas (Salón y
+ * Nails). La navegación va por áreas del día a día; en el celular, Hoy,
+ * Agenda, Ventas y Clientes quedan como pestañas abajo.
+ */
 export default async function PanelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const user = await requireUser();
-  const branches = await prisma.branch.findMany({
-    where: { active: true },
-    orderBy: { order: "asc" },
-    select: { id: true, city: true },
-  });
 
-  // Agrupado por función de negocio: lo del día a día arriba, el catálogo y
-  // el contenido del sitio en sus grupos.
-  const nav: NavEntry[] = [
-    { type: "link", label: "Hoy", href: "/admin" },
-    { type: "link", label: "Agenda", href: "/admin/agenda" },
-    { type: "link", label: "Ventas", href: "/admin/ventas" },
-    { type: "link", label: "Clientes", href: "/admin/clientes" },
+  const grupos: GrupoNav[] = [
     {
-      type: "group",
-      title: "Catálogo",
+      titulo: null,
       items: [
-        { label: "Servicios", href: "/admin/servicios" },
-        { label: "Productos", href: "/admin/productos" },
-        { label: "Promociones", href: "/admin/promociones" },
+        { label: "Hoy", href: "/admin", icono: "hoy" },
+        { label: "Agenda", href: "/admin/agenda", icono: "agenda" },
+        { label: "Ventas", href: "/admin/ventas", icono: "ventas" },
+        { label: "Clientes", href: "/admin/clientes", icono: "clientes" },
       ],
     },
     {
-      type: "group",
-      title: "Administración",
+      titulo: "Catálogo",
       items: [
-        { label: "Equipo", href: "/admin/equipo" },
-        { label: "Locales", href: "/admin/sucursales" },
-        ...(canManageUsers(user.role) ? [{ label: "Usuarios", href: "/admin/usuarios" }] : []),
+        { label: "Servicios", href: "/admin/servicios", icono: "servicios" },
+        { label: "Productos", href: "/admin/productos", icono: "productos" },
+        { label: "Promociones y cupones", href: "/admin/promociones", icono: "promociones" },
       ],
     },
     {
-      type: "group",
-      title: "Contenido",
+      titulo: "Equipo y local",
       items: [
-        { label: "Espacios de medios", href: "/admin/medios" },
-        { label: "Reseñas e historias", href: "/admin/historias" },
-        { label: "Galería", href: "/admin/galeria" },
+        { label: "Equipo", href: "/admin/equipo", icono: "equipo" },
+        { label: "Local", href: "/admin/sucursales", icono: "local" },
+        ...(canManageUsers(user.role)
+          ? [{ label: "Usuarios", href: "/admin/usuarios", icono: "usuarios" as const }]
+          : []),
       ],
     },
     {
-      type: "group",
-      title: "Reportes",
+      titulo: "Números",
       items: [
-        { label: "Resumen", href: "/admin/reportes" },
-        { label: "Comisiones", href: "/admin/reportes/comisiones" },
+        { label: "Reportes", href: "/admin/reportes", icono: "reportes" },
+        { label: "Comisiones", href: "/admin/reportes/comisiones", icono: "comisiones" },
       ],
     },
-    ...(canManageSettings(user.role)
-      ? [{ type: "link" as const, label: "Configuración", href: "/admin/configuracion" }]
-      : []),
+    {
+      titulo: "Sitio",
+      items: [
+        { label: "Reseñas e historias", href: "/admin/historias", icono: "resenas" },
+        { label: "Galería", href: "/admin/galeria", icono: "galeria" },
+        { label: "Fotos y videos del sitio", href: "/admin/medios", icono: "medios" },
+        ...(canManageSettings(user.role)
+          ? [{ label: "Configuración", href: "/admin/configuracion", icono: "configuracion" as const }]
+          : []),
+      ],
+    },
   ];
 
   return (
-    <div className="min-h-screen">
+    <PanelShell grupos={grupos} user={user} logout={logoutAction}>
       <Suspense fallback={null}>
         <OkToast />
       </Suspense>
-      <TopBar nav={nav} user={user} branches={branches} logout={logoutAction} />
-      <div className="px-5 py-8 sm:px-8 lg:px-12 lg:py-14">
-        <div className="mx-auto max-w-[100rem]">{children}</div>
-      </div>
-    </div>
+      {children}
+    </PanelShell>
   );
 }

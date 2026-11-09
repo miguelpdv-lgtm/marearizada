@@ -217,10 +217,10 @@
      para que la información siga siendo rápida de escanear. */
   .admin-card {
     overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
-    border-radius: var(--radius-lg);
+    border: 1.5px solid #d3e3e1;
+    border-radius: 6px;
     background: var(--color-paper);
-    box-shadow: var(--shadow-soft, 0 4px 24px -4px rgba(91, 0, 29, 0.12));
+    box-shadow: 0 1px 0 rgb(15 50 54 / 0.04);
   }
 
   .admin-card-header {
@@ -240,16 +240,16 @@
 
   .admin-control {
     width: 100%;
-    border: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
-    border-radius: var(--radius-md);
+    border: 1.5px solid #c9dcda;
+    border-radius: 3px;
     background: var(--color-paper);
     color: var(--color-ink);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
 
   .admin-control:focus {
-    border-color: var(--color-terra);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold-500) 55%, transparent);
+    border-color: #278e95;
+    box-shadow: 0 0 0 3px rgb(158 229 231 / 0.55);
     outline: none;
   }
 

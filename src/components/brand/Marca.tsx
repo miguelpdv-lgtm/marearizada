@@ -27,15 +27,19 @@ export function Isotipo({
   ...props
 }: Props & { variante?: keyof typeof VARIANTES }) {
   const c = VARIANTES[variante];
-  const clip = `marea-isotipo-${variante}`;
+  // El círculo se recorta con CSS y no con un <clipPath> con id: si hay dos
+  // logos en la página y uno está oculto (display: none), el id compartido
+  // deja de recortar y el otro se ve cuadrado.
   return (
-    <svg viewBox="0 0 100 100" className={className} role="img" aria-label="Marea Rizada" {...props}>
-      <defs>
-        <clipPath id={clip}>
-          <circle cx="50" cy="50" r="47" />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${clip})`}>
+    <svg
+      viewBox="0 0 100 100"
+      className={className}
+      role="img"
+      aria-label="Marea Rizada"
+      {...props}
+      style={{ clipPath: "circle(47% at 50% 50%)", ...props.style }}
+    >
+      <g>
         <rect width="100" height="100" fill={c.arena} />
         <path
           d="M57 26q2.8-2.8 5.6 0q2.8-2.8 5.6 0M69 18q2-2 4 0q2-2 4 0"

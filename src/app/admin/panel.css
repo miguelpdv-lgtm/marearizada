@@ -1,0 +1,110 @@
+/* ==========================================================================
+   Panel de Marea Rizada: estructura (barra lateral, barra móvil, pestañas)
+   y la capa visual de las piezas compartidas del panel.
+   Colores del sistema: abismo #0f3236, marea #1c6f75 / #278e95,
+   espuma #9ee5e7 / #effbfb, concha #cdaa9c, arcilla #9a5b49, sal #f2f8f7.
+   ========================================================================== */
+
+@layer components {
+  .mr-panel { min-height: 100vh; background: #f2f8f7; }
+  @media (min-width: 1024px) { .mr-panel { padding-left: 17.5rem; } }
+
+  /* --- Barra lateral ---------------------------------------------------- */
+  .mr-panel-lateral { display: none; }
+  @media (min-width: 1024px) {
+    .mr-panel-lateral {
+      position: fixed; inset: 0 auto 0 0; z-index: 40; width: 17.5rem;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: #0f3236; color: #effbfb;
+    }
+  }
+  .mr-panel-marca { display: flex; align-items: center; gap: .75rem; padding: 1.5rem 1.25rem 1.25rem; text-decoration: none; }
+  .mr-panel-marca b { display: block; font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; line-height: 1.05; color: #fff; }
+  .mr-panel-marca small { display: block; margin-top: .3rem; font: 500 .6rem/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: #9ee5e7; }
+  .mr-panel-scroll { flex: 1; overflow-y: auto; padding: .5rem 1rem 1.25rem; scrollbar-width: thin; scrollbar-color: rgb(158 229 231 / .3) transparent; }
+  .mr-panel-grupo { padding: 0 .75rem .55rem; font: 500 .6rem/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: rgb(158 229 231 / .6); }
+  .mr-panel-link {
+    display: flex; align-items: center; gap: .75rem; padding: .58rem .75rem; border-radius: 3px;
+    font-size: .92rem; font-weight: 500; color: rgb(239 251 251 / .8); text-decoration: none;
+    transition: background-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .mr-panel-link:hover { background: rgb(255 255 255 / .07); color: #fff; }
+  .mr-panel-link[aria-current="page"] { background: #9ee5e7; color: #0f3236; font-weight: 700; box-shadow: 3px 3px 0 #cdaa9c; }
+  .mr-panel-link svg { flex: none; opacity: .9; }
+  .mr-panel-link:focus-visible, .mr-panel-sitio:focus-visible, .mr-panel-salir:focus-visible, .mr-panel-marca:focus-visible {
+    outline: 2px solid #9ee5e7; outline-offset: 2px;
+  }
+  .mr-panel-pie { display: grid; gap: .9rem; padding: 1rem 1.25rem 1.1rem; border-top: 1px solid rgb(255 255 255 / .08); }
+  .mr-panel-pie > *, .mr-panel-hoja-cuerpo > * { min-width: 0; }
+  .mr-panel-sitio { display: inline-flex; align-items: center; gap: .4rem; font: 700 .68rem/1 var(--font-sans); letter-spacing: .14em; text-transform: uppercase; color: #9ee5e7; text-decoration: none; }
+  .mr-panel-sitio:hover { color: #fff; }
+  .mr-panel-avatar {
+    display: grid; place-items: center; width: 2.25rem; height: 2.25rem; flex: none; border-radius: 50%;
+    background: #cdaa9c; color: #0f3236; font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+  }
+  .mr-panel-salir { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 0; border-radius: 3px; background: none; color: #9ee5e7; cursor: pointer; }
+  .mr-panel-salir:hover { background: rgb(255 255 255 / .1); color: #fff; }
+
+  /* Ola al pie: dos capas de marea y su espuma, corriendo despacio. */
+  .mr-panel-ola { position: relative; height: 3rem; flex: none; overflow: hidden; }
+  .mr-panel-ola svg { position: absolute; left: 0; bottom: 0; width: 200%; height: 100%; animation: mr-panel-ola 10s linear infinite; }
+  @keyframes mr-panel-ola { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .mr-panel-ola svg { animation: none; } }
+
+  /* --- Celular ------------------------------------------------------------ */
+  .mr-panel-movil {
+    position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: .75rem;
+    padding: max(.65rem, env(safe-area-inset-top)) 1rem .65rem; background: #0f3236;
+  }
+  @media (min-width: 1024px) { .mr-panel-movil { display: none; } }
+
+  .mr-panel-contenido { max-width: 100rem; margin: 0 auto; padding: 1.5rem 1rem calc(6rem + env(safe-area-inset-bottom)); }
+  @media (min-width: 640px) { .mr-panel-contenido { padding-inline: 1.75rem; } }
+  @media (min-width: 1024px) { .mr-panel-contenido { padding: 2.5rem 3rem 4rem; } }
+
+  .mr-panel-tabs {
+    position: fixed; inset: auto 0 0 0; z-index: 40; display: grid; grid-template-columns: repeat(5, 1fr);
+    padding-bottom: env(safe-area-inset-bottom); background: #fff; border-top: 2px solid #0f3236;
+  }
+  @media (min-width: 1024px) { .mr-panel-tabs { display: none; } }
+  .mr-panel-tabs > a, .mr-panel-tabs > button {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: .2rem;
+    padding: .55rem 0 .5rem; border: 0; background: none; cursor: pointer;
+    font-size: .68rem; font-weight: 600; color: #5f6b68; text-decoration: none;
+  }
+  .mr-panel-tabs [aria-current="page"] { color: #0f3236; }
+  .mr-panel-tabs [aria-current="page"]::before { content: ""; position: absolute; top: -2px; left: 22%; right: 22%; height: 4px; background: #278e95; border-radius: 0 0 3px 3px; }
+
+  .mr-panel-hoja { position: fixed; inset: 0; z-index: 50; }
+  @media (min-width: 1024px) { .mr-panel-hoja { display: none; } }
+  .mr-panel-velo { position: absolute; inset: 0; width: 100%; border: 0; background: rgb(15 50 54 / .55); cursor: pointer; }
+  .mr-panel-hoja-cuerpo {
+    position: absolute; inset: auto 0 0 0; max-height: 86vh; overflow-y: auto;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+    border-radius: 14px 14px 0 0; background: #0f3236; color: #effbfb;
+    animation: mr-panel-sube .28s cubic-bezier(.2, .8, .2, 1);
+  }
+  @keyframes mr-panel-sube { from { transform: translateY(100%); } }
+  @media (prefers-reduced-motion: reduce) { .mr-panel-hoja-cuerpo { animation: none; } }
+
+  /* --- Piezas compartidas ------------------------------------------------- */
+  .admin-encabezado { position: relative; margin-bottom: 2rem; padding-bottom: 1.5rem; }
+  .admin-encabezado::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Cpath d='M0 5q10-6 20 0t20 0' fill='none' stroke='%239ee5e7' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left center / 40px 10px;
+  }
+  .admin-kicker { display: inline-flex; align-items: center; gap: .5rem; }
+  .admin-kicker::before {
+    content: ""; width: 1.4rem; height: .5rem; flex: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 10'%3E%3Cpath d='M1 6q3.25-5 6.5 0t6.5 0 6.5 0 6.5 0' fill='none' stroke='%239a5b49' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+  }
+}
+
+/* Sin píldoras en el panel: botones y enlaces con esquina de letrero, y
+   tarjetas con esquina corta. Fuera de las capas a propósito, para ganarle
+   a las utilidades de Tailwind (rounded-*) heredadas en las páginas. */
+.admin-area :is(a, button).rounded-full,
+.admin-area :is(a, button, label, div).rounded-lg,
+.admin-area :is(a, button, label, div).rounded-xl { border-radius: 3px; }
+.admin-area :is(div, section).rounded-2xl,
+.admin-area :is(div, section).rounded-3xl { border-radius: 6px; }
