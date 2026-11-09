@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Marea Rizada · Expertos en salud capilar",
     short_name: "Marea Rizada",
-    description: "Salón especializado en salud capilar y rizos.",
+    description: "Salón especializado en salud capilar y rizos en Cartagena.",
     start_url: "/",
     display: "browser",
     background_color: "#f2f8f7",

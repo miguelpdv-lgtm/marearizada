@@ -37,9 +37,9 @@ export const metadata: Metadata = {
     template: "%s · Marea Rizada",
   },
   description:
-    "Salón especializado en salud capilar y rizos. Diagnóstico, corte rizo a rizo y rutinas para cada patrón, del 2A al 4C. Agenda tu cita en línea.",
+    "Salón especializado en salud capilar y rizos en Cartagena, con línea de nails. Diagnóstico, corte rizo a rizo y rutinas para cada patrón, del 2A al 4C. Agenda tu cita en línea.",
   applicationName: "Marea Rizada",
-  keywords: ["salón de rizos", "cabello rizado", "corte rizo a rizo", "salud capilar", "diagnóstico capilar"],
+  keywords: ["salón de rizos Cartagena", "salón de rizos", "cabello rizado", "nails Cartagena", "corte rizo a rizo", "salud capilar", "diagnóstico capilar"],
   openGraph: {
     type: "website",
     locale: "es_CO",

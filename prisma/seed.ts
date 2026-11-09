@@ -104,7 +104,7 @@ async function main() {
     create: {
       name: "Marea Rizada",
       slug: "principal",
-      city: "Ciudad por confirmar",
+      city: "Cartagena",
       address: "Dirección por confirmar",
       order: 1,
     },

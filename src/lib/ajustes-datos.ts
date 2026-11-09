@@ -90,11 +90,11 @@ export const AJUSTES_NUEVOS = [
   },
   {
     key: "legal.ciudad",
-    value: "",
+    value: "Cartagena, Colombia",
     label: "Ciudad del domicilio",
     group: "general",
     type: "TEXT",
-    hint: "Ej.: Barranquilla, Colombia.",
+    hint: "Ej.: Cartagena, Colombia.",
     order: 52,
   },
   {

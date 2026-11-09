@@ -96,6 +96,8 @@ export function TopBar({
           <Logo variant="dark" markClassName="h-10 w-auto lg:h-12" />
         </Link>
 
+        {/* Con un solo local no hay nada que elegir. */}
+        {branches.length > 1 && (
         <label className="hidden items-center gap-2 rounded-lg border border-ink/15 bg-gold-300/50 px-3 py-2 text-[10px] font-bold tracking-[0.12em] text-ink uppercase xl:flex">
           Local
           <select
@@ -110,6 +112,7 @@ export function TopBar({
             ))}
           </select>
         </label>
+        )}
 
         {/* Nav de escritorio */}
         <nav className="hidden flex-1 items-center gap-1 lg:flex">
@@ -198,6 +201,7 @@ export function TopBar({
       {/* Nav de móvil */}
       {openMobile && (
           <nav className="max-h-[calc(100vh-4.5rem)] overflow-y-auto border-t border-ink/15 bg-cream px-4 py-4 lg:hidden">
+          {branches.length > 1 && (
           <label className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-ink/10 bg-gold-50 px-3 py-3 text-[10px] font-bold tracking-[0.12em] text-ink uppercase">
             Local
             <select
@@ -212,6 +216,7 @@ export function TopBar({
               ))}
             </select>
           </label>
+          )}
           {nav.map((entry) =>
             entry.type === "link" ? (
               <Link key={entry.href} href={contextualHref(entry.href)} className={`${linkClass(isActive(entry.href))} mb-0.5`}>

@@ -127,6 +127,7 @@ export default async function AgendaPage({
     dias?: string;
     sede?: string;
     profesional?: string;
+    linea?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -162,10 +163,27 @@ export default async function AgendaPage({
   const rango =
     vista === "semana" ? 7 : vista === "profesionales" ? 1 : Math.min(Number(sp.dias) || 14, 60);
 
-  const [citas, bloqueos, horarios, equipo, staffSchedule, habilitadas] = await Promise.all([
+  // Un solo local con dos líneas: la agenda se mira por Salón o por Nails.
+  // Cada línea es una categoría de servicios; su equipo, quien presta alguno.
+  const categorias = await prisma.serviceCategory.findMany({
+    where: { active: true, services: { some: { active: true } } },
+    orderBy: { order: "asc" },
+    select: { id: true, name: true },
+  });
+  const lineas = categorias.map((c) => ({
+    id: c.id,
+    nombre: /nail|uña/i.test(c.name) ? "Nails" : /rizo/i.test(c.name) ? "Salón" : c.name,
+  }));
+  const lineaId =
+    lineas.length > 1 ? (lineas.find((l) => l.id === sp.linea)?.id ?? lineas[0].id) : undefined;
+  const filtroLineaCita = lineaId ? { service: { categoryId: lineaId } } : {};
+  const filtroLineaEquipo = lineaId ? { services: { some: { service: { categoryId: lineaId } } } } : {};
+
+  const [citas, bloqueosTodos, horarios, equipo, scheduleTodo, habilitadasTodas] = await Promise.all([
     prisma.appointment.findMany({
       where: {
         ...filtroSede,
+        ...filtroLineaCita,
         staffId: sp.profesional || undefined,
         startsAt: {
           gte: aUtc(desde, "00:00"),
@@ -193,6 +211,7 @@ export default async function AgendaPage({
           where: {
             branchId: sedeVista ? sedeVista : { in: permitidas.map((s) => s.id) },
             active: true,
+            ...filtroLineaEquipo,
           },
           orderBy: { order: "asc" },
           select: { id: true, name: true, imageUrl: true },
@@ -214,12 +233,19 @@ export default async function AgendaPage({
       : Promise.resolve([]),
   ]);
 
+  // Bloqueos de todo el local se ven en las dos líneas; los personales y los
+  // horarios, solo si la profesional es de la línea.
+  const delEquipo = new Set(equipo.map((e) => e.id));
+  const bloqueos = bloqueosTodos.filter((b) => !b.staffId || delEquipo.has(b.staffId));
+  const staffSchedule = scheduleTodo.filter((h) => delEquipo.has(h.staffId));
+  const habilitadas = habilitadasTodas.filter((h) => !h.staffId || delEquipo.has(h.staffId));
+
   const activas = citas.filter((c) => ESTADOS_ACTIVOS.includes(c.status));
   const ingresos = activas.reduce((a, c) => a + totalCita(c), 0);
 
   const enlace = (extra: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
-    const base = { vista, desde, sede: sedeId, profesional: sp.profesional, ...extra };
+    const base = { vista, desde, sede: sedeId, profesional: sp.profesional, linea: lineaId, ...extra };
     for (const [k, v] of Object.entries(base)) if (v) p.set(k, v);
     return `/admin/agenda?${p.toString()}`;
   };
@@ -228,7 +254,7 @@ export default async function AgendaPage({
     <>
       <PageHeader
         title="Agenda"
-        description="Las reservas del sitio entran como “Por confirmar”."
+        description="Las reservas en línea entran confirmadas cuando se paga el abono. Cambia entre Salón y Nails para ver cada agenda."
         action={{ label: "Bloqueo de horas", href: "/admin/agenda/bloqueos" }}
       />
 
@@ -241,6 +267,23 @@ export default async function AgendaPage({
       </div>
 
       {/* Controles */}
+      {lineas.length > 1 && (
+        <div className="mb-4 inline-flex border-2 border-ink" role="tablist" aria-label="Agenda de">
+          {lineas.map((l) => (
+            <Link
+              key={l.id}
+              role="tab"
+              aria-selected={l.id === lineaId}
+              href={enlace({ linea: l.id, profesional: undefined })}
+              className={`px-6 py-2.5 text-sm font-bold tracking-[0.1em] uppercase transition-colors ${
+                l.id === lineaId ? "bg-ink text-gold-500" : "bg-paper text-ink hover:bg-cream"
+              }`}
+            >
+              {l.nombre}
+            </Link>
+          ))}
+        </div>
+      )}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="flex">
           {(["profesionales", "semana", "lista"] as const).map((v) => (
@@ -258,6 +301,7 @@ export default async function AgendaPage({
           ))}
         </div>
 
+        {sedes.length > 1 && (
         <div className="flex">
           {vista !== "profesionales" && sedes.length > 1 && (
             <Link
@@ -285,10 +329,12 @@ export default async function AgendaPage({
             </Link>
           ))}
         </div>
+        )}
 
         <form method="get" className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="vista" value={vista} />
           <input type="hidden" name="sede" value={sedeId ?? ""} />
+          {lineaId && <input type="hidden" name="linea" value={lineaId} />}
           <label className="sr-only" htmlFor="fecha-agenda">Fecha</label>
           <input
             id="fecha-agenda"
