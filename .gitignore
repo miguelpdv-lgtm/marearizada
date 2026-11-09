@@ -56,3 +56,6 @@ next-env.d.ts
 # Artefactos intermedios del manual (se regeneran con `npm run manual:pdf`)
 docs/manual/.fuentes.css
 docs/manual/.manual-pdf.html
+.vercel
+.env*
+!.env.example

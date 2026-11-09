@@ -1,0 +1,8 @@
+# Nunca subir secretos locales ni artefactos al desplegar desde la terminal.
+.env
+.env.*
+!.env.example
+.vercel
+.next
+node_modules
+docs/manual/capturas
