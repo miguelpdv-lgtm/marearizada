@@ -8,7 +8,7 @@ import { updateSettings } from "./actions";
 import type { ActionState } from "@/lib/actions";
 
 const inputCls =
-  "w-full border border-stone bg-white px-4 py-2.5 text-sm font-normal text-ink placeholder:text-clay transition-colors focus:border-gold-500 focus:outline-none";
+  "admin-control px-4 py-3 text-base";
 
 export function SettingsGroupForm({
   group,
@@ -35,12 +35,12 @@ export function SettingsGroupForm({
             }
           >
             {setting.type === "BOOLEAN" ? (
-              <label className="flex cursor-pointer items-start gap-3 border border-stone bg-white px-4 py-3.5 hover:border-gold-300">
+              <label className="flex cursor-pointer items-start gap-3 border border-stone bg-white px-4 py-3.5 hover:border-marea">
                 <input
                   type="checkbox"
                   name={setting.key}
                   defaultChecked={setting.value === "true"}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-terra"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-marea"
                 />
                 <span>
                   <span className="block text-sm font-normal text-ink">
@@ -57,7 +57,7 @@ export function SettingsGroupForm({
               <>
                 <label
                   htmlFor={setting.key}
-                  className="mb-2 block text-[11px] tracking-[0.12em] text-muted uppercase"
+                  className="admin-label"
                 >
                   {setting.label}
                 </label>

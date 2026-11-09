@@ -116,7 +116,7 @@ export function CitaDetalle({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone text-ink transition-colors hover:border-terra"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone text-ink transition-colors hover:border-marea"
           >
             ✕
           </button>

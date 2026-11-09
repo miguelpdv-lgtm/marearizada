@@ -38,7 +38,7 @@ export default async function ProductCategoriesPage() {
               </thead>
               <tbody>
                 {categories.map((c) => (
-                  <tr key={c.id} className="transition-colors hover:bg-sand/30">
+                  <tr key={c.id} className="transition-colors hover:bg-[#effbfb]">
                     <Td>
                       <p className="text-sm text-ink">{c.name}</p>
                       {c.description && (

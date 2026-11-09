@@ -23,7 +23,7 @@ export function NuevaReservaButton({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="btn btn-dark rounded-lg px-4 py-2 text-[11px]"
+        className="btn btn-primary px-5 py-3 text-xs"
       >
         + Nueva reserva
       </button>
@@ -42,12 +42,12 @@ export function NuevaReservaButton({
             className="admin-card max-h-[90vh] w-full max-w-lg overflow-y-auto bg-paper p-6 shadow-xl"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
-               <h2 className="t-card text-xl text-ink">Nueva reserva</h2>
+               <h2 className="font-display text-2xl font-[650]">Nueva reserva</h2>
               <button
                 type="button"
                 onClick={() => setAbierto(false)}
                 aria-label="Cerrar"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone text-ink transition-colors hover:border-terra"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone text-ink transition-colors hover:border-marea"
               >
                 ✕
               </button>

@@ -279,7 +279,7 @@ export function ConfirmarMovimiento({
             type="button"
             onClick={cerrar}
             autoFocus
-            className="mt-5 bg-ink px-5 py-2.5 text-sm text-gold-500"
+            className="mt-5 btn btn-primary px-5 py-3 text-sm"
           >
             Listo
           </button>
@@ -347,7 +347,7 @@ export function ConfirmarMovimiento({
               type="checkbox"
               checked={avisar}
               onChange={(e) => setAvisar(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-terra"
+              className="mt-0.5 h-4 w-4 accent-marea"
             />
             <span className="text-sm text-ink">Avisarle a la clienta por correo</span>
           </label>
@@ -365,7 +365,7 @@ export function ConfirmarMovimiento({
             type="button"
             disabled={pending}
             onClick={() => mover(Boolean(conflicto))}
-            className="bg-ink px-5 py-2.5 text-sm text-gold-500 disabled:opacity-60"
+            className="btn btn-primary px-5 py-3 text-sm"
           >
             {pending ? "Moviendo…" : conflicto ? "Mover igual" : "Mover"}
           </button>

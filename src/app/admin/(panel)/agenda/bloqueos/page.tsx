@@ -57,7 +57,7 @@ export default async function BloqueosPage() {
 
       <div className="mb-6 rounded-xl border border-stone bg-cream px-5 py-4 text-sm text-ink">
         <strong>¿Desbloquear solo unas horas o solo a una profesional?</strong> Hazlo en la{" "}
-        <Link href="/admin/agenda?vista=profesionales" className="text-terra underline underline-offset-2">
+        <Link href="/admin/agenda?vista=profesionales" className="text-marea underline underline-offset-2">
           agenda por profesionales
         </Link>
         : toca el bloqueo 🔒 y elige &ldquo;Solo unas horas&rdquo; o &ldquo;Solo para…&rdquo;. Para abrirle

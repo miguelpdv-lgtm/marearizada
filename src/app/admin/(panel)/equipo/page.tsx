@@ -56,7 +56,7 @@ export default async function TeamAdminPage() {
           </thead>
           <tbody>
             {team.map((member) => (
-              <tr key={member.id} className="transition-colors hover:bg-sand/30">
+              <tr key={member.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td>
                   <div className="flex items-center gap-3">
                     <Thumb src={member.imageUrl} alt={member.name} fallback="👤" />
@@ -80,7 +80,7 @@ export default async function TeamAdminPage() {
                 <Td className="text-right">
                   <Link
                     href={`/admin/equipo/${member.id}`}
-                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra"
+                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea"
                   >
                     Editar
                   </Link>

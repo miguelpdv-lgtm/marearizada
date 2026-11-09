@@ -95,7 +95,7 @@ export default async function HistorialProfesionalPage({
         extra={
           <a
             href={enlaceExportar()}
-            className="border border-ink px-4 py-2 text-sm text-ink transition-colors hover:bg-ink hover:text-gold-500"
+            className="btn btn-outline px-4 py-2 text-xs"
           >
             Descargar CSV
           </a>
@@ -130,11 +130,11 @@ export default async function HistorialProfesionalPage({
           </thead>
           <tbody>
             {lineas.map((l) => (
-              <tr key={l.id} className="transition-colors hover:bg-sand/30">
+              <tr key={l.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td className="whitespace-nowrap text-sm text-ink">{formatDateTime(l.fecha)}</Td>
                 <Td className="text-sm text-muted">
                   {l.href ? (
-                    <Link href={l.href} className="underline-offset-2 hover:text-terra hover:underline">
+                    <Link href={l.href} className="underline-offset-2 hover:text-marea hover:underline">
                       {l.origen} {l.codigo}
                     </Link>
                   ) : (

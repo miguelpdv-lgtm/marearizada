@@ -42,11 +42,11 @@ export function AjusteStockForm({
           min={0}
           defaultValue={stockActual}
           required
-          className="w-full rounded-lg border border-stone bg-white px-3 py-2 text-sm text-ink focus:border-gold-500 focus:outline-none"
+          className="admin-control px-4 py-3 text-base"
         />
         <select
           name="cause"
-          className="w-full rounded-lg border border-stone bg-white px-3 py-2 text-sm text-ink focus:border-gold-500 focus:outline-none"
+          className="admin-control px-4 py-3 text-base"
         >
           {CAUSAS_AJUSTE.map((c) => (
             <option key={c} value={c}>
@@ -60,7 +60,7 @@ export function AjusteStockForm({
         type="text"
         name="comment"
         placeholder="Comentario (opcional)"
-        className="mt-2 w-full rounded-lg border border-stone bg-white px-3 py-2 text-sm text-ink placeholder:text-clay focus:border-gold-500 focus:outline-none"
+        className="mt-2 w-full rounded-lg border border-stone bg-white px-3 py-2 text-sm text-ink placeholder:text-clay focus:border-marea focus:outline-none"
       />
 
       <div className="mt-3">

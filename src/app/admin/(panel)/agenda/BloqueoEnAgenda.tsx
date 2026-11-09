@@ -50,7 +50,7 @@ function Ventana({
             type="button"
             onClick={onCerrar}
             aria-label="Cerrar"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone text-ink hover:border-terra"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone text-ink hover:border-marea"
           >
             ✕
           </button>
@@ -180,7 +180,7 @@ export function NuevoBloqueo({
     return (
       <Ventana titulo={modo === "habilitar" ? "Horas habilitadas" : "Horas bloqueadas"} onCerrar={onCerrar}>
         <p className="text-sm text-ink">{aviso}</p>
-        <button type="button" onClick={onCerrar} className="mt-4 bg-ink px-5 py-2.5 text-sm text-gold-500">
+        <button type="button" onClick={onCerrar} className="mt-4 btn btn-primary px-5 py-3 text-sm">
           Entendido
         </button>
       </Ventana>
@@ -210,7 +210,7 @@ export function NuevoBloqueo({
               role="tab"
               aria-selected={modo === v}
               onClick={() => setModo(v)}
-              className={`py-2 transition-colors ${modo === v ? "bg-ink text-gold-500" : "text-ink hover:bg-cream"}`}
+              className={`py-2 transition-colors ${modo === v ? "bg-[#9ee5e7] font-semibold text-[#1f2725]" : "text-[#3d4643] hover:bg-[#effbfb]"}`}
             >
               {t}
             </button>
@@ -235,8 +235,8 @@ export function NuevoBloqueo({
                 onClick={() => setMotivo(m)}
                 className={`border px-2.5 py-1 text-xs transition-colors ${
                   motivo === m
-                    ? "border-ink bg-ink text-gold-500"
-                    : "border-stone text-ink hover:border-terra"
+                    ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]"
+                    : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
                 }`}
               >
                 {m}
@@ -257,7 +257,7 @@ export function NuevoBloqueo({
               type="checkbox"
               checked={toda}
               onChange={(e) => setToda(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-terra"
+              className="mt-0.5 h-4 w-4 accent-marea"
             />
             <span className="text-sm text-ink">
               Bloquear a toda la sede
@@ -273,7 +273,7 @@ export function NuevoBloqueo({
             type="button"
             onClick={guardar}
             disabled={pending}
-            className="bg-ink px-5 py-2.5 text-sm text-gold-500 disabled:opacity-60"
+            className="btn btn-primary px-5 py-3 text-sm"
           >
             {modo === "habilitar"
               ? pending
@@ -373,7 +373,7 @@ export function DetalleBloqueo({
               type="checkbox"
               checked={soloElla}
               onChange={(e) => setSoloElla(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-terra"
+              className="mt-0.5 h-4 w-4 accent-marea"
             />
             <span className="text-sm text-ink">
               Solo para {profesional.name}
@@ -386,7 +386,7 @@ export function DetalleBloqueo({
             type="checkbox"
             checked={parcial}
             onChange={(e) => setParcial(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-terra"
+            className="mt-0.5 h-4 w-4 accent-marea"
           />
           <span className="text-sm text-ink">
             Solo unas horas

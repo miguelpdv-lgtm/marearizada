@@ -134,7 +134,7 @@ export function Uploader({
             ? "border-terra bg-gold-50"
             : subiendo
               ? "cursor-wait border-stone bg-smoke"
-              : "border-stone bg-white hover:border-terra hover:bg-gold-50"
+              : "border-stone bg-white hover:border-marea hover:bg-gold-50"
         }`}
       >
         {subiendo ? (

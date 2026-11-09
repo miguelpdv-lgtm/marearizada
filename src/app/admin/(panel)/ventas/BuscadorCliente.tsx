@@ -66,7 +66,7 @@ export function BuscadorCliente({
             setResultados([]);
             onCambiar();
           }}
-          className="text-xs text-terra underline underline-offset-2"
+          className="text-xs text-marea underline underline-offset-2"
         >
           Cambiar
         </button>
@@ -87,7 +87,7 @@ export function BuscadorCliente({
           setAbierto(true);
         }}
         onFocus={() => setAbierto(true)}
-        className="w-full border border-stone bg-white px-3 py-2.5 text-sm text-ink placeholder:text-clay focus:border-terra focus:outline-none"
+        className="w-full border border-stone bg-white px-3 py-2.5 text-sm text-ink placeholder:text-clay focus:border-marea focus:outline-none"
       />
       {abierto && q.length >= 2 && (
         <ul className="absolute inset-x-0 top-full z-20 mt-1 max-h-80 overflow-y-auto border border-stone bg-white shadow-lg">

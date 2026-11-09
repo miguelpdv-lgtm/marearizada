@@ -84,7 +84,7 @@ export default async function ComisionesPage({
           <Link
             href={enlace({ sede: undefined })}
             className={`border px-4 py-2 text-sm transition-colors ${
-              !sedeId ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+              !sedeId ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
             }`}
           >
             Ambas
@@ -95,7 +95,7 @@ export default async function ComisionesPage({
             key={s.id}
             href={enlace({ sede: s.id })}
             className={`border border-l-0 px-4 py-2 text-sm transition-colors ${
-              sedeId === s.id ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+              sedeId === s.id ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
             }`}
           >
             {s.city}
@@ -115,7 +115,7 @@ export default async function ComisionesPage({
         extra={
           <a
             href={enlaceExportar()}
-            className="border border-ink px-4 py-2 text-sm text-ink transition-colors hover:bg-ink hover:text-gold-500"
+            className="btn btn-outline px-4 py-2 text-xs"
           >
             Descargar CSV
           </a>
@@ -131,7 +131,7 @@ export default async function ComisionesPage({
           </span>
         ))}
         . Los productos no comisionan.{" "}
-        <Link href="/admin/servicios" className="text-terra underline underline-offset-2">
+        <Link href="/admin/servicios" className="text-marea underline underline-offset-2">
           Cambiar en Servicios
         </Link>
       </p>
@@ -157,7 +157,7 @@ export default async function ComisionesPage({
               {filas.map((f) => (
                 <tr key={f.id}>
                   <Td className="text-sm text-ink">
-                    <Link href={enlace({}, `/admin/reportes/comisiones/${f.id}`)} className="hover:text-terra hover:underline">
+                    <Link href={enlace({}, `/admin/reportes/comisiones/${f.id}`)} className="hover:text-marea hover:underline">
                       {f.name}
                     </Link>
                   </Td>
@@ -167,7 +167,7 @@ export default async function ComisionesPage({
                   <Td className="text-right">
                     <Link
                       href={enlace({}, `/admin/reportes/comisiones/${f.id}`)}
-                      className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra"
+                      className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea"
                     >
                       Ver detalle
                     </Link>

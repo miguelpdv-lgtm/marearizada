@@ -199,7 +199,7 @@ export function TeamForm({
                         type="checkbox"
                         name={`weekday-${weekday}-closed`}
                         defaultChecked={base?.closed ?? weekday === 0}
-                        className="h-4 w-4 accent-terra"
+                        className="h-4 w-4 accent-marea"
                       />
                       No trabaja
                     </label>

@@ -24,7 +24,7 @@ export function HistorialCliente({ citas, lookups }: { citas: CitaCliente[]; loo
             key={c.id}
             type="button"
             onClick={() => setCitaAbierta(c)}
-            className="flex w-full flex-col gap-2 p-5 text-left transition-colors hover:bg-sand/30 sm:flex-row sm:items-center sm:justify-between"
+            className="flex w-full flex-col gap-2 p-5 text-left transition-colors hover:bg-[#effbfb] sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
               <p className="text-sm text-ink">

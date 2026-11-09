@@ -169,7 +169,7 @@ export function AgendaProfesionales({
                   onClick={() =>
                     setNuevo({ profesional: p, ini: Math.floor(desdeMin / 15) * 15, fin: hastaMin })
                   }
-                  className="text-[10px] tracking-[0.08em] text-clay uppercase underline-offset-2 hover:text-terra hover:underline"
+                  className="text-[10px] tracking-[0.08em] text-clay uppercase underline-offset-2 hover:text-marea hover:underline"
                 >
                   Bloquear / habilitar
                 </button>

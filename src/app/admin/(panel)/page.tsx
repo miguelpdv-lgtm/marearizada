@@ -131,7 +131,7 @@ export default async function InicioPage() {
               className={`flex flex-wrap items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
                 a.tono === "rojo"
                   ? "border-red-200 bg-red-50 hover:border-red-400"
-                  : "border-gold-300/70 bg-gold-50 hover:border-terra"
+                  : "border-gold-300/70 bg-gold-50 hover:border-marea"
               }`}
             >
               <span

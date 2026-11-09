@@ -20,14 +20,16 @@ export function Toast({ message, onClose }: { message: string; onClose: () => vo
       aria-live="polite"
       className="fixed inset-x-0 top-6 z-[100] flex justify-center px-4"
     >
-      <div className="flex items-center gap-3 border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 shadow-lg">
-        <span aria-hidden className="text-base">✓</span>
+      <div className="admin-toast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 15c3-3 6-3 9 0s6 3 9 0M8 8l3 3 6-6" />
+        </svg>
         <span>{message}</span>
         <button
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="ml-2 text-emerald-700 transition-colors hover:text-emerald-900"
+          className="ml-2 text-lg leading-none text-[#9ee5e7] transition-colors hover:text-white"
         >
           ×
         </button>

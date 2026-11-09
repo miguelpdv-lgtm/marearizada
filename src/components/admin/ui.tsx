@@ -27,7 +27,7 @@ export function PageHeader({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="admin-kicker mb-2.5">Marea Rizada</p>
-          <h1 className="font-display text-[2rem] leading-[1.05] font-bold text-ink sm:text-[2.6rem]">{title}</h1>
+          <h1 className="font-display text-[1.953rem] leading-[1.05] font-[650] sm:text-[2.441rem]">{title}</h1>
           {description && (
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
               {description}
@@ -59,7 +59,7 @@ export function CardHeader({
 }) {
   return (
     <div className="admin-card-header">
-      <h2 className="t-card text-ink">{title}</h2>
+      <h2 className="font-display text-[1.25rem] leading-tight font-[650]">{title}</h2>
       {description && (
         <p className="mt-1.5 text-sm text-muted">{description}</p>
       )}
@@ -82,7 +82,7 @@ export function EmptyState({
         <path d="M2 14q7.5-10 15 0t15 0 15 0 15 0" fill="none" stroke="#278e95" strokeWidth="2.5" strokeLinecap="round" />
         <path d="M2 20q7.5-7 15 0t15 0 15 0 15 0" fill="none" stroke="#9ee5e7" strokeWidth="2.5" strokeLinecap="round" />
       </svg>
-      <p className="font-display text-2xl font-bold text-ink">{title}</p>
+      <p className="font-display text-2xl font-bold">{title}</p>
       {description && (
         <p className="mt-2 max-w-sm text-sm font-normal text-muted">{description}</p>
       )}
@@ -107,20 +107,20 @@ export function Badge({
   children: React.ReactNode;
   tone?: "neutral" | "success" | "warning" | "gold" | "danger";
 }) {
-  // Insignias de letrero: esquina casi recta, mayúsculas y los colores del
-  // sistema (espuma para lo bueno, concha para lo que espera, arcilla roja
-  // para lo cancelado).
+  // Insignia del sistema (.mr-badge): sin borde, esquina de 2 px,
+  // seminegrita en mayúsculas. La base es arena con texto cálido; la
+  // variante "aqua" es espuma clara con texto marea.
   const tones = {
-    neutral: "border-[#d3e3e1] bg-[#f2f8f7] text-[#5f6b68]",
-    success: "border-[#9ee5e7] bg-[#effbfb] text-[#0f3236]",
-    warning: "border-[#cdaa9c] bg-[#f7ece7] text-[#7a4436]",
-    gold: "border-[#278e95]/40 bg-[#e2f6f6] text-[#1c6f75]",
-    danger: "border-[#e3b3a5] bg-[#fbecea] text-[#a8452e]",
+    neutral: "bg-[#eef3f2] text-[#5f6b68]",
+    success: "bg-[#effbfb] text-[#1c6f75]",
+    warning: "bg-[#f3e3dc] text-[#9a5b49]",
+    gold: "bg-[#d8f5f6] text-[#155257]",
+    danger: "bg-[#fbe9e4] text-[#a8452e]",
   };
 
   return (
     <span
-      className={`inline-flex items-center rounded-[3px] border-[1.5px] px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.06em] whitespace-nowrap uppercase ${tones[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-[2px] px-2 py-[3px] text-[0.72rem] leading-[1.4] font-semibold tracking-[0.04em] whitespace-nowrap uppercase ${tones[tone]}`}
     >
       {children}
     </span>

@@ -80,7 +80,7 @@ export function FinalizarCita({
                 onListo();
               })
             }
-            className="text-xs text-terra underline underline-offset-2 disabled:opacity-60"
+            className="text-xs text-marea underline underline-offset-2 disabled:opacity-60"
           >
             Reabrir para corregir
           </button>
@@ -95,7 +95,7 @@ export function FinalizarCita({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="w-full bg-ink px-5 py-3 text-sm font-semibold tracking-[0.06em] text-gold-500 uppercase transition-opacity hover:opacity-90"
+        className="w-full btn btn-primary px-5 py-3 text-sm hover:opacity-90"
       >
         Finalizar cita
       </button>
@@ -122,7 +122,7 @@ export function FinalizarCita({
               aria-label="Precio final del servicio"
               value={precio}
               onChange={(e) => setPrecio(e.target.value)}
-              className="w-28 border border-stone bg-white px-2 py-1 text-right text-sm text-ink focus:border-terra focus:outline-none"
+              className="w-28 border border-stone bg-white px-2 py-1 text-right text-sm text-ink focus:border-marea focus:outline-none"
             />
           </label>
         </li>
@@ -194,7 +194,7 @@ export function FinalizarCita({
               onListo();
             })
           }
-          className="bg-ink px-5 py-2.5 text-sm text-gold-500 disabled:opacity-60"
+          className="btn btn-primary px-5 py-3 text-sm"
         >
           {pending ? "Finalizando…" : `Finalizar · ${formatCOP(abono > 0 ? porCobrar : total)}`}
         </button>

@@ -113,8 +113,8 @@ export function BloqueoForm({
                   }}
                   className={`border px-3.5 py-2 text-sm transition-colors ${
                     activo
-                      ? "border-ink bg-ink text-gold-500"
-                      : "border-stone text-ink hover:border-terra"
+                      ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]"
+                      : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
                   }`}
                 >
                   {a.label}

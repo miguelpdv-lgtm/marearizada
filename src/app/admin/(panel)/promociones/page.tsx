@@ -110,7 +110,7 @@ export default async function PromocionesPage() {
                 null;
 
               return (
-                <tr key={p.id} className="transition-colors hover:bg-sand/30">
+                <tr key={p.id} className="transition-colors hover:bg-[#effbfb]">
                   <Td>
                     <p className="text-sm text-ink">{p.name}</p>
                     <p className="mt-0.5 text-xs font-semibold text-terra">
@@ -153,14 +153,14 @@ export default async function PromocionesPage() {
                         <input type="hidden" name="id" value={p.id} />
                         <button
                           type="submit"
-                          className="text-[10px] tracking-[0.18em] text-muted uppercase transition-colors hover:text-terra"
+                          className="text-[10px] tracking-[0.18em] text-muted uppercase transition-colors hover:text-marea"
                         >
                           {p.active ? "Apagar" : "Encender"}
                         </button>
                       </form>
                       <Link
                         href={`/admin/promociones/${p.id}`}
-                        className="text-[10px] tracking-[0.18em] text-ink uppercase transition-colors hover:text-terra"
+                        className="text-[10px] tracking-[0.18em] text-ink uppercase transition-colors hover:text-marea"
                       >
                         Editar
                       </Link>

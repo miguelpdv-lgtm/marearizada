@@ -58,12 +58,12 @@ export function ClientesTable({ clientes }: { clientes: ClienteFila[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar por nombre o celular…"
-          className="w-full max-w-sm rounded-lg border border-stone bg-white px-4 py-2.5 text-sm text-ink placeholder:text-clay focus:border-gold-500 focus:outline-none"
+          className="w-full max-w-sm rounded-lg border border-stone bg-white px-4 py-2.5 text-sm text-ink placeholder:text-clay focus:border-marea focus:outline-none"
         />
         <select
           value={orden}
           onChange={(e) => setOrden(e.target.value as OrdenKey)}
-          className="rounded-lg border border-stone bg-white px-3 py-2.5 text-sm text-ink focus:border-gold-500 focus:outline-none"
+          className="rounded-lg border border-stone bg-white px-3 py-2.5 text-sm text-ink focus:border-marea focus:outline-none"
         >
           {Object.entries(ORDEN).map(([key, o]) => (
             <option key={key} value={key}>
@@ -88,11 +88,11 @@ export function ClientesTable({ clientes }: { clientes: ClienteFila[] }) {
         </thead>
         <tbody>
           {visibles.map((c) => (
-            <tr key={c.id} className="transition-colors hover:bg-sand/30">
+            <tr key={c.id} className="transition-colors hover:bg-[#effbfb]">
               <Td>
                 <Link
                   href={`/admin/clientes/${c.id}`}
-                  className="text-sm text-ink underline-offset-2 hover:text-terra hover:underline"
+                  className="text-sm text-ink underline-offset-2 hover:text-marea hover:underline"
                 >
                   {c.name}
                 </Link>

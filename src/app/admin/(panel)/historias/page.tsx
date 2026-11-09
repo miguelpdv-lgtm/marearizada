@@ -53,7 +53,7 @@ export default async function TestimonialsAdminPage() {
           </thead>
           <tbody>
             {testimonials.map((t) => (
-              <tr key={t.id} className="transition-colors hover:bg-sand/30">
+              <tr key={t.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td>
                   <p className="text-sm text-ink">
                     {t.clientName}
@@ -95,7 +95,7 @@ export default async function TestimonialsAdminPage() {
                 <Td className="text-right">
                   <Link
                     href={`/admin/historias/${t.id}`}
-                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra"
+                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea"
                   >
                     Editar
                   </Link>

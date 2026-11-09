@@ -4,9 +4,12 @@ import { Figtree, Martian_Mono, Shantell_Sans } from "next/font/google";
 import "./globals.css";
 
 // Tipografías del sistema de diseño de Marea Rizada.
+// Shantell va como fuente variable con sus ejes BNCE (rebote) e INFM
+// (informalidad): el sistema de diseño los usa para que las letras "ricen".
+// Sin `axes`, font-variation-settings no tiene a qué aplicarse.
 const shantell = Shantell_Sans({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  axes: ["BNCE", "INFM"],
   variable: "--font-shantell",
   display: "swap",
 });

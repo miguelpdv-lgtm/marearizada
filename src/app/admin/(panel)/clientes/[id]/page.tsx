@@ -131,7 +131,7 @@ export default async function ClientePage({
             href={wa}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-ink px-4 py-2 text-sm text-ink transition-colors hover:bg-ink hover:text-gold-500"
+            className="btn btn-outline px-4 py-2 text-xs"
           >
             Escribir a WhatsApp
           </a>
@@ -139,7 +139,7 @@ export default async function ClientePage({
         {cliente.email && (
           <a
             href={`mailto:${cliente.email}`}
-            className="border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-terra"
+            className="border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-marea"
           >
             Enviar correo
           </a>

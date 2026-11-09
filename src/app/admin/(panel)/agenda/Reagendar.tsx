@@ -112,8 +112,8 @@ export function Reagendar({
                 }}
                 className={`border px-2.5 py-1.5 text-xs transition-colors ${
                   hora === h
-                    ? "border-ink bg-ink text-gold-500"
-                    : "border-stone bg-white text-ink hover:border-terra"
+                    ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]"
+                    : "border-stone bg-white text-ink hover:border-marea"
                 }`}
               >
                 {hora12(h)}
@@ -131,7 +131,7 @@ export function Reagendar({
             type="button"
             onClick={() => guardar(true)}
             disabled={guardando}
-            className="mt-2 block text-xs font-semibold text-terra underline underline-offset-2"
+            className="mt-2 block text-xs font-semibold text-marea underline underline-offset-2"
           >
             Reagendar igual
           </button>
@@ -142,7 +142,7 @@ export function Reagendar({
         type="button"
         onClick={() => guardar()}
         disabled={!hora || guardando}
-        className="bg-ink px-5 py-2.5 text-sm text-gold-500 transition-opacity disabled:opacity-40"
+        className="btn btn-primary px-5 py-3 text-sm"
       >
         {guardando ? "Guardando…" : hora ? `Mover al ${fecha} · ${hora12(hora)}` : "Elige una hora"}
       </button>

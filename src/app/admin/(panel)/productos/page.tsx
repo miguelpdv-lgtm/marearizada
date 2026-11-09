@@ -74,7 +74,7 @@ export default async function ProductsAdminPage({
       <div className="mb-6">
         <Link
           href="/admin/productos/categorias"
-          className="text-[11px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-terra"
+          className="text-[11px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-marea"
         >
           Gestionar categorías →
         </Link>
@@ -112,7 +112,7 @@ export default async function ProductsAdminPage({
           </thead>
           <tbody>
             {products.map((product) => (
-              <tr key={product.id} className="transition-colors hover:bg-sand/30">
+              <tr key={product.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td>
                   <div className="flex items-center gap-3">
                     <Thumb src={product.imageUrl} alt={product.name} />
@@ -156,7 +156,7 @@ export default async function ProductsAdminPage({
                 <Td className="text-right">
                   <Link
                     href={`/admin/productos/${product.id}`}
-                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra"
+                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea"
                   >
                     Editar
                   </Link>

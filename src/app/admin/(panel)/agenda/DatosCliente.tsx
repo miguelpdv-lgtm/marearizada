@@ -34,18 +34,18 @@ export function DatosCliente({
         <Dato etiqueta="Celular" valor={telefono}>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
             {wa && (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="text-terra underline underline-offset-2">
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="text-marea underline underline-offset-2">
                 WhatsApp
               </a>
             )}
-            <a href={`tel:${telLink(telefono)}`} className="text-terra underline underline-offset-2">
+            <a href={`tel:${telLink(telefono)}`} className="text-marea underline underline-offset-2">
               Llamar
             </a>
           </div>
         </Dato>
         {correo ? (
           <Dato etiqueta="Correo" valor={correo}>
-            <a href={`mailto:${correo}`} className="mt-1 inline-block text-xs text-terra underline underline-offset-2">
+            <a href={`mailto:${correo}`} className="mt-1 inline-block text-xs text-marea underline underline-offset-2">
               Escribir correo
             </a>
           </Dato>
@@ -124,7 +124,7 @@ function BotonCopiar({ texto, etiqueta }: { texto: string; etiqueta: string }) {
       onClick={copiar}
       aria-label={`Copiar ${etiqueta.toLowerCase()}`}
       className={`shrink-0 rounded border px-2 py-0.5 text-[11px] transition-colors ${
-        copiado ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+        copiado ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
       }`}
     >
       {copiado ? "Copiado" : "Copiar"}

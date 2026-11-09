@@ -11,7 +11,7 @@ import { Uploader } from "@/components/admin/Uploader";
 /* --- Campos ----------------------------------------------------------------- */
 
 const inputBase =
-  "admin-control px-4 py-3 text-sm placeholder:text-clay disabled:bg-smoke disabled:text-muted";
+  "admin-control px-4 py-3 text-base placeholder:text-[#5f6b68]/70 disabled:bg-[#f2f8f7] disabled:text-muted";
 
 export function Field({
   label,
@@ -34,10 +34,10 @@ export function Field({
     <div>
       <label
         htmlFor={name}
-        className="admin-kicker mb-2 block text-[10px] tracking-[0.12em]"
+        className="admin-label"
       >
         {label}
-        {required && <span className="ml-1 text-terra">*</span>}
+        {required && <span className="ml-1 text-[#9a5b49]">*</span>}
       </label>
 
       {children}
@@ -47,7 +47,7 @@ export function Field({
       )}
 
       {fieldErrors?.map((e) => (
-        <p key={e} className="mt-1.5 text-xs text-red-600">
+        <p key={e} className="mt-1.5 text-xs font-semibold text-[#a8452e]">
           {e}
         </p>
       ))}
@@ -107,7 +107,7 @@ export function Toggle({
   return (
     <label
       className={`flex items-start gap-3 rounded-xl border border-stone bg-paper px-4 py-3.5 transition-colors ${
-        disabled ? "opacity-60" : "cursor-pointer hover:border-terra"
+        disabled ? "opacity-60" : "cursor-pointer hover:border-marea"
       }`}
     >
       <input
@@ -115,7 +115,7 @@ export function Toggle({
         name={name}
         defaultChecked={defaultChecked}
         disabled={disabled}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-terra"
+        className="mt-0.5 h-4 w-4 shrink-0 accent-marea"
       />
       <span>
         <span className="block text-sm font-normal text-ink">{label}</span>
@@ -175,7 +175,7 @@ export function CheckboxGroup({
         <button
           type="button"
           onClick={alternarTodos}
-          className="text-xs font-semibold text-terra underline underline-offset-2 hover:text-terra-deep"
+          className="text-xs font-semibold text-marea underline underline-offset-2 hover:text-marea"
         >
           {todosMarcados ? "Desmarcar todos" : "Marcar todos"}
         </button>
@@ -191,7 +191,7 @@ export function CheckboxGroup({
               {g.options.map((o) => (
                 <label
                   key={o.value}
-                  className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-stone bg-paper px-3.5 py-2.5 transition-colors hover:border-terra"
+                  className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-stone bg-paper px-3.5 py-2.5 transition-colors hover:border-marea"
                 >
                   <input
                     type="checkbox"
@@ -199,7 +199,7 @@ export function CheckboxGroup({
                     value={o.value}
                     checked={marcados.has(o.value)}
                     onChange={() => alternarUno(o.value)}
-                    className="h-4 w-4 shrink-0 accent-terra"
+                    className="h-4 w-4 shrink-0 accent-marea"
                   />
                   <span className="text-sm text-ink">{o.label}</span>
                 </label>

@@ -33,7 +33,7 @@ export function PeriodoSwitcher({
           <Link
             href={hrefTodo}
             className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-              periodo === null ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+              periodo === null ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
             }`}
           >
             Todo
@@ -46,7 +46,7 @@ export function PeriodoSwitcher({
             className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
               i > 0 || hrefTodo ? "border-l-0" : ""
             } ${
-              periodo === p ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+              periodo === p ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
             }`}
           >
             {PERIODO_LABEL[p]}
@@ -60,20 +60,20 @@ export function PeriodoSwitcher({
         <div className="ml-auto flex items-center gap-2">
           <Link
             href={navegacion.anterior}
-             className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-terra"
+             className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-marea"
             aria-label="Período anterior"
           >
             ←
           </Link>
           <Link
             href={navegacion.hoy}
-             className="rounded-lg border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-terra"
+             className="rounded-lg border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-marea"
           >
             Hoy
           </Link>
           <Link
             href={navegacion.siguiente}
-             className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-terra"
+             className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-marea"
             aria-label="Período siguiente"
           >
             →

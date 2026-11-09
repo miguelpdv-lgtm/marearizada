@@ -169,7 +169,7 @@ export default async function VentasPage({
             <Link
               href={enlace({ fecha: hoy })}
               className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                fecha === hoy ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+                fecha === hoy ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
               }`}
             >
               Hoy
@@ -177,7 +177,7 @@ export default async function VentasPage({
             <Link
               href={enlace({ fecha: "todo" })}
               className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                fecha === null ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+                fecha === null ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
               }`}
             >
               Todo el histórico
@@ -241,7 +241,7 @@ export default async function VentasPage({
           </thead>
           <tbody>
             {filas.map((fila) => (
-              <tr key={fila.id} className="transition-colors hover:bg-sand/30">
+              <tr key={fila.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td className="whitespace-nowrap text-sm text-ink">{formatDateTime(fila.fecha)}</Td>
                 <Td><span className="font-medium text-ink">{fila.tipo}</span></Td>
                 <Td className="max-w-44 text-sm text-muted">{fila.cliente}</Td>
@@ -269,7 +269,7 @@ export default async function VentasPage({
                 <Td className="hidden sm:table-cell"><span className="rounded-full border border-stone bg-sand/50 px-2.5 py-1 text-[10px] tracking-[0.08em] text-muted uppercase">{fila.origen}</span></Td>
                 <Td className="text-right">
                   {fila.href ? (
-                    <Link href={fila.href} className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra">Ver</Link>
+                    <Link href={fila.href} className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea">Ver</Link>
                   ) : (
                     <span className="text-[10px] tracking-[0.14em] text-clay uppercase">Importada</span>
                   )}

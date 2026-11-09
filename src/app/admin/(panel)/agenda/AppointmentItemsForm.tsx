@@ -173,7 +173,7 @@ export function AppointmentItemsForm({
                     type="button"
                     onClick={() => quitar(it.id)}
                     disabled={pending}
-                    className="text-xs text-clay underline underline-offset-2 hover:text-terra disabled:opacity-60"
+                    className="text-xs text-clay underline underline-offset-2 hover:text-marea disabled:opacity-60"
                   >
                     Quitar
                   </button>
@@ -257,7 +257,7 @@ export function PrecioEditable({
             guardar();
           }
         }}
-        className="w-24 border border-stone bg-white px-2 py-1 text-right text-sm text-ink focus:border-terra focus:outline-none disabled:opacity-60"
+        className="w-24 border border-stone bg-white px-2 py-1 text-right text-sm text-ink focus:border-marea focus:outline-none disabled:opacity-60"
       />
     </label>
   );

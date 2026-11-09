@@ -420,7 +420,7 @@ export function VentaForm({ lookups, equipo }: { lookups: Lookups; equipo: Profe
                   <button
                     type="button"
                     onClick={() => quitarDelCarrito(i)}
-                    className="text-xs text-clay underline underline-offset-2 hover:text-terra"
+                    className="text-xs text-clay underline underline-offset-2 hover:text-marea"
                   >
                     Quitar
                   </button>
@@ -455,7 +455,7 @@ export function VentaForm({ lookups, equipo }: { lookups: Lookups; equipo: Profe
           <button
             type="button"
             onClick={dividirPago}
-            className="text-xs text-terra underline underline-offset-2"
+            className="text-xs text-marea underline underline-offset-2"
           >
             {dividido ? "+ Otro medio" : "Pagar con varios medios"}
           </button>
@@ -495,7 +495,7 @@ export function VentaForm({ lookups, equipo }: { lookups: Lookups; equipo: Profe
                   type="button"
                   onClick={() => quitarPago(i)}
                   aria-label="Quitar este medio"
-                  className="px-2 text-xs text-clay hover:text-terra"
+                  className="px-2 text-xs text-clay hover:text-marea"
                 >
                   ✕
                 </button>

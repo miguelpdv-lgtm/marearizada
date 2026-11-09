@@ -46,7 +46,7 @@ export default async function BranchesAdminPage() {
           </thead>
           <tbody>
             {branches.map((branch) => (
-              <tr key={branch.id} className="transition-colors hover:bg-sand/30">
+              <tr key={branch.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td>
                   <div className="flex items-center gap-3">
                     <Thumb src={branch.imageUrl} alt={branch.name} />
@@ -79,7 +79,7 @@ export default async function BranchesAdminPage() {
                 <Td className="text-right">
                   <Link
                     href={`/admin/sucursales/${branch.id}`}
-                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra"
+                    className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea"
                   >
                     Editar
                   </Link>

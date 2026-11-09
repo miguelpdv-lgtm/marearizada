@@ -138,7 +138,7 @@ export function BuscadorCatalogo({
               setAbierto(false);
             }
           }}
-          className="w-full border border-stone bg-white px-3 py-2.5 text-sm text-ink placeholder:text-clay focus:border-terra focus:outline-none disabled:opacity-60"
+          className="w-full border border-stone bg-white px-3 py-2.5 text-sm text-ink placeholder:text-clay focus:border-marea focus:outline-none disabled:opacity-60"
         />
         {abierto && texto && (
           <ul
@@ -197,7 +197,7 @@ export function BuscadorCatalogo({
             value={cantidad}
             disabled={disabled}
             onChange={(e) => setCantidad(Math.max(1, Number(e.target.value) || 1))}
-            className="w-full border border-stone bg-white px-3 py-2 text-sm text-ink focus:border-terra focus:outline-none disabled:opacity-60"
+            className="w-full border border-stone bg-white px-3 py-2 text-sm text-ink focus:border-marea focus:outline-none disabled:opacity-60"
           />
         )}
         {conDescuento && (
@@ -238,7 +238,7 @@ export function BuscadorCatalogo({
           value={staffId}
           disabled={disabled}
           onChange={(e) => setStaffId(e.target.value)}
-          className="w-full border border-stone bg-white px-3 py-2 text-sm text-ink focus:border-terra focus:outline-none disabled:opacity-60"
+          className="w-full border border-stone bg-white px-3 py-2 text-sm text-ink focus:border-marea focus:outline-none disabled:opacity-60"
         >
           <option value="">Vendió: sin asignar</option>
           {equipo.map((p) => (
@@ -251,7 +251,7 @@ export function BuscadorCatalogo({
           type="button"
           onClick={agregar}
           disabled={disabled || !elegido}
-          className="border border-ink px-4 py-2 text-xs text-ink transition-colors hover:bg-ink hover:text-gold-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn btn-outline px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
         >
           Agregar
         </button>

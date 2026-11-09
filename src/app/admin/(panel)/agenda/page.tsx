@@ -270,16 +270,14 @@ export default async function AgendaPage({
 
       {/* Controles */}
       {lineas.length > 1 && (
-        <div className="mb-4 inline-flex border-2 border-ink" role="tablist" aria-label="Agenda de">
+        <div className="admin-chips mb-4" role="tablist" aria-label="Agenda de">
           {lineas.map((l) => (
             <Link
               key={l.id}
               role="tab"
               aria-selected={l.id === lineaId}
               href={enlace({ linea: l.id, profesional: undefined })}
-              className={`px-6 py-2.5 text-sm font-bold tracking-[0.1em] uppercase transition-colors ${
-                l.id === lineaId ? "bg-ink text-gold-500" : "bg-paper text-ink hover:bg-cream"
-              }`}
+              className="admin-chip min-h-[46px] px-7 text-base"
             >
               {l.nombre}
             </Link>
@@ -287,16 +285,13 @@ export default async function AgendaPage({
         </div>
       )}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="flex">
+        <div className="admin-chips">
           {(["profesionales", "semana", "lista"] as const).map((v) => (
             <Link
               key={v}
               href={enlace({ vista: v, desde: v === "semana" ? lunesDe(hoy) : hoy, profesional: undefined })}
-              className={`rounded-lg border px-4 py-2 text-sm capitalize transition-colors ${
-                vista === v
-                  ? "border-ink bg-ink text-gold-500"
-                  : "border-stone text-ink hover:border-terra"
-              }`}
+              aria-current={vista === v ? "page" : undefined}
+              className="admin-chip capitalize"
             >
               {v}
             </Link>
@@ -309,7 +304,7 @@ export default async function AgendaPage({
             <Link
               href={enlace({ sede: undefined })}
               className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                !sedeId ? "border-ink bg-ink text-gold-500" : "border-stone text-ink hover:border-terra"
+                !sedeId ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
               }`}
             >
               Ambas
@@ -323,8 +318,8 @@ export default async function AgendaPage({
                 vista === "profesionales" ? "border-l-0 first:border-l" : "border-l-0"
               } ${
                 sedeVista === s.id
-                  ? "border-ink bg-ink text-gold-500"
-                  : "border-stone text-ink hover:border-terra"
+                  ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]"
+                  : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
               }`}
             >
               {s.city}
@@ -363,20 +358,20 @@ export default async function AgendaPage({
         <div className="ml-auto flex items-center gap-2">
           <Link
             href={enlace({ desde: sumarDias(desde, -rango) })}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-terra"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-marea"
             aria-label="Anterior"
           >
             ←
           </Link>
           <Link
             href={enlace({ desde: vista === "semana" ? lunesDe(hoy) : hoy })}
-            className="rounded-lg border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-terra"
+            className="rounded-lg border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-marea"
           >
             Hoy
           </Link>
           <Link
             href={enlace({ desde: sumarDias(desde, rango) })}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-terra"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-marea"
             aria-label="Siguiente"
           >
             →
@@ -829,7 +824,7 @@ function VistaLista({
                     <select
                       name="estado"
                       defaultValue={c.status}
-                      className="border border-stone bg-white px-2 py-1.5 text-xs text-ink focus:border-terra focus:outline-none"
+                      className="border border-stone bg-white px-2 py-1.5 text-xs text-ink focus:border-marea focus:outline-none"
                     >
                       {/* "Atendida" se pone con "Finalizar cita" (genera la venta). */}
                       {Object.entries(ETIQUETA)
@@ -842,7 +837,7 @@ function VistaLista({
                     </select>
                     <button
                       type="submit"
-                      className="border border-ink px-3 py-1.5 text-xs text-ink transition-colors hover:bg-ink hover:text-gold-500"
+                      className="btn btn-outline px-3 py-2 text-xs"
                     >
                       Guardar
                     </button>

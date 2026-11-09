@@ -32,7 +32,7 @@ export default async function ServicesAdminPage() {
       <div className="mb-6">
         <Link
           href="/admin/servicios/categorias"
-          className="text-[11px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-terra"
+          className="text-[11px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-marea"
         >
           Gestionar categorías →
         </Link>
@@ -58,7 +58,7 @@ export default async function ServicesAdminPage() {
           </thead>
           <tbody>
             {services.map((service) => (
-              <tr key={service.id} className="transition-colors hover:bg-sand/30">
+              <tr key={service.id} className="transition-colors hover:bg-[#effbfb]">
                 <Td>
                   <div className="flex items-center gap-3">
                     <Thumb src={service.imageUrl} alt={service.name} />
@@ -100,13 +100,13 @@ export default async function ServicesAdminPage() {
                     <Link
                       href={`/servicios/${service.slug}`}
                       target="_blank"
-                      className="text-[10px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-terra"
+                      className="text-[10px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-marea"
                     >
                       Ver
                     </Link>
                     <Link
                       href={`/admin/servicios/${service.id}`}
-                      className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-terra"
+                      className="text-[10px] tracking-[0.14em] text-ink uppercase transition-colors hover:text-marea"
                     >
                       Editar
                     </Link>

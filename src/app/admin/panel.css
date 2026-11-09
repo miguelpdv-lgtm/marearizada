@@ -1,9 +1,74 @@
 /* ==========================================================================
    Panel de Marea Rizada: estructura (barra lateral, barra móvil, pestañas)
    y la capa visual de las piezas compartidas del panel.
-   Colores del sistema: abismo #0f3236, marea #1c6f75 / #278e95,
-   espuma #9ee5e7 / #effbfb, concha #cdaa9c, arcilla #9a5b49, sal #f2f8f7.
+   Todo sale de los tokens del sistema de diseño (public/design-system/
+   tokens.css), copiados abajo con los mismos nombres. El panel es solo de
+   tema claro.
    ========================================================================== */
+
+.admin-area {
+  /* Paleta base */
+  --mr-espuma: #9EE5E7;
+  --mr-marea: #1C6F75;
+  --mr-abismo: #0F3236;
+  --mr-concha: #CDAA9C;
+  --mr-arcilla: #9A5B49;
+  --mr-roca: #3D4643;
+  --mr-sal: #F2F8F7;
+  --mr-perla: #FFFFFF;
+  --mr-espuma-50: #EFFBFB;
+  --mr-espuma-100: #D8F5F6;
+  --mr-espuma-200: #BDEEEF;
+  --mr-espuma-400: #6FCFD3;
+  --mr-espuma-600: #278E95;
+  --mr-espuma-800: #155257;
+  --mr-concha-50: #FBF4F1;
+  --mr-concha-100: #F3E3DC;
+  --mr-concha-600: #7A4436;
+
+  /* Roles (tema claro) */
+  --bg: var(--mr-sal);
+  --surface: var(--mr-perla);
+  --surface-2: var(--mr-espuma-50);
+  --sand: var(--mr-concha-100);
+  --fg: var(--mr-roca);
+  --fg-strong: #1F2725;
+  --fg-muted: #5F6B68;
+  --line: #D3E3E1;
+  --accent: var(--mr-marea);
+  --accent-fg: var(--mr-perla);
+  --accent-soft: var(--mr-espuma);
+  --warm: var(--mr-arcilla);
+  --warm-soft: var(--mr-concha);
+  --focus: #278E95;
+  --ok: #2F7D5B;
+  --alert: #A8452E;
+  --shadow-tint: 15 50 54;
+
+  --rizo-bounce: 40;
+  --rizo-informal: 30;
+  --tracking-label: 0.12em;
+  --r-sello: 3px;
+  --r-gota: 6px;
+  --r-guijarro: 14px;
+  --r-concha: 28px 28px 28px 8px;
+  --sh-1: 0 1px 2px rgb(var(--shadow-tint) / .06), 0 2px 8px rgb(var(--shadow-tint) / .05);
+  --sh-2: 0 4px 14px rgb(var(--shadow-tint) / .08), 0 14px 40px -12px rgb(var(--shadow-tint) / .16);
+  --dur-gota: 120ms;
+  --dur-ola: 420ms;
+  --ease-oleaje: cubic-bezier(.45, .05, .25, 1);
+  --mr-wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 8'%3E%3Cpath d='M1 5.5c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  --mr-arrow-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12'%3E%3Cpath d='M1 6.5c2.2-2.4 4.3-2.4 6 0s3.8 2.4 6 0 3-1.2 7-0.5M16 2.5l4 3.5-4 3.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mr-crest-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10' preserveAspectRatio='none'%3E%3Cpath d='M0 10V5C10 5 10 0 20 0S30 5 40 5v5z' fill='black'/%3E%3C/svg%3E");
+
+  /* Las utilidades de Tailwind del panel apuntan a estos roles: "ink" es el
+     texto fuerte del sistema, "muted" el atenuado. */
+  --color-ink: var(--fg-strong);
+  --color-muted: var(--fg-muted);
+  --color-clay: var(--fg-muted);
+
+  color: var(--fg);
+}
 
 @layer components {
   .mr-panel { min-height: 100vh; background: #f2f8f7; }
@@ -89,15 +154,63 @@
 
   /* --- Piezas compartidas ------------------------------------------------- */
   .admin-encabezado { position: relative; margin-bottom: 2rem; padding-bottom: 1.5rem; }
+  /* Separador de ola del sistema (.mr-divider): línea en color --line. */
   .admin-encabezado::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Cpath d='M0 5q10-6 20 0t20 0' fill='none' stroke='%239ee5e7' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left center / 40px 10px;
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 14px;
+    background: var(--line);
+    -webkit-mask: var(--mr-wave-mask) 0 50% / 28px 10px repeat-x;
+            mask: var(--mr-wave-mask) 0 50% / 28px 10px repeat-x;
   }
-  .admin-kicker { display: inline-flex; align-items: center; gap: .5rem; }
+  /* Etiqueta del sistema (.mr-eyebrow): mono, mayúsculas, color cálido y ola. */
+  .admin-kicker, .admin-area .t-eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: var(--font-mono); font-size: .8rem; font-weight: 400;
+    letter-spacing: var(--tracking-label); line-height: 1.2; text-transform: uppercase;
+    color: var(--warm);
+  }
   .admin-kicker::before {
-    content: ""; width: 1.4rem; height: .5rem; flex: none;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 10'%3E%3Cpath d='M1 6q3.25-5 6.5 0t6.5 0 6.5 0 6.5 0' fill='none' stroke='%239a5b49' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+    content: ""; width: 22px; height: 8px; flex: none; background: currentColor;
+    -webkit-mask: var(--mr-wave-mask) center / 22px 8px no-repeat;
+            mask: var(--mr-wave-mask) center / 22px 8px no-repeat;
   }
+
+  /* Títulos: Shantell con sus ejes, color fuerte (h1–h4 del sistema). */
+  .admin-area :is(h1, h2, h3, h4).font-display, .admin-area .font-display {
+    font-variation-settings: "BNCE" var(--rizo-bounce), "INFM" var(--rizo-informal);
+    color: var(--fg-strong);
+  }
+
+  /* Títulos de tarjeta (h3 de .mr-card): Shantell, no la letra de texto. */
+  .admin-area .t-card {
+    font-family: var(--font-display); font-weight: 650; font-size: 1.25rem; line-height: 1.25; letter-spacing: 0;
+    font-variation-settings: "BNCE" var(--rizo-bounce), "INFM" var(--rizo-informal);
+    color: var(--fg-strong);
+  }
+
+  /* Etiqueta de campo (.mr-field label): seminegrita, sin mayúsculas. */
+  .admin-label { display: block; margin-bottom: 6px; font-family: var(--font-sans); font-size: .9rem; font-weight: 600; color: var(--fg-strong); }
+
+  /* Toast del sistema (.mr-toast). */
+  .admin-toast {
+    display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem;
+    border-radius: var(--r-guijarro); background: var(--fg-strong); color: var(--bg);
+    box-shadow: var(--sh-2); font-size: .9rem;
+  }
+  .admin-toast svg { width: 22px; height: 22px; flex: none; color: var(--accent-soft); }
+
+  /* Chip del sistema (.mr-chip): para filtros y pestañas del panel. */
+  .admin-chip {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    min-height: 38px; padding: 0 .9rem; border: 1.5px solid var(--line); border-radius: var(--r-sello);
+    background: var(--surface); color: var(--fg); font: 500 .9rem/1 var(--font-sans); text-decoration: none;
+    transition: background var(--dur-ola) var(--ease-oleaje), border-color var(--dur-ola) var(--ease-oleaje);
+  }
+  .admin-chip:hover { border-color: var(--accent); }
+  .admin-chip[aria-pressed="true"], .admin-chip[aria-selected="true"], .admin-chip[aria-current="page"] {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--fg-strong); font-weight: 600;
+  }
+  /* Grupo de chips pegados: una sola pieza con divisiones. */
+  .admin-chips { display: inline-flex; flex-wrap: wrap; gap: .4rem; }
 }
 
 /* Sin píldoras en el panel: botones y enlaces con esquina de letrero, y
