@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   });
   const permitidas = sedesPermitidas(user, todasLasSedes);
   if (permitidas.length === 0) {
-    return NextResponse.json({ error: "No tienes ninguna sede asignada." }, { status: 403 });
+    return NextResponse.json({ error: "No tienes ningún local asignado." }, { status: 403 });
   }
   const branchId = sedeEfectiva(permitidas, sedeQuery);
 

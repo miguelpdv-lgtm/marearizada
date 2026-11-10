@@ -1,5 +1,6 @@
 "use client";
 
+import { CerrarConEscape } from "@/components/admin/CerrarConEscape";
 import { useState } from "react";
 
 import { ReservaForm, type Lookups } from "./ReservaForm";
@@ -34,6 +35,7 @@ export function NuevaReservaButton({
           onClick={() => setAbierto(false)}
           className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4"
         >
+          <CerrarConEscape onCerrar={() => setAbierto(false)} />
           <div
             role="dialog"
             aria-modal="true"

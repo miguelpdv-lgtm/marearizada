@@ -150,7 +150,7 @@ export default async function ClientePage({
         <div>
           <p className="mb-3 text-[11px] tracking-[0.12em] text-muted uppercase">Citas</p>
           {citasCliente.length === 0 ? (
-            <EmptyState title="Sin citas" description="No tiene reservas en las sedes que puedes ver." />
+            <EmptyState title="Sin citas" description="No tiene reservas registradas." />
           ) : (
             <HistorialCliente citas={citasCliente} lookups={lookups} />
           )}

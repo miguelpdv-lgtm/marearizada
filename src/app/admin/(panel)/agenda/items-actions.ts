@@ -93,7 +93,7 @@ export async function agregarServicioACita(
         warning: true,
         message: cita.staffId
           ? "El profesional ya tiene algo agendado justo después de esta cita."
-          : "Hay un bloqueo de sede justo después de esta cita.",
+          : "Hay un bloqueo de todo el local justo después de esta cita.",
       };
     }
   }
@@ -142,7 +142,7 @@ export async function agregarProductoACita(
   });
   const disponible = stockSede?.stock ?? 0;
   if (quantity > disponible) {
-    return { ok: false, error: `Solo quedan ${disponible} unidades de ese producto en esta sede.` };
+    return { ok: false, error: `Solo quedan ${disponible} unidades de ese producto en este local.` };
   }
 
   await prisma.appointmentItem.create({

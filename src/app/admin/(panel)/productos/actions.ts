@@ -195,7 +195,7 @@ export async function ajustarStock(
     const sedes = await prisma.branch.findMany({ where: { active: true }, select: { id: true } });
     const permitidas = new Set(sedesPermitidas(user, sedes).map((s) => s.id));
     if (!permitidas.has(d.branchId)) {
-      return { error: "No tienes acceso a esa sede." };
+      return { error: "No tienes acceso a ese local." };
     }
 
     const actual = await prisma.productStock.findUnique({

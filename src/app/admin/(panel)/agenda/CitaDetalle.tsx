@@ -1,5 +1,6 @@
 "use client";
 
+import { CerrarConEscape } from "@/components/admin/CerrarConEscape";
 import { useState, useTransition } from "react";
 
 import { Badge } from "@/components/admin/ui";
@@ -94,6 +95,7 @@ export function CitaDetalle({
       onClick={onClose}
       className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4"
     >
+      <CerrarConEscape onCerrar={onClose} />
       <div
         role="dialog"
         aria-modal="true"

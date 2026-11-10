@@ -46,7 +46,7 @@ const pagoSchema = z.object({
 });
 
 const ventaSchema = z.object({
-  branchId: z.string().min(1, "Elige una sede."),
+  branchId: z.string().min(1, "Elige un local."),
   clientName: z.string().trim().max(200).optional(),
   clientPhone: z.string().trim().max(30).optional(),
   // Identificación de quien compra. Opcional: solo si la clienta la da.
@@ -84,9 +84,9 @@ export async function crearVenta(datos: VentaInput): Promise<VentaResultado> {
   const d = parsed.data;
 
   const sede = await prisma.branch.findUnique({ where: { id: d.branchId } });
-  if (!sede) return { ok: false, error: "Esa sede ya no existe." };
+  if (!sede) return { ok: false, error: "Ese local ya no existe." };
   if (sedesPermitidas(user, [sede]).length === 0) {
-    return { ok: false, error: "No tienes acceso a esa sede." };
+    return { ok: false, error: "No tienes acceso a ese local." };
   }
 
   const itemsData: {
@@ -174,7 +174,7 @@ export async function crearVenta(datos: VentaInput): Promise<VentaResultado> {
       if (item.quantity > disponible) {
         return {
           ok: false,
-          error: `Solo quedan ${disponible} unidades de "${producto.name}" en esta sede.`,
+          error: `Solo quedan ${disponible} unidades de "${producto.name}" en este local.`,
         };
       }
       itemsData.push({

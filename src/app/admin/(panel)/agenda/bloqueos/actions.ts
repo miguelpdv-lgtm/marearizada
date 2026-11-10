@@ -6,12 +6,12 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireUserForAction } from "@/lib/auth";
 import { canManageContent } from "@/lib/constants";
-import { aUtc, diaSemanaBogota, ocupaAgenda } from "@/lib/agenda";
+import { aUtc, diaSemanaBogota, ocupaAgenda, sumarDias } from "@/lib/agenda";
 import { bool, optionalStr, runAction, str, type ActionState } from "@/lib/actions";
 
 const esquema = z
   .object({
-    branchId: z.string().min(1, "Elige una sede."),
+    branchId: z.string().min(1, "Elige un local."),
     desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Elige la fecha de inicio."),
     hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Elige la fecha final."),
     todoElDia: z.boolean(),
@@ -81,23 +81,36 @@ export async function crearBloqueo(
 
     let citasAfectadas = 0;
 
+    // Todo el día: un solo bloqueo continuo de la primera fecha a la última.
+    // Una franja (solo la mañana, de 2 a 4…) en varios días: un bloqueo por
+    // día con esa franja. Antes se guardaba uno continuo desde la hora
+    // inicial del primer día hasta la final del último, y eso bloqueaba
+    // también las mañanas y noches de los días intermedios.
+    const tramos: { startsAt: Date; endsAt: Date }[] = [];
+    if (d.todoElDia || d.desde === d.hasta) {
+      tramos.push({ startsAt: aUtc(d.desde, horaInicio), endsAt: aUtc(d.hasta, horaFin) });
+    } else {
+      for (let dia = d.desde, n = 0; dia <= d.hasta && n < 92; dia = sumarDias(dia, 1), n++) {
+        tramos.push({ startsAt: aUtc(dia, horaInicio), endsAt: aUtc(dia, horaFin) });
+      }
+    }
+
     for (const branchId of sedes) {
-      const startsAt = aUtc(d.desde, horaInicio);
-      const endsAt = aUtc(d.hasta, horaFin);
+      for (const { startsAt, endsAt } of tramos) {
+        citasAfectadas += await prisma.appointment.count({
+          where: {
+            branchId,
+            ...(staffId ? { staffId } : {}),
+            ...ocupaAgenda(),
+            startsAt: { lt: endsAt },
+            endsAt: { gt: startsAt },
+          },
+        });
 
-      citasAfectadas += await prisma.appointment.count({
-        where: {
-          branchId,
-          ...(staffId ? { staffId } : {}),
-          ...ocupaAgenda(),
-          startsAt: { lt: endsAt },
-          endsAt: { gt: startsAt },
-        },
-      });
-
-      await prisma.timeOff.create({
-        data: { branchId, staffId, startsAt, endsAt, reason: d.reason ?? null },
-      });
+        await prisma.timeOff.create({
+          data: { branchId, staffId, startsAt, endsAt, reason: d.reason ?? null },
+        });
+      }
     }
 
     revalidatePath("/admin/agenda");
@@ -155,14 +168,14 @@ export async function bloquearEnAgenda(datos: {
   }
 
   const sede = await prisma.branch.findUnique({ where: { id: datos.branchId }, select: { id: true } });
-  if (!sede) return { ok: false, error: "Esa sede ya no existe." };
+  if (!sede) return { ok: false, error: "Ese local ya no existe." };
 
   const staffId = datos.staffId
     ? await prisma.teamMember
         .findFirst({ where: { id: datos.staffId, branchId: sede.id }, select: { id: true } })
         .then((m) => m?.id ?? null)
     : null;
-  if (datos.staffId && !staffId) return { ok: false, error: "Esa profesional no es de esta sede." };
+  if (datos.staffId && !staffId) return { ok: false, error: "Esa profesional no es de este local." };
 
   const startsAt = aUtc(datos.fecha, datos.horaInicio);
   const endsAt = aUtc(datos.fecha, datos.horaFin);
@@ -211,9 +224,9 @@ type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
  * cruzan se recortan y queda solo lo que sobra antes y después.
  *
  * Con `staffId`, se abre solo para esa profesional: sus bloqueos personales se
- * recortan y un bloqueo de toda la sede se reparte en bloqueos personales
+ * recortan y un bloqueo de todo el local se reparte en bloqueos personales
  * (completos para las demás, recortado para ella). Sin `staffId`, se recortan
- * los bloqueos de toda la sede. `soloId` limita el cambio a un bloqueo.
+ * los bloqueos de todo el local. `soloId` limita el cambio a un bloqueo.
  */
 async function abrirRango(
   tx: Tx,
@@ -277,7 +290,7 @@ export type ResultadoHabilitar =
 
 /**
  * Deja disponible a una profesional en un rango del día: le quita los
- * bloqueos (los suyos y su parte de los de toda la sede) y, si el rango cae
+ * bloqueos (los suyos y su parte de los de todo el local) y, si el rango cae
  * fuera de su horario semanal, lo habilita solo para ese día.
  */
 export async function habilitarHoras(datos: {
@@ -302,7 +315,7 @@ export async function habilitarHoras(datos: {
     where: { id: datos.staffId, branchId: datos.branchId },
     select: { id: true, schedule: true },
   });
-  if (!prof) return { ok: false, error: "Esa profesional no es de esta sede." };
+  if (!prof) return { ok: false, error: "Esa profesional no es de este local." };
 
   const desde = aUtc(datos.fecha, datos.horaInicio);
   const hasta = aUtc(datos.fecha, datos.horaFin);
@@ -347,7 +360,7 @@ export async function quitarHabilitacion(id: string): Promise<ResultadoBloqueo> 
 }
 
 /**
- * Desbloquea parte de un bloqueo (o todo, sin horas) y, si es de toda la sede,
+ * Desbloquea parte de un bloqueo (o todo, sin horas) y, si es de todo el local,
  * opcionalmente solo para una profesional.
  */
 export async function desbloquearParte(datos: {
@@ -381,7 +394,7 @@ export async function desbloquearParte(datos: {
       where: { id: datos.staffId, branchId: b.branchId },
       select: { id: true },
     });
-    if (!m) return { ok: false, error: "Esa profesional no es de esta sede." };
+    if (!m) return { ok: false, error: "Esa profesional no es de este local." };
     staffId = m.id;
   }
 

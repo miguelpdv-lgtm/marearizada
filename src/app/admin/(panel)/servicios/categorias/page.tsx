@@ -21,7 +21,7 @@ export default async function ServiceCategoriesPage() {
       />
 
       <div className="grid gap-8 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+        <div className="min-w-0 lg:col-span-3">
           {categories.length === 0 ? (
             <p className="border border-dashed border-stone px-6 py-12 text-center text-sm font-normal text-muted">
               Todavía no hay categorías.
@@ -62,7 +62,7 @@ export default async function ServiceCategoriesPage() {
                             max={100}
                             defaultValue={c.commissionPercent ?? ""}
                             placeholder="0"
-                            className="admin-control w-20 px-2 py-1.5 text-sm"
+                            className="admin-control !min-h-[38px] w-20 px-2 py-1.5 text-sm"
                           />
                           %
                         </label>
@@ -71,12 +71,12 @@ export default async function ServiceCategoriesPage() {
                           id={`agenda-${c.id}`}
                           name="agenda"
                           defaultValue={c.agenda}
-                          className="admin-control w-auto px-2 py-1.5 text-sm"
+                          className="admin-control !min-h-[38px] w-auto px-2 py-1.5 text-sm"
                         >
                           <option value="SALON">Salón</option>
                           <option value="NAILS">Nails</option>
                         </select>
-                        <button type="submit" className="btn btn-outline px-3 py-1.5 text-[10px]">
+                        <button type="submit" className="btn btn-outline btn-sm">
                           Guardar
                         </button>
                       </form>
@@ -96,7 +96,7 @@ export default async function ServiceCategoriesPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <CardHeader title="Nueva categoría" />
           <div className="mt-6">
             <CategoryForm action={createServiceCategory} />

@@ -112,7 +112,7 @@ export function BranchForm({
             label="Cierre temporal"
             name="closedNotice"
             errors={errors}
-            hint="Déjalo vacío si la sede está abierta. Con texto, la sede se sigue viendo en el sitio con este aviso, pero no recibe reservas ni despacha pedidos."
+            hint="Déjalo vacío si el local está abierto. Con texto, el local se sigue viendo en el sitio con este aviso, pero no recibe reservas ni despacha pedidos."
           >
             <Textarea
               name="closedNotice"
@@ -170,7 +170,7 @@ export function BranchForm({
             label="Enlace para dejar reseña en Google"
             name="googleReviewUrl"
             errors={errors}
-            hint="En Google Business: “Pedir reseñas” → copiar enlace. Sale en la página de la sede y en el correo de “Gracias por tu visita”."
+            hint="En Google Business: “Pedir reseñas” → copiar enlace. Sale en el correo de “Gracias por tu visita”."
           >
             <Input
               name="googleReviewUrl"

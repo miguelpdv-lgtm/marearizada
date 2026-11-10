@@ -39,6 +39,9 @@ export function BloqueoForm({
       <FormAlert state={state} />
 
       <div className="space-y-5">
+        {/* Con un solo local no hay nada que elegir. */}
+        {sedes.length === 1 && <input type="hidden" name="branchId" value={branchId} />}
+        {sedes.length > 1 && (
         <Field label="Local" name="branchId" errors={errors} required>
           <Select
             name="branchId"
@@ -53,13 +56,14 @@ export function BloqueoForm({
             <option value="todas">Todos los locales</option>
           </Select>
         </Field>
+        )}
 
         {branchId !== "todas" && (
           <Field
-            label="Profesional"
+            label="A quién"
             name="staffId"
             errors={errors}
-            hint="Vacío bloquea todo el local. Con alguien elegido, solo esa persona."
+            hint="Todo el local bloquea Salón y Nails. Con alguien elegido, solo a esa persona."
           >
             <Select name="staffId" defaultValue="" key={branchId}>
               <option value="">Todo el local</option>
@@ -87,14 +91,14 @@ export function BloqueoForm({
             label="Hasta"
             name="hasta"
             errors={errors}
-            hint="Déjalo igual para bloquear un solo día."
+            hint="Déjalo igual para un solo día. Con una franja, se bloquea esa franja cada día."
           >
             <Input name="hasta" type="date" defaultValue={desde} min={desde} key={desde} />
           </Field>
         </div>
 
         <div>
-          <p className="t-eyebrow mb-2 text-muted">Franja</p>
+          <p className="admin-label">Franja</p>
           <div className="flex flex-wrap gap-2">
             {ATAJOS.map((a) => {
               const activo =
@@ -111,11 +115,8 @@ export function BloqueoForm({
                       setFin(a.fin!);
                     }
                   }}
-                  className={`border px-3.5 py-2 text-sm transition-colors ${
-                    activo
-                      ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]"
-                      : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
-                  }`}
+                  aria-pressed={activo}
+                  className="admin-chip"
                 >
                   {a.label}
                 </button>

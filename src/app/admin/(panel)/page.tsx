@@ -95,7 +95,7 @@ export default async function InicioPage() {
     porConfirmar > 0 && {
       tono: "ambar" as const,
       titulo: porConfirmar === 1 ? "1 cita por confirmar" : `${porConfirmar} citas por confirmar`,
-      detalle: "Entraron por el sitio y nadie las ha confirmado.",
+      detalle: "Están agendadas pero nadie las ha confirmado con la clienta.",
       href: "/admin/agenda?vista=lista",
       accion: "Ver agenda",
     },
@@ -153,7 +153,7 @@ export default async function InicioPage() {
       )}
 
       {/* --- El día en cifras --- */}
-      <div className="grid gap-px border border-stone bg-stone sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[14px] border border-stone bg-stone sm:grid-cols-4">
         <Cifra valor={String(activas.length)} etiqueta="citas hoy" />
         <Cifra valor={String(porConfirmar)} etiqueta="por confirmar" alerta={porConfirmar > 0} />
         <Cifra valor={formatCOP(agendadoHoy)} etiqueta="agendado hoy" />
@@ -268,8 +268,8 @@ function Cifra({
   alerta?: boolean;
 }) {
   return (
-    <div className="bg-white px-6 py-5">
-      <p className={`display text-3xl ${alerta ? "text-terra" : "text-ink"}`}>{valor}</p>
+    <div className="min-w-0 bg-white px-4 py-4 sm:px-6 sm:py-5">
+      <p className={`display truncate text-2xl sm:text-3xl ${alerta ? "text-terra" : "text-ink"}`}>{valor}</p>
       <p className="t-small mt-1">{etiqueta}</p>
     </div>
   );

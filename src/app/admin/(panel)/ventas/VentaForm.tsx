@@ -184,7 +184,7 @@ export function VentaForm({ lookups, equipo }: { lookups: Lookups; equipo: Profe
   const registrar = () => {
     setError(null);
     if (!branchId) {
-      setError("Elige una sede.");
+      setError("Elige un local.");
       return;
     }
     if (carrito.length === 0) {
@@ -294,15 +294,17 @@ export function VentaForm({ lookups, equipo }: { lookups: Lookups; equipo: Profe
         )}
       </div>
 
-      <Field label="Sede" name="branchId" required>
-        <Select name="branchId" value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
-          {lookups.sedes.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.city}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      {lookups.sedes.length > 1 && (
+        <Field label="Local" name="branchId" required>
+          <Select name="branchId" value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
+            {lookups.sedes.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.city}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      )}
 
       {/* Opcional: solo si la clienta quiere dejar su documento. */}
       <div className="grid gap-4 sm:grid-cols-2">

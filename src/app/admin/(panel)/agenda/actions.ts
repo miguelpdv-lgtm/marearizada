@@ -68,7 +68,7 @@ export async function actualizarEstado(id: string, estado: string, metodoPago?: 
 /* --- Reserva completa (crear / editar desde el panel) ----------------------- */
 
 const esquemaReserva = z.object({
-  branchId: z.string().min(1, "Elige una sede."),
+  branchId: z.string().min(1, "Elige un local."),
   serviceId: z.string().min(1, "Elige un servicio."),
   staffId: z.string().optional(),
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Elige una fecha."),
@@ -133,7 +133,7 @@ async function guardarReserva(
     prisma.branch.findUnique({ where: { id: d.branchId } }),
   ]);
   if (!servicio) return { ok: false, error: "Ese servicio ya no existe." };
-  if (!sede) return { ok: false, error: "Esa sede ya no existe." };
+  if (!sede) return { ok: false, error: "Ese local ya no existe." };
 
   if (citaId) {
     const actual = await prisma.appointment.findUnique({ where: { id: citaId }, select: { status: true } });
@@ -174,7 +174,7 @@ async function guardarReserva(
         warning: true,
         message: staffId
           ? "Este profesional ya tiene una reserva o un bloqueo en ese horario."
-          : "Hay un bloqueo de sede en ese horario.",
+          : "Hay un bloqueo de todo el local en ese horario.",
       };
     }
   }
@@ -336,7 +336,7 @@ export async function reagendarCita(
       where: { id: opciones.staffId, branchId: cita.branchId, active: true },
       select: { id: true },
     });
-    if (!m) return { ok: false, error: "Esa profesional no es de esta sede." };
+    if (!m) return { ok: false, error: "Esa profesional no es de este local." };
     staffId = m.id;
   }
 
@@ -352,7 +352,7 @@ export async function reagendarCita(
       warning: true,
       message: staffId
         ? "La profesional ya tiene una reserva o un bloqueo a esa hora."
-        : "Hay un bloqueo de sede a esa hora.",
+        : "Hay un bloqueo de todo el local a esa hora.",
     };
   }
 

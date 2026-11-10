@@ -43,7 +43,7 @@ export type FranjaNoDisponible = {
   /** Presente si la franja es un bloqueo creado a mano (no el horario). */
   bloqueo?: {
     id: string;
-    /** Sin profesional: bloquea a toda la sede. */
+    /** Sin profesional: bloquea a todo el local. */
     sedeEntera: boolean;
     motivo: string | null;
     /** "YYYY-MM-DD HH:MM" en hora de Bogotá. */
@@ -92,6 +92,8 @@ export function AgendaProfesionales({
   // rango; al soltar se abre la ventana para confirmar.
   const [arrastre, setArrastre] = useState<{ staffId: string; ini: number; fin: number } | null>(null);
   const origen = useRef<number | null>(null);
+  /** Toque con el dedo: dónde empezó, para distinguirlo de un desplazamiento. */
+  const toque = useRef<{ y: number; minuto: number } | null>(null);
   const [nuevo, setNuevo] = useState<{ profesional: Profesional; ini: number; fin: number } | null>(null);
   const [detalle, setDetalle] = useState<{
     bloqueo: NonNullable<FranjaNoDisponible["bloqueo"]>;
@@ -123,7 +125,7 @@ export function AgendaProfesionales({
   if (profesionales.length === 0) {
     return (
       <div className="admin-card p-10 text-center">
-        <p className="t-small">Esta sede no tiene profesionales activos.</p>
+        <p className="t-small">Este local no tiene profesionales activos.</p>
       </div>
     );
   }
@@ -147,10 +149,16 @@ export function AgendaProfesionales({
 
   return (
     <>
-      <p className="t-small mb-2">
-        Arrastra una cita para moverla de hora o de profesional. Arrastra sobre el espacio libre de
-        una columna (o toca una hora) para bloquear o habilitar horas. Toca un bloqueo 🔒 para desbloquearlo completo, solo una parte o solo para una
-        profesional.
+      {/* La ayuda cambia con el dispositivo: con mouse se arrastra, con el
+          dedo se toca. */}
+      <p className="t-small mb-2 hidden lg:block">
+        Arrastra una cita para moverla de hora o de profesional. Arrastra sobre un espacio libre para
+        bloquear o habilitar horas. Haz clic en un bloqueo 🔒 para quitarlo completo, por partes o solo
+        para una profesional.
+      </p>
+      <p className="t-small mb-2 lg:hidden">
+        Toca una cita para verla o moverla. Toca una hora libre para bloquearla o habilitarla, y un
+        bloqueo 🔒 para quitarlo.
       </p>
       <div className="admin-card overflow-x-auto">
         <div style={{ minWidth: 56 + profesionales.length * 200 }}>
@@ -199,9 +207,15 @@ export function AgendaProfesionales({
                 {/* Capa para arrastrar y bloquear: va debajo de citas y
                     bloqueos, que siguen recibiendo sus clics. */}
                 <div
-                  className="absolute inset-0 cursor-crosshair touch-none"
+                  className="absolute inset-0 cursor-crosshair touch-manipulation"
                   title="Arrastra para bloquear o habilitar horas"
                   onPointerDown={(e) => {
+                    // Con el dedo: se deja desplazar la página y solo cuenta
+                    // el toque (ver onPointerUp). Arrastrar es del mouse.
+                    if (e.pointerType === "touch") {
+                      toque.current = { y: e.clientY, minuto: minutoEn(e) };
+                      return;
+                    }
                     const m = minutoEn(e);
                     origen.current = m;
                     e.currentTarget.setPointerCapture(e.pointerId);
@@ -216,12 +230,27 @@ export function AgendaProfesionales({
                       fin: Math.max(origen.current, m),
                     });
                   }}
-                  onPointerUp={() => {
+                  onPointerUp={(e) => {
+                    if (e.pointerType === "touch") {
+                      const t = toque.current;
+                      toque.current = null;
+                      // Un toque quieto propone una hora desde ahí.
+                      if (t && Math.abs(e.clientY - t.y) < 10) {
+                        setNuevo({ profesional: p, ini: t.minuto, fin: Math.min(t.minuto + 60, hastaMin) });
+                      }
+                      return;
+                    }
                     if (origen.current === null || !arrastre) return;
                     origen.current = null;
-                    // Un toque sin arrastrar propone una hora.
+                    // Un clic sin arrastrar propone una hora.
                     const fin = arrastre.fin - arrastre.ini < 15 ? Math.min(arrastre.ini + 60, hastaMin) : arrastre.fin;
                     setNuevo({ profesional: p, ini: arrastre.ini, fin });
+                    setArrastre(null);
+                  }}
+                  onPointerCancel={() => {
+                    // El navegador tomó el gesto para desplazar la página.
+                    toque.current = null;
+                    origen.current = null;
                     setArrastre(null);
                   }}
                 />
@@ -279,7 +308,7 @@ export function AgendaProfesionales({
                       >
                         <span className="block truncate px-1.5 pt-1 text-[10px] font-semibold text-ink">
                           🔒 {bloqueo.motivo ?? "Bloqueado"}
-                          {bloqueo.sedeEntera && " · toda la sede"}
+                          {bloqueo.sedeEntera && " · todo el local"}
                         </span>
                         <span className="block px-1.5 font-mono text-[10px] text-ink/70">
                           {aHora(Math.max(n.inicioMin, desdeMin))} – {aHora(Math.min(n.finMin, hastaMin))}

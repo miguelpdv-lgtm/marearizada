@@ -29,7 +29,7 @@ function leerSedes(formData: FormData, role: string): ActionState | string[] {
   if (role !== "ADMIN" && ids.length === 0) {
     return {
       error: "Revisa los campos marcados.",
-      fieldErrors: { branchIds: ["Elige al menos una sede."] },
+      fieldErrors: { branchIds: ["Elige al menos un local."] },
     };
   }
   return role === "ADMIN" ? [] : ids;

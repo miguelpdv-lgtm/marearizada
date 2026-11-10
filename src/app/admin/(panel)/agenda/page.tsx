@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Badge, EmptyState, PageHeader } from "@/components/admin/ui";
+import { Badge, EmptyState } from "@/components/admin/ui";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { sedeEfectiva, sedesPermitidas } from "@/lib/branchAccess";
@@ -27,6 +27,7 @@ import {
   type Profesional,
 } from "./AgendaProfesionales";
 import { NuevaReservaButton } from "./NuevaReservaButton";
+import { FiltrosAgenda } from "./FiltrosAgenda";
 import type { Lookups } from "./ReservaForm";
 import type { ItemDTO } from "./items-actions";
 
@@ -41,6 +42,15 @@ const MESES = [
 function tituloDia(fecha: string, hoy: string) {
   if (fecha === hoy) return "Hoy";
   if (fecha === sumarDias(hoy, 1)) return "Mañana";
+  const [a, m, d] = fecha.split("-").map(Number);
+  const dia = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"][
+    new Date(Date.UTC(a, m - 1, d)).getUTCDay()
+  ];
+  return `${dia} ${d} de ${MESES[m - 1]}`;
+}
+
+/** "martes 10 de noviembre" */
+function fechaCorta(fecha: string) {
   const [a, m, d] = fecha.split("-").map(Number);
   const dia = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"][
     new Date(Date.UTC(a, m - 1, d)).getUTCDay()
@@ -151,7 +161,7 @@ export default async function AgendaPage({
   // pertenece a una sola sede): si no hay una elegida, se asume la primera.
   const sedeVista = vista === "profesionales" ? (sedeId ?? sedes[0]?.id) : sedeId;
   // Sin sede elegida, se filtra a las permitidas (nunca "sin filtro": un
-  // usuario sin ninguna sede asignada no debe ver nada).
+  // usuario sin ningún local asignado no debe ver nada).
   const filtroSede = sedeVista
     ? { branchId: sedeVista }
     : { branchId: { in: permitidas.map((s) => s.id) } };
@@ -245,6 +255,15 @@ export default async function AgendaPage({
   const activas = citas.filter((c) => ESTADOS_ACTIVOS.includes(c.status));
   const ingresos = activas.reduce((a, c) => a + totalCita(c), 0);
 
+  // Qué se está mirando, en palabras: "Hoy", "martes 11 de noviembre" o la
+  // semana. Antes solo lo decía el campo de fecha.
+  const tituloPeriodo =
+    vista === "semana"
+      ? `Semana del ${Number(desde.slice(8))} de ${MESES[Number(desde.slice(5, 7)) - 1]}`
+      : tituloDia(inicio, hoy) === "Hoy" || tituloDia(inicio, hoy) === "Mañana"
+        ? `${tituloDia(inicio, hoy)}, ${fechaCorta(inicio)}`
+        : tituloDia(inicio, hoy);
+
   const enlace = (extra: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
     const base = { vista, desde, sede: sedeId, profesional: sp.profesional, linea: lineaId, ...extra };
@@ -254,148 +273,118 @@ export default async function AgendaPage({
 
   return (
     <>
-      <PageHeader
-        title="Agenda"
-        description="Las reservas en línea entran confirmadas cuando se paga el abono. Cambia entre Salón y Nails para ver cada agenda; cada categoría elige la suya en Servicios → Categorías."
-        action={{ label: "Bloqueo de horas", href: "/admin/agenda/bloqueos" }}
-      />
-
-      <div className="mb-6 flex justify-end">
-        <NuevaReservaButton
-          lookups={lookups}
-          sedePorDefecto={sedeVista ?? sedes[0]?.id}
-          fechaPorDefecto={vista === "semana" ? hoy : inicio}
-        />
+      {/* Encabezado compacto: la agenda es la pantalla del día a día y lo
+          que importa es que el calendario quede arriba. */}
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0">
+          <p className="admin-kicker mb-1.5">Agenda</p>
+          <h1 className="font-display text-[1.75rem] leading-tight font-[650] first-letter:uppercase sm:text-[2.2rem]">
+            {tituloPeriodo}
+          </h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/agenda/bloqueos" className="btn btn-outline btn-sm">
+            Bloqueos
+          </Link>
+          <NuevaReservaButton
+            lookups={lookups}
+            sedePorDefecto={sedeVista ?? sedes[0]?.id}
+            fechaPorDefecto={vista === "semana" ? hoy : inicio}
+          />
+        </div>
       </div>
 
       {/* Controles */}
-      {lineas.length > 1 && (
-        <div className="admin-chips mb-4" role="tablist" aria-label="Agenda de">
-          {lineas.map((l) => (
-            <Link
-              key={l.id}
-              role="tab"
-              aria-selected={l.id === lineaId}
-              href={enlace({ linea: l.id, profesional: undefined })}
-              className="admin-chip min-h-[46px] px-7 text-base"
-            >
-              {l.nombre}
-            </Link>
-          ))}
-        </div>
-      )}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="admin-chips">
-          {(["profesionales", "semana", "lista"] as const).map((v) => (
-            <Link
-              key={v}
-              href={enlace({ vista: v, desde: v === "semana" ? lunesDe(hoy) : hoy, profesional: undefined })}
-              aria-current={vista === v ? "page" : undefined}
-              className="admin-chip capitalize"
-            >
-              {v}
-            </Link>
-          ))}
-        </div>
-
-        {sedes.length > 1 && (
-        <div className="flex">
-          {vista !== "profesionales" && sedes.length > 1 && (
-            <Link
-              href={enlace({ sede: undefined })}
-              className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                !sedeId ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]" : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
-              }`}
-            >
-              Ambas
-            </Link>
-          )}
-          {sedes.map((s) => (
-            <Link
-              key={s.id}
-              href={enlace({ sede: s.id })}
-              className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                vista === "profesionales" ? "border-l-0 first:border-l" : "border-l-0"
-              } ${
-                sedeVista === s.id
-                  ? "border-[1.5px] border-[#1c6f75] bg-[#9ee5e7] font-semibold text-[#1f2725]"
-                  : "border-[1.5px] border-[#d3e3e1] bg-white text-[#3d4643] hover:border-[#1c6f75]"
-              }`}
-            >
-              {s.city}
-            </Link>
-          ))}
-        </div>
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-3">
+        {lineas.length > 1 && (
+          <div className="admin-chips" role="tablist" aria-label="Agenda de">
+            {lineas.map((l) => (
+              <Link
+                key={l.id}
+                role="tab"
+                aria-selected={l.id === lineaId}
+                href={enlace({ linea: l.id, profesional: undefined })}
+                className="admin-chip min-h-[42px] px-6 text-base"
+              >
+                {l.nombre}
+              </Link>
+            ))}
+          </div>
         )}
 
-        <form method="get" className="flex flex-wrap items-center gap-2">
-          <input type="hidden" name="vista" value={vista} />
-          <input type="hidden" name="sede" value={sedeId ?? ""} />
-          {lineaId && <input type="hidden" name="linea" value={lineaId} />}
-          <label className="sr-only" htmlFor="fecha-agenda">Fecha</label>
-          <input
-            id="fecha-agenda"
-            type="date"
-            name="desde"
-            defaultValue={inicio}
-            className="admin-control w-auto px-3 py-2 text-sm"
-          />
-          <label className="sr-only" htmlFor="profesional-agenda">Profesional</label>
-          <select
-            id="profesional-agenda"
-            name="profesional"
-            defaultValue={sp.profesional ?? ""}
-            className="admin-control w-auto min-w-44 px-3 py-2 text-sm"
-          >
-            <option value="">Todos los profesionales</option>
-            {equipo.map((profesional) => (
-              <option key={profesional.id} value={profesional.id}>{profesional.name}</option>
-            ))}
-          </select>
-          <button type="submit" className="btn btn-outline rounded-lg px-4 py-2 text-[11px]">Aplicar</button>
-        </form>
-
         <div className="ml-auto flex items-center gap-2">
-          <Link
-            href={enlace({ desde: sumarDias(desde, -rango) })}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-marea"
-            aria-label="Anterior"
-          >
+          <Link href={enlace({ desde: sumarDias(desde, -rango) })} className="admin-chip w-[38px] px-0" aria-label="Anterior">
             ←
           </Link>
           <Link
             href={enlace({ desde: vista === "semana" ? lunesDe(hoy) : hoy })}
-            className="rounded-lg border border-stone px-4 py-2 text-sm text-ink transition-colors hover:border-marea"
+            aria-current={(vista === "semana" ? lunesDe(hoy) : hoy) === desde ? "page" : undefined}
+            className="admin-chip"
           >
             Hoy
           </Link>
-          <Link
-            href={enlace({ desde: sumarDias(desde, rango) })}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone text-ink transition-colors hover:border-marea"
-            aria-label="Siguiente"
-          >
+          <Link href={enlace({ desde: sumarDias(desde, rango) })} className="admin-chip w-[38px] px-0" aria-label="Siguiente">
             →
           </Link>
         </div>
       </div>
 
-      {/* Métricas */}
-      <div className="mb-8 grid gap-px border border-stone bg-stone sm:grid-cols-3">
-        <div className="bg-white px-6 py-5">
-          <p className="display text-3xl text-ink">{activas.length}</p>
-          <p className="t-small mt-1">reservas activas</p>
+      <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div className="admin-chips">
+          {(["profesionales", "semana", "lista"] as const).map((v) => (
+            <Link
+              key={v}
+              // Cambiar de vista conserva el día que se está mirando.
+              href={enlace({ vista: v, desde: v === "semana" ? lunesDe(inicio) : inicio, profesional: undefined })}
+              aria-current={vista === v ? "page" : undefined}
+              className="admin-chip capitalize"
+            >
+              {v === "profesionales" ? "Día" : v}
+            </Link>
+          ))}
         </div>
-        <div className="bg-white px-6 py-5">
-          <p className="display text-3xl text-ink">
-            {citas.filter((c) => c.status === "PENDIENTE").length}
-          </p>
-          <p className="t-small mt-1">por confirmar</p>
-        </div>
-        <div className="bg-white px-6 py-5">
-          <p className="display text-3xl text-ink">{formatCOP(ingresos)}</p>
-          <p className="t-small mt-1">valor agendado</p>
-        </div>
+
+        {sedes.length > 1 && (
+          <div className="admin-chips">
+            {vista !== "profesionales" && (
+              <Link href={enlace({ sede: undefined })} aria-current={!sedeId ? "page" : undefined} className="admin-chip">
+                Todos
+              </Link>
+            )}
+            {sedes.map((s) => (
+              <Link
+                key={s.id}
+                href={enlace({ sede: s.id })}
+                aria-current={sedeVista === s.id ? "page" : undefined}
+                className="admin-chip"
+              >
+                {s.city}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <FiltrosAgenda
+          base={{ vista, sede: sedeId, linea: lineaId }}
+          fecha={inicio}
+          profesional={sp.profesional ?? ""}
+          equipo={equipo}
+        />
       </div>
+
+      {/* Cifras del período, en una sola franja también en el celular. */}
+      <dl className="mb-6 grid grid-cols-3 divide-x divide-[#d3e3e1] rounded-[14px] border border-[#d3e3e1] bg-white">
+        {[
+          { valor: String(activas.length), etiqueta: activas.length === 1 ? "cita" : "citas" },
+          { valor: String(citas.filter((c) => c.status === "PENDIENTE").length), etiqueta: "por confirmar" },
+          { valor: formatCOP(ingresos), etiqueta: "agendado" },
+        ].map((c) => (
+          <div key={c.etiqueta} className="min-w-0 px-3 py-3 sm:px-6 sm:py-4">
+            <dd className="font-display text-lg font-[650] sm:text-3xl">{c.valor}</dd>
+            <dt className="t-small mt-0.5 truncate">{c.etiqueta}</dt>
+          </div>
+        ))}
+      </dl>
 
       {vista === "semana" ? (
         <VistaSemana
@@ -688,7 +677,7 @@ function VistaProfesionales({
       ),
   );
 
-  // Un bloqueo sin profesional afecta a toda la sede; con uno, solo a esa persona.
+  // Un bloqueo sin profesional afecta a todo el local; con uno, solo a esa persona.
   for (const b of bloqueos) {
     if (b.startsAt >= finDia || b.endsAt <= iniDia) continue;
     const inicioMin = b.startsAt <= iniDia ? 0 : aMinutos(horaBogota(b.startsAt));
@@ -814,21 +803,23 @@ function VistaLista({
                   )}
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:shrink-0">
                   <Badge tone={TONO[c.status] ?? "neutral"}>
                     {ETIQUETA[c.status] ?? c.status}
                   </Badge>
 
-                  <form action={cambiarEstado} className="flex items-center gap-2">
+                  <form action={cambiarEstado} className="flex min-w-0 items-center gap-2">
                     <input type="hidden" name="id" value={c.id} />
                     <select
                       name="estado"
                       defaultValue={c.status}
-                      className="border border-stone bg-white px-2 py-1.5 text-xs text-ink focus:border-marea focus:outline-none"
+                      aria-label={`Estado de la cita de ${c.clientName}`}
+                      className="admin-control !min-h-[38px] w-auto min-w-0 px-2 py-1.5 text-sm"
                     >
-                      {/* "Atendida" se pone con "Finalizar cita" (genera la venta). */}
+                      {/* "Atendida" se pone con "Finalizar cita" (genera la venta) y
+                          "Esperando abono" solo lo pone la reserva en línea. */}
                       {Object.entries(ETIQUETA)
-                        .filter(([v]) => v !== "ATENDIDA" || c.status === "ATENDIDA")
+                        .filter(([v]) => (v !== "ATENDIDA" && v !== "POR_PAGAR") || c.status === v)
                         .map(([v, l]) => (
                         <option key={v} value={v}>
                           {l}
@@ -837,7 +828,7 @@ function VistaLista({
                     </select>
                     <button
                       type="submit"
-                      className="btn btn-outline px-3 py-2 text-xs"
+                      className="btn btn-outline btn-sm"
                     >
                       Guardar
                     </button>

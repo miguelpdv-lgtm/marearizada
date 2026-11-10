@@ -218,16 +218,19 @@ export function ReservaForm({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Local" name="branchId" required>
-          <Select name="branchId" value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
-            <option value="">Elige un local</option>
-            {lookups.sedes.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.city}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {/* Con un solo local no se pregunta. */}
+        {lookups.sedes.length > 1 && (
+          <Field label="Local" name="branchId" required>
+            <Select name="branchId" value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
+              <option value="">Elige un local</option>
+              {lookups.sedes.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.city}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
 
         <Field label="Servicio" name="serviceId" required>
           <Select

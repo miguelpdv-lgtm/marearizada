@@ -97,10 +97,12 @@ export function UserForm({
 
           {role === "ADMIN" ? (
             <p className="t-small">
-              Los administradores siempre tienen acceso a ambas sedes.
+              Los administradores tienen acceso a todo el panel.
             </p>
+          ) : branches.length === 1 ? (
+            <input type="hidden" name="branchIds" value={branches[0].id} />
           ) : (
-            <Field label="Sedes" name="branchIds" errors={errors} required>
+            <Field label="Locales" name="branchIds" errors={errors} required>
               <CheckboxGroup
                 name="branchIds"
                 groups={[
@@ -110,7 +112,7 @@ export function UserForm({
                   },
                 ]}
                 defaultValues={branchIds}
-                emptyHint="No hay sedes activas todavía."
+                emptyHint="No hay locales activos todavía."
               />
             </Field>
           )}

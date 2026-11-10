@@ -1,5 +1,6 @@
 "use client";
 
+import { CerrarConEscape } from "@/components/admin/CerrarConEscape";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -85,7 +86,9 @@ export function useArrastreCita({
     if (!sePuedeMover(cita.status)) return {};
     return {
       onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
-        if (e.button !== 0) return;
+        // Con el dedo no se arrastra: el gesto es para desplazar la agenda.
+        // En el celular la cita se mueve desde su detalle (Reagendar).
+        if (e.button !== 0 || e.pointerType === "touch") return;
         agarre.current = { x: e.clientX, y: e.clientY, cita, offset: null };
         arrastrando.current = false;
       },
@@ -131,7 +134,7 @@ export function useArrastreCita({
           e.preventDefault();
         }
       },
-      style: { cursor: "grab", touchAction: "none" as const },
+      style: { cursor: "grab", touchAction: "manipulation" as const },
     };
   };
 
@@ -233,6 +236,7 @@ export function ConfirmarMovimiento({
         onClick={cerrar}
         className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 p-4"
       >
+        <CerrarConEscape onCerrar={cerrar} />
         <div
           role="dialog"
           aria-modal="true"
@@ -294,6 +298,7 @@ export function ConfirmarMovimiento({
       onClick={() => cerrar()}
       className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 p-4"
     >
+      <CerrarConEscape onCerrar={cerrar} />
       <div
         role="dialog"
         aria-modal="true"

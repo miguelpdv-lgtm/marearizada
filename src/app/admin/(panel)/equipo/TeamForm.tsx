@@ -58,7 +58,7 @@ export function TeamForm({
   submitLabel?: string;
   extra?: React.ReactNode;
 }) {
-  const [branchId, setBranchId] = useState(member?.branchId ?? "");
+  const [branchId, setBranchId] = useState(member?.branchId ?? (branches.length === 1 ? branches[0].id : ""));
 
   const serviciosDeLaSede = branchId
     ? services.filter((s) => !s.branchId || s.branchId === branchId)
@@ -147,20 +147,24 @@ export function TeamForm({
               />
             </Field>
 
-            <Field label="Local" name="branchId" errors={errors}>
-              <Select
-                name="branchId"
-                value={branchId}
-                onChange={(e) => setBranchId(e.target.value)}
-              >
-                <option value="">Sin local</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.city}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            {branches.length > 1 ? (
+              <Field label="Local" name="branchId" errors={errors}>
+                <Select
+                  name="branchId"
+                  value={branchId}
+                  onChange={(e) => setBranchId(e.target.value)}
+                >
+                  <option value="">Sin local</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.city}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ) : (
+              <input type="hidden" name="branchId" value={branchId} />
+            )}
 
             <Field label="Orden" name="order" errors={errors}>
               <Input name="order" type="number" defaultValue={member?.order ?? 0} />
@@ -179,7 +183,7 @@ export function TeamForm({
             </p>
             <p className="t-small mb-3">
               Cuándo está disponible para que le asignemos citas — no cuándo
-              abre la sede.
+              abre el local.
             </p>
             <div className="space-y-2">
               {DIAS.map((dia, weekday) => {

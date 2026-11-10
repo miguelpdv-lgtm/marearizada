@@ -38,7 +38,7 @@ export default async function ComisionesPage({
     return (
       <PageHeader
         title="Comisiones"
-        description="No tienes ninguna sede asignada — pídele a un administrador que te asigne una en Usuarios."
+        description="No tienes ningún local asignado — pídele a un administrador que te asigne uno en Usuarios."
         breadcrumb={{ label: "Reportes", href: "/admin/reportes" }}
       />
     );
@@ -79,7 +79,8 @@ export default async function ComisionesPage({
         breadcrumb={{ label: "Reportes", href: "/admin/reportes" }}
       />
 
-      <div className="mb-6 flex">
+      {/* Con un solo local no hay nada que filtrar. */}
+      <div className={sedes.length > 1 ? "mb-6 flex" : "hidden"}>
         {sedes.length > 1 && (
           <Link
             href={enlace({ sede: undefined })}

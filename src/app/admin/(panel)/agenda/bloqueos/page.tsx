@@ -51,26 +51,25 @@ export default async function BloqueosPage() {
     <>
       <PageHeader
         title="Bloqueo de horas"
-        description="Festivos, capacitaciones o cierres puntuales. Las horas bloqueadas dejan de ofrecerse en el sitio de inmediato."
+        description="Festivos, vacaciones o cierres. Lo bloqueado deja de ofrecerse en la reserva en línea de inmediato."
         breadcrumb={{ label: "Agenda", href: "/admin/agenda" }}
       />
 
-      <div className="mb-6 rounded-xl border border-stone bg-cream px-5 py-4 text-sm text-ink">
-        <strong>¿Desbloquear solo unas horas o solo a una profesional?</strong> Hazlo en la{" "}
+      <p className="mb-6 rounded-xl border border-stone bg-cream px-5 py-4 text-sm text-ink">
+        Acá se bloquean días o franjas completas. Para bloquear un rato a una profesional, quitar solo
+        una parte de un bloqueo o abrirle horas fuera de su horario, usa la{" "}
         <Link href="/admin/agenda?vista=profesionales" className="text-marea underline underline-offset-2">
           agenda por profesionales
         </Link>
-        : toca el bloqueo 🔒 y elige &ldquo;Solo unas horas&rdquo; o &ldquo;Solo para…&rdquo;. Para abrirle
-        horas a una profesional fuera de su horario (o quitarle un bloqueo de un rango), arrastra sobre su
-        columna y elige <strong>✓ Habilitar</strong>.
-      </div>
+        : toca la hora o el bloqueo 🔒.
+      </p>
 
       <div className="grid gap-8 lg:grid-cols-5">
-        <div className="space-y-8 lg:col-span-3">
+        <div className="min-w-0 space-y-8 lg:col-span-3">
           {bloqueos.length === 0 ? (
             <EmptyState
               title="No hay horas bloqueadas"
-              description="La agenda se ofrece completa según el horario de cada local."
+              description="La agenda se ofrece completa, según el horario de cada profesional."
             />
           ) : (
             <div className="divide-y divide-stone rounded-xl border border-stone bg-white">
@@ -150,7 +149,7 @@ export default async function BloqueosPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="order-first min-w-0 lg:order-none lg:col-span-2">
           <CardHeader
             title="Nuevo bloqueo de horas"
             description="Se aplica al instante sobre la disponibilidad del sitio."

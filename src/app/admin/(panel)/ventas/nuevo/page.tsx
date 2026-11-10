@@ -40,7 +40,7 @@ export default async function NuevaVentaPage({
 
       {sedes.length === 0 ? (
         <p className="t-small">
-          No tienes ninguna sede asignada — pídele a un administrador que te asigne una en Usuarios.
+          No tienes ningún local asignado — pídele a un administrador que te asigne uno en Usuarios.
         </p>
       ) : (
         <VentaForm lookups={lookups} equipo={equipo} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { CerrarConEscape } from "@/components/admin/CerrarConEscape";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -37,6 +38,7 @@ function Ventana({
       onClick={onCerrar}
       className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 p-4"
     >
+      <CerrarConEscape onCerrar={onCerrar} />
       <div
         role="dialog"
         aria-modal="true"
@@ -101,7 +103,7 @@ function Horas({
 
 /**
  * Un rango arrastrado (o tocado) sobre la columna de una profesional:
- * bloquearlo (para ella o toda la sede) o habilitarlo, que la deja disponible
+ * bloquearlo (para ella o todo el local) o habilitarlo, que la deja disponible
  * aunque esté bloqueada o fuera de su horario ese día.
  */
 export function NuevoBloqueo({
@@ -192,7 +194,7 @@ export function NuevoBloqueo({
       titulo={
         modo === "habilitar"
           ? `Habilitar a ${profesional.name}`
-          : `Bloquear a ${toda ? "toda la sede" : profesional.name}`
+          : `Bloquear a ${toda ? "todo el local" : profesional.name}`
       }
       onCerrar={onCerrar}
     >
@@ -219,7 +221,7 @@ export function NuevoBloqueo({
         {modo === "habilitar" && (
           <p className="t-small">
             Deja a {profesional.name} disponible para citas en esas horas: le quita los bloqueos (también su
-            parte de un bloqueo de toda la sede) y, si es fuera de su horario, se las abre solo ese día.
+            parte de un bloqueo de todo el local) y, si es fuera de su horario, se las abre solo ese día.
           </p>
         )}
 
@@ -260,7 +262,7 @@ export function NuevoBloqueo({
               className="mt-0.5 h-4 w-4 accent-marea"
             />
             <span className="text-sm text-ink">
-              Bloquear a toda la sede
+              Bloquear a todo el local
               <span className="t-small block">Para todas las profesionales (festivo, cierre).</span>
             </span>
           </label>
@@ -294,7 +296,7 @@ export function NuevoBloqueo({
 
 /**
  * Un bloqueo existente: qué es y a quién afecta. Se puede quitar completo,
- * solo una parte de las horas o, si es de toda la sede, solo para la
+ * solo una parte de las horas o, si es de todo el local, solo para la
  * profesional de esa columna.
  */
 export function DetalleBloqueo({
@@ -344,14 +346,14 @@ export function DetalleBloqueo({
       onCerrar();
     });
 
-  const quien = soloElla ? profesional.name : bloqueo.sedeEntera ? "toda la sede" : profesional.name;
+  const quien = soloElla ? profesional.name : bloqueo.sedeEntera ? "todo el local" : profesional.name;
 
   return (
     <Ventana titulo="Horas bloqueadas" onCerrar={onCerrar}>
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between gap-3">
           <dt className="text-muted">A quién</dt>
-          <dd className="text-right text-ink">{bloqueo.sedeEntera ? "Toda la sede" : profesional.name}</dd>
+          <dd className="text-right text-ink">{bloqueo.sedeEntera ? "Todo el local" : profesional.name}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-muted">Cuándo</dt>

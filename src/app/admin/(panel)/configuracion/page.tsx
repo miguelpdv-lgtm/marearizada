@@ -31,7 +31,7 @@ const GROUP_META: Record<string, { title: string; description: string }> = {
   seo: {
     title: "Google y buscadores",
     description:
-      "Verificación del sitio en Google Search Console y Bing. Los datos de cada sede (coordenadas, enlace de reseñas) se editan en Sucursales.",
+      "Verificación del sitio en Google Search Console y Bing. Los datos del local (coordenadas, enlace de reseñas) se editan en Locales.",
   },
   fases: {
     title: "Reservas en línea",

@@ -21,7 +21,7 @@ export default async function ProductCategoriesPage() {
       />
 
       <div className="grid gap-8 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+        <div className="min-w-0 lg:col-span-3">
           {categories.length === 0 ? (
             <p className="border border-dashed border-stone px-6 py-12 text-center text-sm font-normal text-muted">
               Todavía no hay categorías.
@@ -66,7 +66,7 @@ export default async function ProductCategoriesPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <CardHeader title="Nueva categoría" />
           <div className="mt-6">
             <CategoryForm action={createProductCategory} />

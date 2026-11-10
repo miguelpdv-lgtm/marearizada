@@ -44,7 +44,7 @@ export default async function ReportesPage({
     return (
       <PageHeader
         title="Reportes"
-        description="No tienes ninguna sede asignada — pídele a un administrador que te asigne una en Usuarios."
+        description="No tienes ningún local asignado — pídele a un administrador que te asigne uno en Usuarios."
       />
     );
   }
@@ -93,7 +93,8 @@ export default async function ReportesPage({
         action={{ label: "Comisiones", href: "/admin/reportes/comisiones" }}
       />
 
-      <div className="mb-6 flex">
+      {/* Con un solo local no hay nada que filtrar. */}
+      <div className={sedes.length > 1 ? "mb-6 flex" : "hidden"}>
         {sedes.length > 1 && (
           <Link
             href={enlace({ sede: undefined })}
@@ -155,7 +156,7 @@ export default async function ReportesPage({
           <div className="mb-6">
             <p className="admin-kicker mb-2">Ritmo del período</p>
             <h2 className="t-card text-ink">Reservas por día</h2>
-            <p className="mt-1 text-sm text-muted">La actividad operativa de la sede seleccionada.</p>
+            <p className="mt-1 text-sm text-muted">La actividad del período elegido.</p>
           </div>
           <DailyBookingsChart datos={actual.porDia} />
         </section>

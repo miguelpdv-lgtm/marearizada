@@ -13,7 +13,7 @@ export const ETIQUETA: Record<string, string> = {
   POR_PAGAR: "Esperando abono",
   PENDIENTE: "Pendiente",
   CONFIRMADA: "Confirmada",
-  ATENDIDA: "Asiste",
+  ATENDIDA: "Atendida",
   CANCELADA: "Cancelada",
   NO_ASISTIO: "No asistió",
 };
@@ -29,12 +29,14 @@ export const TONO: Record<string, "neutral" | "success" | "warning" | "gold" | "
 
 /** Mismo color por estado en los bloques del calendario (semana y profesionales). */
 export const COLOR: Record<string, string> = {
-  POR_PAGAR: "border-l-terra border-dashed bg-paper text-muted",
-  PENDIENTE: "border-l-terra bg-gold-100 text-ink",
-  CONFIRMADA: "border-l-emerald-600 bg-emerald-50 text-ink",
-  ATENDIDA: "border-l-clay bg-smoke text-muted",
-  CANCELADA: "border-l-red-400 bg-red-50 text-muted line-through",
-  NO_ASISTIO: "border-l-red-400 bg-red-50 text-muted",
+  POR_PAGAR: "border-l-[#cdaa9c] border-dashed bg-white text-[#5f6b68]",
+  // Colores del sistema: concha = espera algo, espuma/marea = en firme,
+  // gris = ya pasó, alerta = no se dio.
+  PENDIENTE: "border-l-[#9a5b49] bg-[#f3e3dc] text-[#1f2725]",
+  CONFIRMADA: "border-l-[#1c6f75] bg-[#d8f5f6] text-[#1f2725]",
+  ATENDIDA: "border-l-[#5f6b68] bg-[#eef3f2] text-[#5f6b68]",
+  CANCELADA: "border-l-[#a8452e] bg-[#fbe9e4] text-[#5f6b68] line-through",
+  NO_ASISTIO: "border-l-[#a8452e] bg-[#fbe9e4] text-[#5f6b68]",
 };
 
 /**
@@ -48,7 +50,7 @@ export const COLOR: Record<string, string> = {
  */
 export const BLOQUE_CITA =
   "absolute overflow-hidden rounded-md border border-white/90 border-l-4 text-left " +
-  "shadow-[0_1px_3px_rgba(91,0,29,0.14)] transition hover:z-10 hover:shadow-[0_4px_12px_rgba(91,0,29,0.22)] hover:brightness-[0.97]";
+  "shadow-[0_1px_3px_rgb(15_50_54/0.14)] transition hover:z-10 hover:shadow-[0_4px_12px_rgb(15_50_54/0.22)] hover:brightness-[0.97]";
 
 const SEPARACION_PX = 2;
 
