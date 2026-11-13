@@ -1,6 +1,6 @@
 /* Interacciones de la landing de Marea Rizada. */
 (function () {
-  const { Tide, curlPath, CURL_TYPES, drawStrands, reduceMotion } = window.MareaRizada;
+  const { Tide, curlPath, CURL_TYPES, reduceMotion } = window.MareaRizada;
   const $ = (s, r = document) => r.querySelector(s);
 
   /* ---- Olas ---------------------------------------------------------- */
@@ -76,11 +76,4 @@
     finder.appendChild(b);
   });
   select('3B');
-
-  /* ---- Antes / después --------------------------------------------- */
-  const ba = $('#ba');
-  const redrawBA = () => { drawStrands($('#ba-before'), 'antes'); drawStrands($('#ba-after'), 'despues'); };
-  new ResizeObserver(redrawBA).observe(ba);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawBA);
-  $('#ba-range').addEventListener('input', (e) => ba.style.setProperty('--split', e.target.value + '%'));
 })();

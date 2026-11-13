@@ -4,7 +4,7 @@
    una sola vez por elemento. Necesita window.MareaRizada (tide.js). */
 export function iniciarMarea() {
 
-  const { Tide, curlPath, CURL_TYPES, drawStrands, reduceMotion } = window.MareaRizada;
+  const { Tide, curlPath, CURL_TYPES, reduceMotion } = window.MareaRizada;
   const ola = (el, opts) => el && !el.dataset.vivo && (el.dataset.vivo = '1', new Tide(el, opts));
   const $ = (s, r = document) => r.querySelector(s);
 
@@ -83,11 +83,4 @@ export function iniciarMarea() {
     finder.appendChild(b);
   });
   select('3B');
-
-  /* ---- Antes / después --------------------------------------------- */
-  const ba = $('#ba');
-  const redrawBA = () => { drawStrands($('#ba-before'), 'antes'); drawStrands($('#ba-after'), 'despues'); };
-  new ResizeObserver(redrawBA).observe(ba);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawBA);
-  $('#ba-range').addEventListener('input', (e) => ba.style.setProperty('--split', e.target.value + '%'));
 }

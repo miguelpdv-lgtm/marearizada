@@ -289,3 +289,31 @@ a { color: var(--accent); text-underline-offset: .2em; text-decoration-thickness
 .mr-ba__tag--r { right: var(--sp-4); }
 .mr-ba input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
 .mr-ba input:focus-visible ~ .mr-ba__knob { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* ---- Fotografía ----------------------------------------------------------
+   La marca se apoya en imagen, no en bloques de color. Un velo de abismo
+   (nunca un fondo sólido) asegura el contraste del texto sobre la foto.
+   .mr-photo   contenedor recortado; .mr-scrim velo inferior
+   .mr-tile    portada de servicio: foto vertical con el texto encima
+   .mr-reel    banda de fotos que se desplaza como la marea */
+.mr-photo { position: relative; overflow: hidden; background: var(--sand); }
+.mr-photo > img { width: 100%; height: 100%; object-fit: cover; display: block; transition: scale 1.4s var(--ease-oleaje); }
+.mr-photo--concha { border-radius: var(--r-concha); }
+.mr-photo--guijarro { border-radius: var(--r-guijarro); }
+.mr-scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgb(var(--shadow-tint) / .9), rgb(var(--shadow-tint) / .35) 55%, rgb(var(--shadow-tint) / 0)); }
+.mr-scrim--full { background: rgb(var(--shadow-tint) / .66); }
+
+.mr-tile { position: relative; display: flex; align-items: flex-end; aspect-ratio: 3 / 4.3; border-radius: var(--r-guijarro); overflow: hidden; color: var(--mr-perla); text-decoration: none; isolation: isolate; }
+.mr-tile > .mr-photo { position: absolute; inset: 0; z-index: -1; }
+.mr-tile:hover > .mr-photo > img { scale: 1.06; }
+.mr-tile__body { display: grid; gap: 6px; padding: var(--sp-5); }
+.mr-tile__n { font: 500 var(--fs-xs)/1 var(--font-mono); letter-spacing: var(--tracking-label); color: var(--mr-espuma); text-transform: uppercase; }
+.mr-tile h3 { color: var(--mr-perla); font-size: var(--fs-lg); }
+.mr-tile p { font-size: var(--fs-sm); color: var(--mr-espuma-100); }
+
+.mr-reel { overflow: hidden; }
+.mr-reel__track { display: flex; gap: var(--sp-4); width: max-content; animation: mr-reel var(--dur-pleamar) linear infinite; animation-duration: 70s; }
+.mr-reel .mr-photo { flex: none; width: clamp(180px, 22vw, 260px); aspect-ratio: 4 / 5; border-radius: var(--r-gota); }
+.mr-reel .mr-photo:nth-child(even) { margin-top: var(--sp-6); }
+@keyframes mr-reel { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .mr-reel { overflow-x: auto; } .mr-reel__track { animation: none; } }

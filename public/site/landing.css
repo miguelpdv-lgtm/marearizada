@@ -206,3 +206,42 @@ html.mr-intro-running .mr-rise { animation-play-state: paused; }
 .mr-intro__word span:first-child { font-size: .62em; font-weight: 500; letter-spacing: .08em; }
 .mr-intro__skip { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); left: 50%; translate: -50% 0; font: 500 var(--fs-xs)/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mr-espuma-200); opacity: .7; }
 @media (max-width: 520px) { .mr-intro__stage { flex-direction: column; text-align: center; } }
+
+/* ---- Héroe con foto: la fachada cubre todo el bloque y el panel de abismo
+   es un velo translúcido con el mismo borde de ola. ---------------------- */
+.lp-hero__right { left: 0; }
+.lp-hero__left { background: linear-gradient(90deg, rgb(15 50 54 / .94), rgb(15 50 54 / .74)); }
+
+/* ---- Servicios: portadas con foto ------------------------------------- */
+.lp-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-4); }
+.lp-tiles .mr-badge { justify-self: start; }
+@media (max-width: 1040px) { .lp-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .lp-tiles { grid-template-columns: 1fr; } .lp-tiles .mr-tile { aspect-ratio: 4 / 3; } }
+.lp-reel { padding-bottom: clamp(3rem, 7vw, 5rem); }
+
+/* ---- Método: foto + pasos ---------------------------------------------- */
+.lp-method { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+.lp-method > .mr-photo { aspect-ratio: 4 / 5; }
+.lp-method .lp-steps { grid-template-columns: 1fr; row-gap: var(--sp-5); }
+.lp-method .lp-steps::before { display: none; }
+.lp-method .lp-step { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--sp-5); align-items: center; padding-top: var(--sp-4); border-top: 1.5px solid var(--line); }
+.lp-method .lp-step .mr-tide-loader { width: 72px; grid-row: span 3; }
+@media (max-width: 860px) { .lp-method { grid-template-columns: 1fr; } .lp-method > .mr-photo { aspect-ratio: 4 / 3; } }
+
+/* ---- Manifiesto sobre foto (las olas siguen cerrando el bloque) ---------- */
+.lp-manifesto__bg { position: absolute; inset: 0; }
+.lp-manifesto__bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.lp-manifesto__bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(95deg, rgb(15 50 54 / .9), rgb(15 50 54 / .55)); }
+.lp-manifesto__sea { z-index: 1; }
+
+/* ---- Familia: portadas con foto ---------------------------------------- */
+.lp-fam { position: relative; isolation: isolate; overflow: hidden; min-height: 22rem; color: var(--mr-perla); justify-content: flex-end; }
+.lp-fam > .mr-photo { position: absolute; inset: 0; z-index: -1; }
+.lp-fam:hover > .mr-photo > img { scale: 1.06; }
+.lp-fam p { color: var(--mr-espuma-100); opacity: 1; }
+.lp-fam b { color: var(--mr-perla); }
+.lp-fam span { color: var(--mr-espuma); }
+.lp-fam--salon, .lp-fam--shop, .lp-fam--nails { background: var(--mr-abismo); }
+.lp-fam svg { width: 48px; height: 48px; }
+
+.lp-fam .mr-scrim { background: linear-gradient(to top, rgb(15 50 54 / .92), rgb(15 50 54 / .6)); }

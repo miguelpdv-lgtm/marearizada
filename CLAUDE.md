@@ -22,7 +22,7 @@ Plataforma (sitio + reservas en línea + panel) de **Marea Rizada**, salón de r
 ## Pendientes (por prioridad)
 1. **Integrar Wompi**: pasos en `src/lib/pasarela.ts` (Web Checkout con firma de integridad, webhook con checksum, conciliación en `/reservar/pago/[codigo]`). Necesita: llave pública, secreto de integridad y secreto de eventos de la cuenta del salón.
 2. **Cambiar el envío de correo de Resend a Brevo** (`src/lib/correo/enviar.ts`, variables `.env.example`, README y política de datos, que hoy mencionan al proveedor de correo). Necesita: cuenta Brevo, clave API y dominio remitente verificado (SPF/DKIM/DMARC).
-3. **Datos reales** (los pasa Miguel luego): dirección, WhatsApp, correo, razón social, NIT y ciudad (en Configuración); servicios con precios reales; equipo con fotos, horarios y servicios; logo en vector; textos legales revisados por un abogado.
+3. **Datos reales** (los pasa Miguel luego; las fotos de `public/landing/` salvo la fachada son de Unsplash, de prototipo: cambiarlas por fotos propias del salón): dirección, WhatsApp, correo, razón social, NIT y ciudad (en Configuración); servicios con precios reales; equipo con fotos, horarios y servicios; logo en vector; textos legales revisados por un abogado.
 4. **Cuentas a nombre del salón**: Supabase (hoy en la org "Velas"), Vercel (hoy el plan Pro de Miguel), dominio propio, y conectar el repo a Vercel (Settings → Git, rama de producción `plataforma`).
 5. Fotos subidas desde el panel: faltan `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`.
 6. Seguridad antes de lanzar: cambiar la contraseña del administrador y crear los usuarios del equipo; `CRON_SECRET` y `AUTH_SECRET` propios en producción.

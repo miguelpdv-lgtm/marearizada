@@ -86,81 +86,58 @@ export default async function Portada() {
       </section>
 
       {/* Servicios */}
-      <section className="lp-section lp-section--tint" id="servicios">
+      <section className="lp-section" id="servicios">
         <div className="mr-wrap">
           <div className="lp-head">
             <span className="mr-eyebrow">Servicios</span>
             <h2>Salud primero, definición después</h2>
             <p>Trabajamos el rizo desde dentro: cuero cabelludo, hidratación y forma. El resultado bonito es la consecuencia.</p>
           </div>
-          <div className="lp-services">
-            <article className="mr-card">
-              <div className="mr-card__icon"><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="15" cy="15" r="9" /><path d="M22 22l8 8M10 16c2-3 4-3 5 0s3 3 5 0" /></svg></div>
-              <h3>Diagnóstico capilar</h3>
-              <p>El punto de partida. Analizamos tu historia con el pelo y cómo está hoy.</p>
-              <ul><li>Patrón y porosidad</li><li>Estado del cuero cabelludo</li><li>Plan por etapas</li></ul>
+          <div className="lp-tiles">
+            <article className="mr-tile">
+              <div className="mr-photo"><img src="/landing/diagnostico.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
+              <div className="mr-tile__body"><span className="mr-tile__n">01</span><h3>Diagnóstico capilar</h3><p>El punto de partida: patrón, porosidad, cuero cabelludo y un plan por etapas.</p></div>
             </article>
-            <article className="mr-card">
-              <div className="mr-card__icon"><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="26" r="4" /><circle cx="21" cy="28" r="4" /><path d="M12 23L26 6M18 25L11 8" /><path d="M26 18c2-2 4-2 5 0" /></svg></div>
-              <h3>Corte rizo a rizo</h3>
-              <p>Corte en seco, mechón a mechón, respetando cómo cae cada rizo.</p>
-              <ul><li>Forma y volumen equilibrados</li><li>Saneado de puntas dañadas</li><li>Ideal en transición</li></ul>
+            <article className="mr-tile">
+              <div className="mr-photo"><img src="/landing/corte.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
+              <div className="mr-tile__body"><span className="mr-tile__n">02</span><h3>Corte rizo a rizo</h3><p>Corte en seco, mechón a mechón, respetando cómo cae cada rizo.</p></div>
             </article>
-            <article className="mr-card">
-              <div className="mr-card__icon"><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 4C12 12 9 17 9 22a9 9 0 0 0 18 0c0-5-3-10-9-18z" /><path d="M12 23c2-2 4-2 6 0s4 2 6 0" /></svg></div>
-              <h3>Tratamientos de recuperación</h3>
-              <p>Hidratación, nutrición o proteína según lo que pida tu fibra.</p>
-              <ul><li>Adaptados a tu porosidad</li><li>Elasticidad y brillo</li><li>Menos frizz, más forma</li></ul>
+            <article className="mr-tile">
+              <div className="mr-photo"><img src="/landing/tratamiento.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
+              <div className="mr-tile__body"><span className="mr-tile__n">03</span><h3>Tratamientos de recuperación</h3><p>Hidratación, nutrición o proteína según lo que pida tu fibra.</p></div>
             </article>
-            <article className="mr-card mr-card--feature">
-              <div className="mr-card__icon"><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8h24v15H16l-6 6v-6H6z" /><path d="M18 11a3.5 3.5 0 1 0 3.5 3.5" /></svg></div>
-              <span className="mr-badge">Para casa</span>
-              <h3>Asesoría curly</h3>
-              <p>Tu rutina paso a paso: lavado, definición y secado, con productos que sí funcionan para ti.</p>
+            <article className="mr-tile">
+              <div className="mr-photo"><img src="/landing/nails.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
+              <div className="mr-tile__body"><span className="mr-tile__n">04 · Para casa</span><h3>Asesoría curly</h3><p>Tu rutina paso a paso, con productos que sí funcionan para ti.</p></div>
             </article>
           </div>
         </div>
       </section>
+
+      <div className="mr-reel lp-reel" aria-hidden="true">
+        <div className="mr-reel__track">
+          {[0, 1].flatMap((k) => ["rizo-corto", "manos", "corte", "manicure", "diagnostico", "tratamiento"].map((n) => (
+            <div key={`${k}-${n}`} className="mr-photo"><img src={`/landing/${n}.jpg`} alt="" loading="lazy" /></div>
+          )))}
+        </div>
+      </div>
 
       {/* Método */}
       <section className="lp-section" id="metodo">
-        <div className="mr-wrap">
-          <div className="lp-head">
-            <span className="mr-eyebrow">El método</span>
-            <h2>La marea sube poco a poco</h2>
-            <p>Recuperar un rizo lleva semanas, no una tarde. Por eso trabajamos por etapas y te acompañamos entre citas.</p>
-          </div>
-          <ol className="lp-steps" style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "22%"} as CSSProperties}></div><span className="lp-step__n">Paso 1</span><h3>Diagnóstico</h3><p>Leemos tu pelo: patrón, porosidad, daño químico o térmico y hábitos.</p></li>
-            <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "46%"} as CSSProperties}></div><span className="lp-step__n">Paso 2</span><h3>Limpieza y corte</h3><p>Liberamos el rizo de residuos y cortamos lo que ya no puede volver.</p></li>
-            <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "70%"} as CSSProperties}></div><span className="lp-step__n">Paso 3</span><h3>Hidratación y rutina</h3><p>Tratamiento en salón y una rutina clara para casa.</p></li>
-            <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "92%"} as CSSProperties}></div><span className="lp-step__n">Paso 4</span><h3>Seguimiento</h3><p>Revisamos cómo responde tu rizo y ajustamos productos y técnica.</p></li>
-          </ol>
-        </div>
-      </section>
-
-      {/* Resultados */}
-      <section className="lp-section lp-section--sand" id="resultados">
-        <div className="mr-wrap lp-results">
-          <div className="mr-ba" id="ba" aria-label="Ilustración antes y después">
-            <canvas id="ba-before" aria-hidden="true" />
-            <div className="mr-ba__after"><canvas id="ba-after" aria-hidden="true" /></div>
-            <span className="mr-ba__line"></span>
-            <span className="mr-badge mr-ba__tag mr-ba__tag--l">Antes · encrespado</span>
-            <span className="mr-badge mr-badge--aqua mr-ba__tag mr-ba__tag--r">Después · definido</span>
-            <input type="range" id="ba-range" min="0" max="100" defaultValue="50" aria-label="Mover comparador" />
-            <span className="mr-ba__knob"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6" /></svg></span>
-          </div>
-          <div className="lp-results__copy">
-            <span className="mr-eyebrow">Transición</span>
-            <h2>Del encrespado a la definición</h2>
-            <p>El frizz casi siempre es sed. Cuando el rizo recupera agua y deja de recibir calor y químicos, vuelve a agruparse y a marcar su forma.</p>
-            <ul className="lp-checks">
-              <li><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 17c3-3 6-3 9 0s6 3 9 0M9 10l3 3 7-7" /></svg>Rizos que se agrupan en vez de abrirse</li>
-              <li><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 17c3-3 6-3 9 0s6 3 9 0M9 10l3 3 7-7" /></svg>Elasticidad: se estira y vuelve</li>
-              <li><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 17c3-3 6-3 9 0s6 3 9 0M9 10l3 3 7-7" /></svg>Una rutina que entiendes y puedes repetir</li>
-            </ul>
-            <a className="mr-btn mr-btn--secondary" href="https://instagram.com/marea.rizada" target="_blank" rel="noopener noreferrer" style={{ justifySelf: "start" }}>Ver resultados reales en Instagram</a>
+        <div className="mr-wrap lp-method">
+          <div className="mr-photo mr-photo--concha"><img src="/landing/metodo.jpg" alt="Mujer de perfil con rizos definidos sobre la ciudad al atardecer" loading="lazy" /></div>
+          <div>
+            <div className="lp-head" style={{ marginBottom: "var(--sp-6)" }}>
+              <span className="mr-eyebrow">El método</span>
+              <h2>La marea sube poco a poco</h2>
+              <p>Recuperar un rizo lleva semanas, no una tarde. Por eso trabajamos por etapas y te acompañamos entre citas.</p>
+            </div>
+            <ol className="lp-steps" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "22%"} as CSSProperties}></div><span className="lp-step__n">Paso 1</span><h3>Diagnóstico</h3><p>Leemos tu pelo: patrón, porosidad, daño químico o térmico y hábitos.</p></li>
+              <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "46%"} as CSSProperties}></div><span className="lp-step__n">Paso 2</span><h3>Limpieza y corte</h3><p>Liberamos el rizo de residuos y cortamos lo que ya no puede volver.</p></li>
+              <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "70%"} as CSSProperties}></div><span className="lp-step__n">Paso 3</span><h3>Hidratación y rutina</h3><p>Tratamiento en salón y una rutina clara para casa.</p></li>
+              <li className="lp-step"><div className="mr-tide-loader" style={{"--level": "92%"} as CSSProperties}></div><span className="lp-step__n">Paso 4</span><h3>Seguimiento</h3><p>Revisamos cómo responde tu rizo y ajustamos productos y técnica.</p></li>
+            </ol>
           </div>
         </div>
       </section>
@@ -192,6 +169,7 @@ export default async function Portada() {
 
       {/* Manifiesto */}
       <section className="lp-manifesto" aria-label="Manifiesto">
+        <div className="lp-manifesto__bg" aria-hidden="true"><img src="/landing/manifiesto.jpg" alt="" loading="lazy" /></div>
         <div className="mr-wrap">
           <span className="mr-eyebrow">Por qué Marea Rizada</span>
           <p>Ningún rizo es difícil. Ninguno hay que domarlo. Cada uno tiene su ritmo, como la marea: sube, baja y siempre vuelve.</p>
@@ -208,19 +186,22 @@ export default async function Portada() {
           </div>
           <div className="lp-family">
             <a className="lp-fam lp-fam--salon" href="https://instagram.com/marea.rizada" target="_blank" rel="noopener noreferrer">
+              <div className="mr-photo"><img src="/landing/salon.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
               <svg aria-hidden="true"><use href="#mr-mark" /></svg>
               <b>Marea Rizada</b>
               <p>Salud capilar, diagnóstico, corte y tratamientos para rizos.</p>
               <span>@marea.rizada →</span>
             </a>
             <a className="lp-fam lp-fam--shop" href="https://instagram.com/marearizada_shop" target="_blank" rel="noopener noreferrer">
-              <svg aria-hidden="true" style={{"--mark-sand": "#9EE5E7", "--mark-water": "#F3E3DC", "--mark-water2": "#E6CCC1", "--mark-foam": "#9A5B49"} as CSSProperties}><use href="#mr-mark" /></svg>
+              <div className="mr-photo"><img src="/landing/shop.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
+              <svg aria-hidden="true"><use href="#mr-mark" /></svg>
               <b>Marea Rizada Shop</b>
               <p>Los productos que usamos en el salón, para tu rutina en casa.</p>
               <span>@marearizada_shop →</span>
             </a>
             <a className="lp-fam lp-fam--nails" href="https://instagram.com/marea.rizada_nails" target="_blank" rel="noopener noreferrer">
-              <svg aria-hidden="true" style={{"--mark-sand": "#F3E3DC", "--mark-water": "#CDAA9C", "--mark-water2": "#E6CCC1"} as CSSProperties}><use href="#mr-mark" /></svg>
+              <div className="mr-photo"><img src="/landing/manos.jpg" alt="" loading="lazy" /><span className="mr-scrim" /></div>
+              <svg aria-hidden="true"><use href="#mr-mark" /></svg>
               <b>Marea Rizada Nails</b>
               <p>Manicura con el mismo cuidado y la misma calma.</p>
               <span>@marea.rizada_nails →</span>
