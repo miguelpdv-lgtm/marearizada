@@ -14,13 +14,13 @@ export function DailyBookingsChart({ datos }: { datos: Dia[] }) {
     <div role="img" aria-label="Reservas por día" className="space-y-3">
       <div className="flex h-44 items-end gap-1.5 border-b border-ink/10 px-1 sm:gap-2">
         {datos.map((dato) => (
-          <div key={dato.fecha} className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
-            <span className="invisible text-[10px] font-semibold text-terra group-hover:visible">
+          <div key={dato.fecha} className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
+            <span className="invisible text-[10px] font-semibold text-marea group-hover:visible">
               {dato.reservas}
             </span>
             <div
               title={`${formatoDia(dato.fecha)}: ${dato.reservas} reservas`}
-              className="w-full max-w-9 rounded-t-md bg-terra transition-all group-hover:bg-ink"
+              className="w-full max-w-9 rounded-t-md bg-marea transition-all group-hover:bg-[#0f3236]"
               style={{ height: `${Math.max((dato.reservas / max) * 100, dato.reservas ? 4 : 0)}%` }}
             />
           </div>
@@ -70,11 +70,11 @@ export function RevenueTrendChart({ datos }: { datos: Dia[] }) {
         ))}
         {datos.length > 1 && (
           <>
-            <polyline points={points} fill="none" stroke="var(--color-terra)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={points} fill="none" stroke="#1c6f75" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
             {datos.map((dato, index) => {
               const x = padX + index * step;
               const y = height - padY - (dato.ingresos / max) * (height - padY * 2);
-              return <circle key={dato.fecha} cx={x} cy={y} r="4" fill="var(--color-gold-500)" stroke="var(--color-terra)" strokeWidth="2" />;
+              return <circle key={dato.fecha} cx={x} cy={y} r="4" fill="#9ee5e7" stroke="#1c6f75" strokeWidth="2" />;
             })}
           </>
         )}
@@ -104,7 +104,7 @@ export function BookingOriginChart({ online, manual }: { online: number; manual:
         className="relative h-36 w-36 shrink-0 rounded-full"
         style={{
           background: total
-            ? `conic-gradient(var(--color-terra) 0 ${onlinePct}%, var(--color-gold-500) ${onlinePct}% 100%)`
+            ? `conic-gradient(#1c6f75 0 ${onlinePct}%, #9ee5e7 ${onlinePct}% 100%)`
             : "var(--color-sand)",
         }}
       >
@@ -114,8 +114,8 @@ export function BookingOriginChart({ online, manual }: { online: number; manual:
         </div>
       </div>
       <div className="w-full space-y-3">
-        <Legend color="bg-terra" label="Online" value={online} total={total} />
-        <Legend color="bg-gold-500" label="Agenda manual" value={manual} total={total} />
+        <Legend color="bg-marea" label="Online" value={online} total={total} />
+        <Legend color="bg-[#9ee5e7]" label="Agenda manual" value={manual} total={total} />
       </div>
     </div>
   );

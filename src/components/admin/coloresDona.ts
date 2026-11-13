@@ -2,14 +2,13 @@
  * Colores de las gráficas de dona. Van en un archivo aparte (sin "use client")
  * para que las páginas del servidor puedan leerlos.
  *
- * Paleta validada para daltonismo con todos los pares (en una dona todas las
- * tajadas se tocan): azul, naranja, aguamarina y ciruela; gris para lo que no
- * tiene dato.
+ * Colores del sistema de diseño (marea, arcilla, espuma y concha; gris para lo
+ * que no tiene dato). Los nombres vienen de la paleta anterior y se conservan.
  */
 export const COLORES_DONA = {
-  azul: "#2a78d6",
-  naranja: "#eb6834",
-  aguamarina: "#1baf7a",
-  ciruela: "#9b3d8f",
-  gris: "#a8a29e",
+  azul: "#1c6f75",
+  naranja: "#9a5b49",
+  aguamarina: "#6fcfd3",
+  ciruela: "#cdaa9c",
+  gris: "#b9c4c2",
 } as const;
