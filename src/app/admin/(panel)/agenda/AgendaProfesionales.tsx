@@ -92,6 +92,8 @@ export function AgendaProfesionales({
   // rango; al soltar se abre la ventana para confirmar.
   const [arrastre, setArrastre] = useState<{ staffId: string; ini: number; fin: number } | null>(null);
   const origen = useRef<number | null>(null);
+  /** Casilla de 15 minutos bajo el mouse: se resalta en marea para ver dónde caerá el bloqueo. */
+  const [sobre, setSobre] = useState<{ staffId: string; min: number } | null>(null);
   /** Toque con el dedo: dónde empezó, para distinguirlo de un desplazamiento. */
   const toque = useRef<{ y: number; minuto: number } | null>(null);
   const [nuevo, setNuevo] = useState<{ profesional: Profesional; ini: number; fin: number } | null>(null);
@@ -221,9 +223,14 @@ export function AgendaProfesionales({
                     e.currentTarget.setPointerCapture(e.pointerId);
                     setArrastre({ staffId: p.id, ini: m, fin: m });
                   }}
+                  onPointerLeave={() => setSobre(null)}
                   onPointerMove={(e) => {
-                    if (origen.current === null) return;
+                    if (e.pointerType === "touch") return;
                     const m = minutoEn(e);
+                    if (origen.current === null) {
+                      setSobre((s) => (s && s.staffId === p.id && s.min === m ? s : { staffId: p.id, min: m }));
+                      return;
+                    }
                     setArrastre({
                       staffId: p.id,
                       ini: Math.min(origen.current, m),
@@ -254,15 +261,28 @@ export function AgendaProfesionales({
                     setArrastre(null);
                   }}
                 />
+                {sobre?.staffId === p.id && !arrastre && sobre.min < hastaMin && (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 z-[3] border-y border-marea/60 bg-marea/15"
+                    style={{
+                      top: `${pct(sobre.min)}%`,
+                      height: `${(Math.min(15, hastaMin - sobre.min) / totalMin) * 100}%`,
+                    }}
+                  >
+                    <span className="absolute top-1/2 left-1.5 -translate-y-1/2 font-mono text-[10px] text-marea">
+                      {aHora(sobre.min)}
+                    </span>
+                  </div>
+                )}
                 {arrastre?.staffId === p.id && arrastre.fin > arrastre.ini && (
                   <div
-                    className="pointer-events-none absolute inset-x-1 z-20 border-2 border-dashed border-terra bg-terra/15"
+                    className="pointer-events-none absolute inset-x-1 z-20 border-2 border-dashed border-marea bg-marea/15"
                     style={{
                       top: `${pct(arrastre.ini)}%`,
                       height: `${((arrastre.fin - arrastre.ini) / totalMin) * 100}%`,
                     }}
                   >
-                    <span className="block px-1.5 pt-0.5 font-mono text-[10px] text-terra">
+                    <span className="block px-1.5 pt-0.5 font-mono text-[10px] text-marea">
                       {aHora(arrastre.ini)} – {aHora(arrastre.fin)}
                     </span>
                   </div>
