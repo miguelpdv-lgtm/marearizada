@@ -131,58 +131,9 @@
   --measure: 65ch;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg:          #0B2427;
-    --surface:     #10313A;
-    --surface-2:   #133A3F;
-    --sand:        #2E3A39;
-    --fg:          #DCEBE9;
-    --fg-strong:   #F4FBFA;
-    --fg-muted:    #94ADAA;
-    --line:        #23484D;
-    --accent:      #9EE5E7;
-    --accent-fg:   #0B2427;
-    --accent-soft: #1C6F75;
-    --warm:        #E2BFB1;
-    --warm-soft:   #8E6A5D;
-    --water-1:     #134A50;
-    --water-2:     #1C6F75;
-    --water-3:     #278E95;
-    --foam:        #BDEEEF;
-    --sky:         #0B2427;
-    --focus:       #9EE5E7;
-    --ok:          #7FD3AE;
-    --alert:       #F0A08A;
-    --shadow-tint: 0 0 0;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg:          #0B2427;
-  --surface:     #10313A;
-  --surface-2:   #133A3F;
-  --sand:        #2E3A39;
-  --fg:          #DCEBE9;
-  --fg-strong:   #F4FBFA;
-  --fg-muted:    #94ADAA;
-  --line:        #23484D;
-  --accent:      #9EE5E7;
-  --accent-fg:   #0B2427;
-  --accent-soft: #1C6F75;
-  --warm:        #E2BFB1;
-  --warm-soft:   #8E6A5D;
-  --water-1:     #134A50;
-  --water-2:     #1C6F75;
-  --water-3:     #278E95;
-  --foam:        #BDEEEF;
-  --sky:         #0B2427;
-  --focus:       #9EE5E7;
-  --ok:          #7FD3AE;
-  --alert:       #F0A08A;
-  --shadow-tint: 0 0 0;
-  color-scheme: dark;
-}
+/* El sitio público es siempre de tema claro (acordado en el sistema de diseño):
+   el tema oscuro vive solo en la guía public/design-system.html. */
+:root { color-scheme: light; }
 
 /* ---- design-system/components.css ---- */
 /* ==========================================================================
