@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/db";
 import { aUtc, hoyBogota, liberarVencidas, sumarDias } from "@/lib/agenda";
-import { enviarInvitacionResena, enviarRecordatorio } from "@/lib/correo/programados";
+import { enviarInvitacionResena } from "@/lib/correo/programados";
 import { getSettings } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,9 @@ export const maxDuration = 60;
 const LOTE = 80;
 
 /**
- * Trabajo diario: recordatorio a las citas de mañana e invitación a reseñar a
- * las de los últimos días que quedaron como atendidas.
+ * Trabajo diario: libera los cupos vencidos e invita a reseñar a las citas de
+ * los últimos días que quedaron como atendidas. El recordatorio del mismo día
+ * no sale de aquí: lo manda la primera entrada al panel (recordatorio-dia.ts).
  *
  * Lo llama un programador externo (el cron de Vercel, cron-job.org o GitHub
  * Actions) con `Authorization: Bearer <CRON_SECRET>`, una vez al día. Se
@@ -35,32 +36,7 @@ export async function GET(req: NextRequest) {
 
   const settings = await getSettings();
   const ahora = new Date();
-  const resultado = { recordatorios: 0, resenas: 0, fallidos: 0, liberadas: await liberarVencidas() };
-
-  // --- Recordatorios: de ahora hasta el final de mañana (hora de Colombia).
-  // Las reservadas hace menos de 12 horas no lo reciben: acaban de recibir la
-  // confirmación.
-  if (settings.bool("email.recordatorios", true)) {
-    const finDeManana = aUtc(sumarDias(hoyBogota(), 2), "00:00");
-    const citas = await prisma.appointment.findMany({
-      where: {
-        status: { in: ["PENDIENTE", "CONFIRMADA"] },
-        reminderSentAt: null,
-        clientEmail: { not: null },
-        startsAt: { gt: ahora, lt: finDeManana },
-        createdAt: { lt: new Date(ahora.getTime() - 12 * 3600_000) },
-      },
-      include: { service: true, branch: true },
-      orderBy: { startsAt: "asc" },
-      take: LOTE,
-    });
-    for (const cita of citas) {
-      if (await enviarRecordatorio(cita, settings)) {
-        await prisma.appointment.update({ where: { id: cita.id }, data: { reminderSentAt: new Date() } });
-        resultado.recordatorios++;
-      } else resultado.fallidos++;
-    }
-  }
+  const resultado = { resenas: 0, fallidos: 0, liberadas: await liberarVencidas() };
 
   // --- Reseñas: citas atendidas en los últimos 3 días, sin reseña todavía.
   if (settings.bool("email.resenas", true)) {

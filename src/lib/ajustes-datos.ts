@@ -37,10 +37,10 @@ export const AJUSTES_NUEVOS = [
   {
     key: "email.recordatorios",
     value: "true",
-    label: "Recordatorios por correo (día anterior y el mismo día)",
+    label: "Recordatorio por correo el mismo día de la cita",
     group: "contacto",
     type: "BOOLEAN",
-    hint: "El del día anterior sale con el trabajo programado; el del mismo día, la primera vez que alguien entra al panel ese día. Ambos incluyen el botón para cambiar la cita.",
+    hint: "Sale la primera vez que alguien entra al panel ese día, a quienes tienen cita hoy. Incluye el botón para reagendar.",
     order: 5,
   },
   {

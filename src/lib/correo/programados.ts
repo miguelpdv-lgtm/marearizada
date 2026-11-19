@@ -11,8 +11,8 @@ import { boton, escapar, fila, parrafo, plantilla, tablaDatos } from "./plantill
 
 /**
  * Correos que no responden a una acción sino al calendario: el recordatorio
- * del día anterior y la invitación a dejar una reseña después de la visita.
- * Los manda el trabajo diario (/api/cron/diario). Devuelven true si el correo
+ * del mismo día y la invitación a dejar una reseña después de la visita.
+ * El recordatorio lo manda la primera entrada del día al panel; la reseña, el trabajo diario (/api/cron/diario). Devuelven true si el correo
  * salió, para que el trabajo marque la cita y no lo repita.
  */
 

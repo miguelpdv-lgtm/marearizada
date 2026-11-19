@@ -17,7 +17,7 @@ Plataforma (sitio + reservas en línea + panel) de **Marea Rizada**, salón de r
 - Agenda del panel con pestañas **Salón / Nails** (campo `agenda` de cada categoría). Cejas, Pestañas y Depilación están en Nails (por confirmar con el cliente).
 - Un solo local: selectores de local ocultos en el panel.
 - Panel con layout propio (barra lateral de abismo en escritorio; barra superior + pestañas en celular) y alineado al sistema de diseño.
-- Cupones, recordatorios del día anterior y reseñas con aprobación ya construidos. Tarea diaria: `GET /api/cron/diario` con `CRON_SECRET` (programada en `vercel.json`).
+- Cupones, recordatorio del mismo día (lo dispara la primera entrada al panel de cada día, `src/lib/correo/recordatorio-dia.ts`; el del día anterior se quitó) y reseñas con aprobación ya construidos. Tarea diaria: `GET /api/cron/diario` con `CRON_SECRET` (programada en `vercel.json`).
 
 ## Pendientes (por prioridad)
 1. **Integrar Wompi**: pasos en `src/lib/pasarela.ts` (Web Checkout con firma de integridad, webhook con checksum, conciliación en `/reservar/pago/[codigo]`). Necesita: llave pública, secreto de integridad y secreto de eventos de la cuenta del salón.
