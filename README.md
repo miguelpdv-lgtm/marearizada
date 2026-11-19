@@ -9,7 +9,7 @@ Sitio de **Marea Rizada** ([@marea.rizada](https://instagram.com/marea.rizada)) 
 - **Cambiar cita** (`/reservar/cambiar`): la clienta mueve su cita desde el enlace del correo o con su código y celular.
 - **Abono obligatorio en línea**: al terminar los datos, el cupo queda apartado unos minutos (Configuración → Fases) mientras la clienta paga el abono o el total. La cita se confirma, y sale su correo, cuando se aprueba el pago; si no paga a tiempo, el cupo se libera solo. Para cancelar, la clienta escribe al salón.
 - **Promociones y cupones**: una promoción sin código aplica sola y se ve tachada en la lista de servicios; con código es un cupón que la clienta escribe al reservar. Pueden tener vigencia y usos máximos.
-- **Recordatorios y reseñas por correo**: el mismo día de la cita sale el recordatorio (con el botón para reagendar) la primera vez que alguien entra al panel, y y, después de una cita atendida, la invitación a dejar una reseña. Las reseñas llegan a Contenido → Reseñas e historias y se publican en la portada cuando el equipo las activa.
+- **Recordatorios y reseñas por correo**: el mismo día de la cita sale el recordatorio (con el botón para reagendar) la primera vez que alguien entra al panel, y, después de una cita atendida, la invitación a dejar una reseña. Las reseñas llegan a Contenido → Reseñas e historias y se publican en la portada cuando el equipo las activa.
 - **Panel** (`/admin`): agenda, citas, clientas con su historial, servicios, profesionales con horarios y bloqueos, ventas, reportes, promociones, galería y configuración.
 
 ## Stack
