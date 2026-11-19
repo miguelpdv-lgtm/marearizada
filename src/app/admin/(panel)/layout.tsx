@@ -1,8 +1,10 @@
+import { after } from "next/server";
 import { Suspense } from "react";
 
 import { OkToast } from "@/components/admin/Toast";
 import { PanelShell, type GrupoNav } from "@/components/admin/PanelShell";
 import { requireUser } from "@/lib/auth";
+import { enviarRecordatoriosDelDia } from "@/lib/correo/recordatorio-dia";
 import { canManageSettings, canManageUsers } from "@/lib/constants";
 import { logoutAction } from "@/app/admin/login/actions";
 
@@ -17,6 +19,10 @@ export default async function PanelLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+
+  // Primera entrada del día al panel: recordatorio "tu cita es hoy" a quien
+  // tiene cita hoy. Corre después de responder, sin hacer esperar la página.
+  after(enviarRecordatoriosDelDia);
 
   const grupos: GrupoNav[] = [
     {

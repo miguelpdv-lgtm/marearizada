@@ -254,6 +254,8 @@ model Appointment {
 
   /// Cuándo salió el recordatorio del día anterior y la invitación a reseñar.
   reminderSentAt    DateTime?
+  /// Recordatorio "tu cita es hoy", que sale la primera vez que alguien entra al panel ese día.
+  dayReminderSentAt DateTime?
   reviewRequestedAt DateTime?
   review            Testimonial?
 

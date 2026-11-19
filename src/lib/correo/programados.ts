@@ -24,23 +24,23 @@ const primerNombre = (nombre: string) => escapar(nombre.trim().split(/\s+/)[0] ?
 export const enlaceResena = (codigo: string) =>
   `${urlSitio()}/resena?c=${encodeURIComponent(codigo)}&t=${tokenResena(codigo)}`;
 
-export async function enviarRecordatorio(cita: Cita, settings: Ajustes) {
+export async function enviarRecordatorio(cita: Cita, settings: Ajustes, delDia = false) {
   if (!cita.clientEmail) return false;
   const sede = cita.branch;
   const whatsapp = sede?.whatsapp || settings.get("contact.whatsapp");
 
   return enviar({
     para: cita.clientEmail,
-    asunto: `Te esperamos: ${cuando(cita.startsAt)}`,
+    asunto: delDia ? `Hoy te esperamos: ${cuando(cita.startsAt)}` : `Te esperamos: ${cuando(cita.startsAt)}`,
     responderA: correoDelSalon(settings.get("contact.email")) || null,
     html: plantilla({
-      titulo: "Tu cita se acerca",
-      etiqueta: "Recordatorio",
+      titulo: delDia ? "Tu cita es hoy" : "Tu cita se acerca",
+      etiqueta: delDia ? "Hoy" : "Recordatorio",
       despedida: true,
       pie: pieDe(settings, "Te llega porque tienes una cita en Marea Rizada."),
       preencabezado: `${cita.service?.name ?? "Tu cita"} · ${cuando(cita.startsAt)}`,
       cuerpo: [
-        parrafo(`Hola ${primerNombre(cita.clientName)}, te recordamos tu cita:`),
+        parrafo(`Hola ${primerNombre(cita.clientName)}, ${delDia ? "hoy te esperamos" : "te recordamos tu cita"}:`),
         tablaDatos(
           [
             fila("Servicio", escapar(cita.service?.name ?? "—")),
@@ -53,7 +53,7 @@ export async function enviarRecordatorio(cita: Cita, settings: Ajustes) {
           "Si puedes, llega con el pelo como lo llevas normalmente: así vemos cómo se comporta tu rizo en el día a día.",
         ),
         parrafo("¿No alcanzas a venir? Muévela tú misma con este botón, mientras haya cupo:"),
-        boton("Cambiar mi cita", enlaceCambiar(cita.code)),
+        boton(delDia ? "Reagendar mi cita" : "Cambiar mi cita", enlaceCambiar(cita.code)),
         whatsapp ? parrafo(`O escríbenos por WhatsApp al ${escapar(whatsapp)}.`) : "",
       ].join(""),
     }),
